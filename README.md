@@ -1,12 +1,21 @@
 # kt-techup-shopping
-KT Cloud TECH-UP Backend 1st Cohort Team 5’s e-commerce backend project. Implements RESTful APIs for shopping, chat, and blog management with Spring Boot.
+KT Cloud TECH-UP Backend 1st Cohort Team 5’s e-commerce backend project. Implements RESTful APIs for shopping with Spring Boot.
 
 # 🛒 KT Cloud TECH-UP 백엔드 1기 5조 - 쇼핑 프로젝트
 
 ## 📘 프로젝트 소개
 KT Cloud TECH-UP 백엔드 1기 **5조**의 전자상거래 백엔드 프로젝트입니다.  
-Spring Boot 기반으로 **실시간 채팅**, **전자상거래(쇼핑)**, **블로그 관리**, **개인 맞춤 서비스** 등의 기능을 제공하는 RESTful API를 설계하고 구현합니다.  
+Spring Boot 기반으로 **전자상거래(쇼핑)** 의 기능을 제공하는 RESTful API를 설계하고 구현합니다.  
 확장성과 유지보수성을 고려한 백엔드 아키텍처를 구축하여, 실제 배포 가능한 형태로 완성하는 것을 목표로 합니다.
+
+### 🪜 하위 목표
+- **프로젝트 : 전자상거래 백엔드**
+    - 상품 등록 및 조회 API
+    - 장바구니 및 주문 처리 API
+    - 결제 연동 및 보안 관리
+    - 리뷰 및 평점 시스템 구현
+    - 관리자용 상품 관리 기능
+    - 재고 관리 시스템
 
 ---
 
@@ -69,6 +78,7 @@ TECH UP에서 백엔드 개발을 공부 중인 이신영입니다.
 
 ## 🌱 진행 방식
 - **개인별 기능 단위 브랜치**에서 개발 → **Pull Request(PR)** 로 코드 리뷰 후 병합  
-- **`develop` 브랜치**: 통합 개발용  
+- **`develop` 브랜치**: 통합 개발용
+- **`feature` 브랜치**: 개인별 기능 단위 브랜치
 - **`main` 브랜치**: 안정 버전 및 배포용  
 ---
