@@ -1,4 +1,4 @@
-# kt-techup-shopping
+gi# kt-techup-shopping
 KT Cloud TECH-UP Backend 1st Cohort Team 5’s e-commerce backend project. Implements RESTful APIs for shopping, chat, and blog management with Spring Boot.
 
 # 🛒 KT Cloud TECH-UP 백엔드 1기 5조 - 쇼핑 프로젝트
@@ -28,6 +28,8 @@ Spring Boot 기반으로 **실시간 채팅**, **전자상거래(쇼핑)**, **�
 - 팀 단위로 **효율적인 협업 및 브랜치 전략(Git Flow)** 적용
 
 ---
+## 👥 자기소개
+-양승희입니다!!! 반갑습니다
 
 ## ⚙️ 기술 스택 [미정]
 - **언어(Language)**: Java 
