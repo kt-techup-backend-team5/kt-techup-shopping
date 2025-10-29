@@ -20,6 +20,10 @@ Spring Boot 기반으로 **실시간 채팅**, **전자상거래(쇼핑)**, **�
 | **이동현** | 백엔드 개발 | [donghyeon95] (https://github.com/donghyeon95/kt-techup-donghyoen) |
 
 ---
+## 자기 소개
+**양승희**
+> 안ㄴ여핫ㅅ에ㅛ 저는 누구입니다 자기소개입니다.s 저는 강슬기입다 안ㄴ여핫에ㅛ
+> 리ㅓ니ㅑㄹ너랴ㅣㄴ더ㅣ랴ㅓㄷㅈ.
 
 ## 🎯 프로젝트 목표
 - Spring Boot와 JPA를 활용한 **전자상거래 서비스용 RESTful API 구현**
