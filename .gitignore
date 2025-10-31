@@ -1,0 +1,15 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Build
+/out/
+build/
+.gradle/
+
+# OS files
+.DS_Store
