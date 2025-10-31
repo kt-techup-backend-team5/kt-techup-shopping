@@ -12,8 +12,6 @@ build/
 .gradle/
 
 # OS files
-.DS_Store
-=======
 HELP.md
 .gradle
 !gradle/wrapper/gradle-wrapper.jar
@@ -49,3 +47,4 @@ out/
 
 ### VS Code ###
 .vscode/
+.DS_Store
