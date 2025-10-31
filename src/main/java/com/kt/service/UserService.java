@@ -1,12 +1,12 @@
-package com.kt.service;
+package java.com.kt.service;
 
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
-import com.kt.domain.User;
-import com.kt.dto.UserCreateRequest;
-import com.kt.repository.UserRepository;
+import java.com.kt.domain.User;
+import java.com.kt.dto.UserCreateRequest;
+import java.com.kt.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 

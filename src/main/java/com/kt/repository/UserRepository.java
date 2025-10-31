@@ -1,11 +1,11 @@
-package com.kt.repository;
+package java.com.kt.repository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.stereotype.Repository;
 
-import com.kt.domain.User;
-import com.kt.dto.UserCreateRequest;
+import java.com.kt.domain.User;
+import java.com.kt.dto.UserCreateRequest;
 
 import lombok.RequiredArgsConstructor;
 

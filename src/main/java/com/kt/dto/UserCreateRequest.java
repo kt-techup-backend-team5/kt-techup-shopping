@@ -1,4 +1,4 @@
-package com.kt.dto;
+package java.com.kt.dto;
 
 import java.time.LocalDate;
 
