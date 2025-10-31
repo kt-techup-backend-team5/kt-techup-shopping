@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kt.dto.UserCreateRequest;
-import com.kt.service.UserService;
+import java.com.kt.dto.UserCreateRequest;
+import java.com.kt.service.UserService;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
