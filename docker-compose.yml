@@ -1,0 +1,16 @@
+services:
+  local-mysql:
+    image: mysql
+    container_name: techup-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    ports:
+      - "3306:3306"
+    platform: linux/arm64
+
+  local-redis:
+    image: redis
+    container_name: techup-redis
+    ports:
+      - "6379:6379"
+    platform: linux/arm64

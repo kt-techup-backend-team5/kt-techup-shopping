@@ -1,9 +1,11 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/shopping
+    url: jdbc:mysql://localhost:3306/shopping-test
     username: root
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 1000
   jpa:
     hibernate:
       #create = 테이블을 만들기만
@@ -11,21 +13,16 @@ spring:
       #validate = 테이블이랑 entity랑 맞는지 확인만
       #none = 아무것도 안함
       #create-drop = create랑 똑같은데 애플리케이션 종료시점에 테이블을 drop함 => 테스트코드에서만 쓰세요
-      ddl-auto: update
+      ddl-auto: create-drop
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
         jdbc:
           time_zone: Asia/Seoul
-        show_sql: true #로컬에서만
-    show-sql: true
+        show_sql: false
+    show-sql: false
   data:
     redis:
       host: ${redis.host:localhost}
       port: ${redis.port:6379}
-
-jwt:
-  secret: ${kt.jwt.secret:kt-cloud-tech-up-shopping-202511171107}
-  access-token-expiration: ${kt.jwt.access-token-expiration:300000} #5분
-  refresh-token-expiration: ${kt.jwt.refresh-token-expiration:43200000} #12시간
