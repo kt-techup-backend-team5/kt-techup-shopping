@@ -1,6 +1,19 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Build
+/out/
+build/
+.gradle/
+
+# OS files
 HELP.md
 .gradle
-build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -20,7 +33,6 @@ bin/
 ### IntelliJ IDEA ###
 .idea
 *.iws
-*.iml
 *.ipr
 out/
 !**/src/main/**/out/
@@ -35,3 +47,4 @@ out/
 
 ### VS Code ###
 .vscode/
+.DS_Store
