@@ -66,8 +66,11 @@ public class SwaggerConfiguration {
 		// local, default -> localhost:8080
 		// dev -> dev.ktechup.com
 		// prod -> ktechup.com
-		var profile = environment.getActiveProfiles()[0];
 
+		var profiles = environment.getActiveProfiles(); // <- 여기에 아무것도 지정 안해서 오류뜸!!
+
+		// 아무 프로파일도 없으면 local로 설정
+		String profile = (profiles.length >0) ? profiles[0] : "local";
 		return switch (profile) {
 			case "dev" -> "https://dev.ktechup.com";
 			case "prod" -> "https://ktechup.com";
