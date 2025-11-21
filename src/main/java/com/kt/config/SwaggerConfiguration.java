@@ -1,5 +1,6 @@
 package com.kt.config;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springdoc.core.models.GroupedOpenApi;
@@ -67,10 +68,11 @@ public class SwaggerConfiguration {
 		// dev -> dev.ktechup.com
 		// prod -> ktechup.com
 
-		var profiles = environment.getActiveProfiles(); // <- 여기에 아무것도 지정 안해서 오류뜸!!
-
 		// 아무 프로파일도 없으면 local로 설정
-		String profile = (profiles.length >0) ? profiles[0] : "local";
+		var profile = Arrays.stream(environment.getActiveProfiles())
+			.findFirst()
+			.orElse("local");
+
 		return switch (profile) {
 			case "dev" -> "https://dev.ktechup.com";
 			case "prod" -> "https://ktechup.com";
