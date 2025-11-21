@@ -17,8 +17,10 @@ public class OrderProduct extends BaseEntity {
 	private Long quantity;
 
 	@ManyToOne
+	// @JoinColumn(name = "order_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 	@JoinColumn(name = "order_id")
 	private Order order;
+
 	@ManyToOne
 	@JoinColumn(name = "product_id")
 	private Product product;

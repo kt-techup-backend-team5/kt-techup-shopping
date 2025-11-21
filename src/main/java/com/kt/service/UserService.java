@@ -12,6 +12,7 @@ import com.kt.common.ErrorCode;
 import com.kt.common.Preconditions;
 import com.kt.domain.user.User;
 import com.kt.dto.user.UserRequest;
+import com.kt.repository.order.OrderRepository;
 import com.kt.repository.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final OrderRepository orderRepository;
 
 	// 트랜잭션 처리해줘
 	// PSA - Portable Service Abstraction
@@ -83,5 +85,39 @@ public class UserService {
 		// 삭제에는 두가지 개념 - softdelete, harddelete
 		// var user = userRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 		// userRepository.delete(user);
+	}
+
+	public void getOrders(Long id) {
+		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+		var orders = orderRepository.findAllByUserId(user.getId());
+
+		var products = orders.stream()
+			.flatMap(order -> order.getOrderProducts().stream()
+				.map(orderProduct -> orderProduct.getProduct().getName())).toList();
+
+		// var statuses = orders.stream()
+		// 	.flatMap(order -> order.getOrderProducts().stream()
+		// 		.map(orderProduct -> orderProduct.getOrder().getStatus())).toList();
+
+		// N개의 주문이 있는데 N개의 주문엔 상품이 존재하는데 가짓수가 1만개
+
+		// Stream의 연산과정
+		// 1. 스트림생성
+		// 2. 중간연산 -> 여러번 가능 O
+		// 3. 최종연산 -> 여러번 가능 X -> 재사용 불가능
+
+		// List<List<Product>> -> List<Product>
+
+		// N + 1 문제를 해결하는 방법
+		// 1. fetch join 사용 -> JPQL전용 -> 딱 1번 사용 2번사용하면 에러남
+		// 2. @EntityGraph 사용 -> JPA표준기능 -> 여러번 사용가능
+		// 3. batch fetch size 옵션 사용 -> 전역설정 -> paging동작원리와 같아서 성능이슈가 있을 수 있음
+		// 4. @BatchSize 어노테이션 사용 -> 특정 엔티티에만 적용 가능
+		// 5. native query 사용해서 해결
+
+		// Collection, stream, foreach
+
+		// 연관관계를 아예 끊는다 -> 엔티티자체를 느슨하게 결합해둔다.
+		// JPA를 안쓴다.
 	}
 }

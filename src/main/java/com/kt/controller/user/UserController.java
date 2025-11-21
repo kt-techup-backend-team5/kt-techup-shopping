@@ -16,8 +16,10 @@ import com.kt.common.ApiResult;
 import com.kt.common.SwaggerAssistance;
 import com.kt.dto.user.UserRequest;
 import com.kt.dto.user.UserUpdatePasswordRequest;
+import com.kt.security.CurrentUser;
 import com.kt.service.UserService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +59,7 @@ public class UserController extends SwaggerAssistance {
 	// @RequestParam의 속성은 기본이 required = true
 	@GetMapping("/duplicate-login-id")
 	@ResponseStatus(HttpStatus.OK)
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Boolean> isDuplicateLoginId(@RequestParam String loginId) {
 		var result = userService.isDuplicateLoginId(loginId);
 
@@ -73,6 +76,7 @@ public class UserController extends SwaggerAssistance {
 	// 3. 인증/인가 객체에서 id값을 꺼낸다. (V)
 	@PutMapping("/{id}/update-password")
 	@ResponseStatus(HttpStatus.OK)
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> updatePassword(
 		@PathVariable Long id,
 		@RequestBody @Valid UserUpdatePasswordRequest request
@@ -83,8 +87,18 @@ public class UserController extends SwaggerAssistance {
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.OK)
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> delete(@PathVariable Long id) {
 		userService.delete(id);
 		return ApiResult.ok();
+	}
+
+	@GetMapping("/orders")
+	@ResponseStatus(HttpStatus.OK)
+	@SecurityRequirement(name = "Bearer Authentication")
+	public void getOrders(
+		@AuthenticationPrincipal CurrentUser currentUser
+	) {
+		userService.getOrders(currentUser.getId());
 	}
 }

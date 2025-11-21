@@ -19,6 +19,7 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
         show_sql: true #로컬에서만
+    #        default_batch_fetch_size: 2
     show-sql: true
   data:
     redis:

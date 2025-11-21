@@ -11,6 +11,8 @@ import com.kt.common.CustomException;
 import com.kt.common.ErrorCode;
 import com.kt.domain.user.User;
 
+import jakarta.validation.constraints.NotNull;
+
 // <T, ID>
 // T: Entity 클래스 => User
 // ID: Entity 클래스의 PK 타입 => Long
@@ -32,6 +34,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	Boolean existsByLoginIdJPQL(String loginId);
 
 	Page<User> findAllByNameContaining(String name, Pageable pageable);
+
+	@Query(value = """
+			SELECT DISTINCT u FROM User u
+			LEFT JOIN FETCH u.orders o
+			WHERE u.id = :id
+		""")
+	@NotNull
+	Optional<User> findById(@NotNull Long id);
+
+	// @EntityGraph(attributePaths = "orders")
+	// @NotNull Optional<User> findById(@NotNull Long id);
 
 	default User findByIdOrThrow(Long id, ErrorCode errorCode) {
 		return findById(id).orElseThrow(() -> new CustomException(errorCode));
