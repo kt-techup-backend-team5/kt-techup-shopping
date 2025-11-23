@@ -18,7 +18,7 @@ public class UserOrderService {
     // 주문 상세 조회
     @Transactional(readOnly = true)
     public OrderResponse.Detail getByIdForUser(Long userId, Long orderId) {
-        var order = orderRepository.findWithOrderProductsByIdAndUserId(orderId, userId)
+        var order = orderRepository.findByIdAndUserId(orderId, userId)
                 .orElseThrow();
         return mapToDetail(order);
     }

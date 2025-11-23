@@ -1,6 +1,5 @@
 package com.kt.repository.order;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -20,5 +19,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // 주문 상세 조회
     @EntityGraph(attributePaths = {"orderProducts", "orderProducts.product", "user"})
-    Optional<Order> findWithOrderProductsByIdAndUserId(Long id, Long userId);
+    Optional<Order> findByIdAndUserId(Long id, Long userId);
 }

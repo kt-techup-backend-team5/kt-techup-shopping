@@ -89,7 +89,8 @@ public class UserService {
 
 	public void getOrders(Long id) {
 		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
-		var orders = orderRepository.findAllByUserId(user.getId());
+		var page = orderRepository.findAllByUserId(user.getId(), Pageable.unpaged());
+        var orders = page.getContent();
 
 		var products = orders.stream()
 			.flatMap(order -> order.getOrderProducts().stream()
