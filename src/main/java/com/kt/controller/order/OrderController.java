@@ -1,6 +1,7 @@
 package com.kt.controller.order;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +34,15 @@ public class OrderController {
 			request.receiverMobile(),
 			request.quantity()
 		);
+		return ApiResult.ok();
+	}
+
+	@PostMapping("/{orderId}/cancel")
+	public ApiResult<Void> cancelOrder(
+		@AuthenticationPrincipal DefaultCurrentUser currentUser,
+		@PathVariable Long orderId
+	) {
+		orderService.cancelOrder(orderId, currentUser);
 		return ApiResult.ok();
 	}
 }
