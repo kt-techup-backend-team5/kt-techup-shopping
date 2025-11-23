@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.kt.common.CustomException;
+import com.kt.common.ErrorCode;
 import com.kt.domain.order.Order;
 
 import jakarta.validation.constraints.NotNull;
@@ -19,4 +21,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 	@NotNull
 	@EntityGraph(attributePaths = {"orderProducts", "orderProducts.product"})
 	List<Order> findAllByUserId(Long userId);
+
+	default Order findByOrderIdOrThrow(Long id, ErrorCode errorCode) {
+		return findById(id)
+			.orElseThrow(() -> new CustomException(errorCode));
+	}
 }
