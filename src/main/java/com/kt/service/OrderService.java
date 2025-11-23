@@ -95,7 +95,8 @@ public class OrderService {
 
 		var requestingUser = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
 
-		Preconditions.validate(requestingUser.getRole() == Role.ADMIN || order.getUser().getId().equals(currentUser.getId()),
+		Preconditions.validate(
+			requestingUser.getRole() == Role.ADMIN || order.getUser().getId().equals(currentUser.getId()),
 			ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
 
 		order.cancel();

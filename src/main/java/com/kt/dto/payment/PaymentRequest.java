@@ -10,5 +10,4 @@ public record PaymentRequest(
 	@NotNull
 	PaymentType paymentType // 어떤 결제 수단으로 결제할지
 ) {
-
 }
