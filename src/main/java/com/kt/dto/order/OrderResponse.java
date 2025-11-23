@@ -30,6 +30,7 @@ public interface OrderResponse {
     ) {
     }
 
+    // 상세조회용
     record Detail(
         Long id,
         String receiverName,
@@ -39,6 +40,17 @@ public interface OrderResponse {
         Long totalPrice,
         OrderStatus status,
         LocalDateTime createdAt
+    ) {
+    }
+
+    // 목록용
+    record Summary(
+        Long orderId,
+        Long totalPrice,
+        LocalDateTime createdAt,
+        OrderStatus status,
+        String firstProductName,
+        int productCount
     ) {
     }
 }
