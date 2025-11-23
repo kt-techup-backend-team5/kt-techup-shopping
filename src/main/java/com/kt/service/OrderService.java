@@ -2,25 +2,28 @@ package com.kt.service;
 
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kt.common.CustomException;
 import com.kt.common.ErrorCode;
 import com.kt.common.Lock;
 import com.kt.common.Preconditions;
 import com.kt.domain.order.Order;
 import com.kt.domain.order.Receiver;
 import com.kt.domain.orderproduct.OrderProduct;
+import com.kt.domain.user.Role;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.orderproduct.OrderProductRepository;
 import com.kt.repository.product.ProductRepository;
 import com.kt.repository.user.UserRepository;
+import com.kt.security.CurrentUser;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
 public class OrderService {
 	private final RedisProperties redisProperties;
 	private final UserRepository userRepository;
@@ -28,6 +31,25 @@ public class OrderService {
 	private final OrderRepository orderRepository;
 	private final OrderProductRepository orderProductRepository;
 	private final RedissonClient redissonClient;
+	private final OrderService self;
+
+	public OrderService(
+		RedisProperties redisProperties,
+		UserRepository userRepository,
+		ProductRepository productRepository,
+		OrderRepository orderRepository,
+		OrderProductRepository orderProductRepository,
+		RedissonClient redissonClient,
+		@Lazy OrderService self
+	) {
+		this.redisProperties = redisProperties;
+		this.userRepository = userRepository;
+		this.productRepository = productRepository;
+		this.orderRepository = orderRepository;
+		this.orderProductRepository = orderProductRepository;
+		this.redissonClient = redissonClient;
+		this.self = self;
+	}
 
 	// reference , primitive
 	// 선택하는 기준 1번째 : null 가능?
@@ -66,5 +88,29 @@ public class OrderService {
 
 		product.mapToOrderProduct(orderProduct);
 		order.mapToOrderProduct(orderProduct);
+	}
+
+	public void cancelOrder(Long orderId, CurrentUser currentUser) {
+		Order order = orderRepository.findById(orderId)
+			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_ORDER));
+
+		var requestingUser = userRepository.findById(currentUser.getId())
+			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+		if (requestingUser.getRole() != Role.ADMIN && !order.getUser().getId().equals(currentUser.getId())) {
+			throw new CustomException(ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
+		}
+
+		order.cancel();
+
+		for (OrderProduct orderProduct : order.getOrderProducts()) {
+			self.increaseStockWithLock(orderProduct.getProduct().getId(), orderProduct.getQuantity());
+		}
+	}
+
+	@Lock(key = Lock.Key.STOCK, index = 0)
+	public void increaseStockWithLock(Long productId, Long quantity) {
+		var product = productRepository.findByIdOrThrow(productId);
+		product.increaseStock(quantity);
 	}
 }

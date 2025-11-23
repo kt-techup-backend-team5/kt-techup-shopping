@@ -88,4 +88,13 @@ public class OrderController extends SwaggerAssistance {
         var page = userOrderService.listMyOrders(currentUser.getId(), pageable);
         return ApiResult.ok(page);
     }
+
+    @PostMapping("/{orderId}/cancel")
+    public ApiResult<Void> cancelOrder(
+        @AuthenticationPrincipal DefaultCurrentUser currentUser,
+        @PathVariable Long orderId
+    ) {
+        orderService.cancelOrder(orderId, currentUser);
+        return ApiResult.ok();
+    }
 }
