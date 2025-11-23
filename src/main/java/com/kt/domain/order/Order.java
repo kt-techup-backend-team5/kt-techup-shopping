@@ -61,6 +61,12 @@ public class Order extends BaseEntity {
 		this.orderProducts.add(orderProduct);
 	}
 
+	public long getTotalPrice() {
+		return orderProducts.stream()
+			.mapToLong(op -> op.getProduct().getPrice() * op.getQuantity())
+			.sum();
+	}
+
 	//하나의 오더는 여러개의 상품을 가질수있음
 	// 1:N
 	//하나의 상품은 여러개의 오더를 가질수있음
