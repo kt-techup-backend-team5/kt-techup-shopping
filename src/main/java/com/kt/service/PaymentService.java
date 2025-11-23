@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class PaymentService {
 	private final OrderRepository orderRepository;
-	private final OrderRepository paymentRepository;
+	private final PaymentRepository paymentRepository;
 
 	public void pay(Long orderId, PaymentType paymentType) {
 		// 주문 정보 가져오기
