@@ -19,4 +19,14 @@ public interface OrderRequest {
 		String receiverMobile
 	) {
 	}
+
+    record Update(
+        @NotBlank
+        String receiverName,
+        @NotBlank
+        String receiverAddress,
+        @NotBlank
+        String receiverMobile
+    ) {
+    }
 }
