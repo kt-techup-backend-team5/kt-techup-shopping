@@ -91,15 +91,12 @@ public class OrderService {
 	}
 
 	public void cancelOrder(Long orderId, CurrentUser currentUser) {
-		Order order = orderRepository.findById(orderId)
-			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_ORDER));
+		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
 
-		var requestingUser = userRepository.findById(currentUser.getId())
-			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+		var requestingUser = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
 
-		if (requestingUser.getRole() != Role.ADMIN && !order.getUser().getId().equals(currentUser.getId())) {
-			throw new CustomException(ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
-		}
+		Preconditions.validate(requestingUser.getRole() == Role.ADMIN || order.getUser().getId().equals(currentUser.getId()),
+			ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
 
 		order.cancel();
 
