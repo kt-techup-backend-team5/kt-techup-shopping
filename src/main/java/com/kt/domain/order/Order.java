@@ -75,6 +75,10 @@ public class Order extends BaseEntity {
 			.sum();
 	}
 
+	public void setPaid() {
+		this.status = OrderStatus.COMPLETED;
+	}
+
 	//하나의 오더는 여러개의 상품을 가질수있음
 	// 1:N
 	//하나의 상품은 여러개의 오더를 가질수있음
