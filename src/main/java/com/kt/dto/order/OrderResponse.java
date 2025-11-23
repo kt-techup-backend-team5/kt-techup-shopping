@@ -1,7 +1,9 @@
 package com.kt.dto.order;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import com.kt.domain.order.Order;
 import com.kt.domain.order.OrderStatus;
 import com.querydsl.core.annotations.QueryProjection;
 

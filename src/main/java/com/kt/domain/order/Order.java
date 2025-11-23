@@ -3,8 +3,12 @@ package com.kt.domain.order;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.kt.common.BaseEntity;
+import com.kt.common.CustomException;
+import com.kt.common.ErrorCode;
+import com.kt.common.Preconditions;
 import com.kt.domain.orderproduct.OrderProduct;
 import com.kt.domain.user.User;
 
@@ -40,7 +44,6 @@ public class Order extends BaseEntity {
 	private User user;
 
 	@OneToMany(mappedBy = "order")
-	// @BatchSize(size = 2)
 	private List<OrderProduct> orderProducts = new ArrayList<>();
 
 	private Order(Receiver receiver, User user) {
@@ -59,6 +62,11 @@ public class Order extends BaseEntity {
 
 	public void mapToOrderProduct(OrderProduct orderProduct) {
 		this.orderProducts.add(orderProduct);
+	}
+
+	public void cancel() {
+		Preconditions.validate(this.status == OrderStatus.PENDING, ErrorCode.CANNOT_CANCEL_ORDER);
+		this.status = OrderStatus.CANCELLED;
 	}
 
 	public long getTotalPrice() {
