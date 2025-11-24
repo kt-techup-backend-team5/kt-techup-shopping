@@ -1,8 +1,5 @@
 package com.kt.service;
 
-import org.redisson.api.RedissonClient;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,36 +17,19 @@ import com.kt.repository.product.ProductRepository;
 import com.kt.repository.user.UserRepository;
 import com.kt.security.CurrentUser;
 
+import lombok.RequiredArgsConstructor
 import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class OrderService {
-	private final RedisProperties redisProperties;
 	private final UserRepository userRepository;
 	private final ProductRepository productRepository;
 	private final OrderRepository orderRepository;
 	private final OrderProductRepository orderProductRepository;
-	private final RedissonClient redissonClient;
-	private final OrderService self;
-
-	public OrderService(
-		RedisProperties redisProperties,
-		UserRepository userRepository,
-		ProductRepository productRepository,
-		OrderRepository orderRepository,
-		OrderProductRepository orderProductRepository,
-		RedissonClient redissonClient,
-		@Lazy OrderService self
-	) {
-		this.redisProperties = redisProperties;
-		this.userRepository = userRepository;
-		this.productRepository = productRepository;
-		this.orderRepository = orderRepository;
-		this.orderProductRepository = orderProductRepository;
-		this.redissonClient = redissonClient;
-		this.self = self;
-	}
+	private final ApplicationEventPublisher applicationEventPublisher;
+	private final StockService stockService;
 
 	// reference , primitive
 	// 선택하는 기준 1번째 : null 가능?
@@ -58,12 +38,12 @@ public class OrderService {
 	//주문생성
 	@Lock(key = Lock.Key.STOCK, index = 1)
 	public void create(
-		Long userId,
-		Long productId,
-		String receiverName,
-		String receiverAddress,
-		String receiverMobile,
-		Long quantity
+			Long userId,
+			Long productId,
+			String receiverName,
+			String receiverAddress,
+			String receiverMobile,
+			Long quantity
 	) {
 		// var product = productRepository.findByIdPessimistic(productId).orElseThrow();
 		var product = productRepository.findByIdOrThrow(productId);
@@ -75,9 +55,9 @@ public class OrderService {
 		var user = userRepository.findByIdOrThrow(userId, ErrorCode.NOT_FOUND_USER);
 
 		var receiver = new Receiver(
-			receiverName,
-			receiverAddress,
-			receiverMobile
+				receiverName,
+				receiverAddress,
+				receiverMobile
 		);
 
 		var order = orderRepository.save(Order.create(receiver, user));
@@ -88,6 +68,9 @@ public class OrderService {
 
 		product.mapToOrderProduct(orderProduct);
 		order.mapToOrderProduct(orderProduct);
+		// applicationEventPublisher.publishEvent(
+		// 		new Message("User: " + user.getName() + " ordered :" + quantity * product.getPrice())
+		// );
 	}
 
 	public void cancelOrder(Long orderId, CurrentUser currentUser) {
@@ -96,19 +79,13 @@ public class OrderService {
 		var requestingUser = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
 
 		Preconditions.validate(
-			requestingUser.getRole() == Role.ADMIN || order.getUser().getId().equals(currentUser.getId()),
-			ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
+				requestingUser.getRole() == Role.ADMIN || order.getUser().getId().equals(currentUser.getId()),
+				ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
 
 		order.cancel();
 
 		for (OrderProduct orderProduct : order.getOrderProducts()) {
-			self.increaseStockWithLock(orderProduct.getProduct().getId(), orderProduct.getQuantity());
+			stockService.increaseStockWithLock(orderProduct.getProduct().getId(), orderProduct.getQuantity());
 		}
-	}
-
-	@Lock(key = Lock.Key.STOCK, index = 0)
-	public void increaseStockWithLock(Long productId, Long quantity) {
-		var product = productRepository.findByIdOrThrow(productId);
-		product.increaseStock(quantity);
 	}
 }
