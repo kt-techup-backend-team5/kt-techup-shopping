@@ -1,6 +1,6 @@
 package com.kt.domain.orderproduct;
 
-import com.kt.common.BaseEntity;
+import com.kt.common.support.BaseEntity;
 import com.kt.domain.order.Order;
 import com.kt.domain.product.Product;
 

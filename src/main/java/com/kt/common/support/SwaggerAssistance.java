@@ -1,4 +1,4 @@
-package com.kt.common;
+package com.kt.common.support;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

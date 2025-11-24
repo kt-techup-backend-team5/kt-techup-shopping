@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kt.common.ApiResult;
-import com.kt.common.Paging;
-import com.kt.common.SwaggerAssistance;
+import com.kt.common.response.ApiResult;
+import com.kt.common.request.Paging;
+import com.kt.common.support.SwaggerAssistance;
 import com.kt.dto.order.OrderRequest;
 import com.kt.dto.order.OrderResponse;
 import com.kt.security.DefaultCurrentUser;

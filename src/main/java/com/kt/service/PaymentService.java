@@ -3,9 +3,8 @@ package com.kt.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kt.common.CustomException;
-import com.kt.common.ErrorCode;
-import com.kt.common.Preconditions;
+import com.kt.common.exception.ErrorCode;
+import com.kt.common.support.Preconditions;
 import com.kt.domain.order.Order;
 import com.kt.domain.order.OrderStatus;
 import com.kt.domain.payment.Payment;
@@ -38,12 +37,12 @@ public class PaymentService {
 
 		// 결제(Payment) 엔티티 생성하고 저장하기
 		Payment newPayment = new Payment(
-			order,
-			paymentType,
-			originalPrice,
-			discountPrice,
-			deliveryFee,
-			finalPrice
+				order,
+				paymentType,
+				originalPrice,
+				discountPrice,
+				deliveryFee,
+				finalPrice
 		);
 		paymentRepository.save(newPayment);
 

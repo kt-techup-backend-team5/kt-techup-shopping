@@ -1,4 +1,4 @@
-package com.kt.common;
+package com.kt.common.request;
 
 import org.springframework.data.domain.PageRequest;
 
