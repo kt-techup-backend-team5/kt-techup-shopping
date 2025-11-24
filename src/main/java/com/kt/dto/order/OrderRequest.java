@@ -20,13 +20,13 @@ public interface OrderRequest {
 	) {
 	}
 
-    record Update(
-        @NotBlank
-        String receiverName,
-        @NotBlank
-        String receiverAddress,
-        @NotBlank
-        String receiverMobile
-    ) {
-    }
+	record Update(
+		@NotBlank
+		String receiverName,
+		@NotBlank
+		String receiverAddress,
+		@NotBlank
+		String receiverMobile
+	) {
+	}
 }

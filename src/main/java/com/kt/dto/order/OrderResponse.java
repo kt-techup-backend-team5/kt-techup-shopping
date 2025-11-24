@@ -22,36 +22,36 @@ public interface OrderResponse {
 		}
 	}
 
-    record Item(
-        Long productId,
-        String productName,
-        Long price,
-        Long quantity,
-        Long lineTotal
-    ) {
-    }
+	record Item(
+		Long productId,
+		String productName,
+		Long price,
+		Long quantity,
+		Long lineTotal
+	) {
+	}
 
-    // 상세조회용
-    record Detail(
-        Long id,
-        String receiverName,
-        String receiverAddress,
-        String receiverMobile,
-        List<Item> items,
-        Long totalPrice,
-        OrderStatus status,
-        LocalDateTime createdAt
-    ) {
-    }
+	// 상세조회용
+	record Detail(
+		Long id,
+		String receiverName,
+		String receiverAddress,
+		String receiverMobile,
+		List<Item> items,
+		Long totalPrice,
+		OrderStatus status,
+		LocalDateTime createdAt
+	) {
+	}
 
-    // 목록용
-    record Summary(
-        Long orderId,
-        Long totalPrice,
-        LocalDateTime createdAt,
-        OrderStatus status,
-        String firstProductName,
-        int productCount
-    ) {
-    }
+	// 목록용
+	record Summary(
+		Long orderId,
+		Long totalPrice,
+		LocalDateTime createdAt,
+		OrderStatus status,
+		String firstProductName,
+		int productCount
+	) {
+	}
 }
