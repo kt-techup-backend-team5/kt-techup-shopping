@@ -13,7 +13,7 @@ import com.kt.domain.order.Order;
 
 import jakarta.validation.constraints.NotNull;
 
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends JpaRepository<Order, Long>, OrderRepositoryCustom {
 	// 주문 목록 조회 (페이징)
 	@NotNull
 	@EntityGraph(attributePaths = {"orderProducts", "orderProducts.product"})
