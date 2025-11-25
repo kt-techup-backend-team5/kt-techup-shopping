@@ -9,13 +9,14 @@ import com.querydsl.core.annotations.QueryProjection;
 
 public interface OrderResponse {
 	record Search(
-		Long id,
-		String receiverName,
-		String productName,
-		Long quantity,
-		Long totalPrice,
-		OrderStatus status,
-		LocalDateTime createdAt
+			Long id,
+			String receiverName,
+			String username,
+			String productName,
+			Long quantity,
+			Long totalPrice,
+			OrderStatus status,
+			LocalDateTime createdAt
 	) {
 		@QueryProjection
 		public Search {
@@ -23,35 +24,63 @@ public interface OrderResponse {
 	}
 
 	record Item(
-		Long productId,
-		String productName,
-		Long price,
-		Long quantity,
-		Long lineTotal
+			Long productId,
+			String productName,
+			Long price,
+			Long quantity,
+			Long lineTotal
 	) {
 	}
 
-	// 상세조회용
+	// user 상세조회용
 	record Detail(
-		Long id,
-		String receiverName,
-		String receiverAddress,
-		String receiverMobile,
-		List<Item> items,
-		Long totalPrice,
-		OrderStatus status,
-		LocalDateTime createdAt
+			Long id,
+			String receiverName,
+			String receiverAddress,
+			String receiverMobile,
+			List<Item> items,
+			Long totalPrice,
+			OrderStatus status,
+			LocalDateTime createdAt
 	) {
 	}
 
-	// 목록용
+	// user 목록용
 	record Summary(
-		Long orderId,
-		Long totalPrice,
-		LocalDateTime createdAt,
-		OrderStatus status,
-		String firstProductName,
-		int productCount
+			Long orderId,
+			Long totalPrice,
+			LocalDateTime createdAt,
+			OrderStatus status,
+			String firstProductName,
+			int productCount
+	) {
+	}
+
+	// admin 상세 조회용
+	record AdminDetail(
+			Long id,
+			String receiverName,
+			String receiverAddress,
+			String receiverMobile,
+			List<Item> items,
+			Long totalPrice,
+			OrderStatus status,
+			LocalDateTime createdAt,
+			Long userId,
+			String username
+	) {
+	}
+
+	// admin 목록용
+	record AdminSummary(
+			Long orderId,
+			Long totalPrice,
+			LocalDateTime createdAt,
+			OrderStatus status,
+			String firstProductName,
+			int productCount,
+			Long userId,
+			String username
 	) {
 	}
 }
