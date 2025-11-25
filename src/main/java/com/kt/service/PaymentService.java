@@ -37,12 +37,12 @@ public class PaymentService {
 
 		// 결제(Payment) 엔티티 생성하고 저장하기
 		Payment newPayment = new Payment(
-				order,
-				paymentType,
-				originalPrice,
-				discountPrice,
-				deliveryFee,
-				finalPrice
+			order,
+			paymentType,
+			originalPrice,
+			discountPrice,
+			deliveryFee,
+			finalPrice
 		);
 		paymentRepository.save(newPayment);
 
