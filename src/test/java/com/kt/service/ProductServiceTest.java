@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductStatus;
+import com.kt.dto.product.ProductRequest;
 import com.kt.repository.product.ProductRepository;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -41,11 +42,12 @@ public class ProductServiceTest {
 		String name = "test";
 		Long price = 10L;
 		Long stock = 5L;
+		ProductRequest.Create request = new ProductRequest.Create(name, price, stock);
 
 		ArgumentCaptor<Product> argumentCaptor = ArgumentCaptor.forClass(Product.class);
 
 		// when
-		productService.create(name, price, stock);
+		productService.create(request);
 
 		// then
 		Mockito.verify(productRepository, Mockito.times(1)).save(argumentCaptor.capture());
@@ -65,15 +67,13 @@ public class ProductServiceTest {
 		Pageable pageable = PageRequest.of(0, 10);
 
 		// When
-		productService.searchPublic(keyword, pageable);
+		productService.searchPublicStatus(keyword, pageable);
 
 		// Then
-		// 💡 Repository의 메서드가 "정확히" 빈 문자열("")을 인자로 받았는지 검증
 		Mockito.verify(productRepository).findAllByKeywordAndStatuses(
 				eq(""),
 				eq(publicStatuses),
 				eq(pageable)
 		);
 	}
-
 }

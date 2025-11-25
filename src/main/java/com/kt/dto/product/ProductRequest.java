@@ -1,5 +1,7 @@
 package com.kt.dto.product;
 
+import com.kt.domain.product.Product;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +23,10 @@ public class ProductRequest {
 		private Long price;
 		@NotNull
 		private Long quantity;
+
+		public Product toEntity() {
+			return new Product(name, price, quantity);
+		}
 	}
 
 	@Getter

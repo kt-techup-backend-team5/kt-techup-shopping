@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
+import com.kt.common.exception.CustomException;
+
 class ProductTest {
 	// 객체 생성이 잘됨?
 	// 제목을 작성하는 2가지 방법
@@ -15,9 +17,9 @@ class ProductTest {
 	@Test
 	void 객체_생성_성공() {
 		var product = new Product(
-			"테스트 상품명",
-			100_000L,
-			10L
+				"테스트 상품명",
+				100_000L,
+				10L
 		);
 
 		// 객체가 잘 생성되었나
@@ -33,28 +35,49 @@ class ProductTest {
 	@ParameterizedTest
 	@NullAndEmptySource
 	void 상품_생성_실패__상품명_null_이거나_공백(String name) {
-		assertThrowsExactly(IllegalArgumentException.class, () -> new Product(
-			name,
-			100_000L,
-			10L
+		assertThrowsExactly(CustomException.class, () -> new Product(
+				name,
+				100_000L,
+				10L
 		));
 	}
 
 	@Test
 	void 상품_생성_실패__가격이_음수() {
-		assertThrowsExactly(IllegalArgumentException.class, () -> new Product(
-			"테스트 상품명",
-			-1L,
-			10L
+		assertThrowsExactly(CustomException.class, () -> new Product(
+				"테스트 상품명",
+				-1L,
+				10L
 		));
 	}
 
 	@Test
 	void 상품_생성_실패__가격이_null() {
-		assertThrowsExactly(IllegalArgumentException.class, () -> new Product(
-			"테스트 상품명",
-			null,
-			10L
+		assertThrowsExactly(CustomException.class, () -> new Product(
+				"테스트 상품명",
+				null,
+				10L
 		));
+	}
+
+	@Test
+	void 상품_수정_성공() {
+		// given
+		var product = new Product(
+				"테스트 상품명",
+				100_000L,
+				10L
+		);
+		String updatedName = "이름";
+
+		// when
+		product.update(
+				updatedName,
+				product.getPrice(),
+				product.getStock()
+		);
+
+		// then
+		assertThat(product.getName()).isEqualTo(updatedName);
 	}
 }
