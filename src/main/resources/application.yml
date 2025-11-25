@@ -30,3 +30,7 @@ jwt:
   secret: ${kt.jwt.secret:kt-cloud-tech-up-shopping-202511171107}
   access-token-expiration: ${kt.jwt.access-token-expiration:300000} #5분
   refresh-token-expiration: ${kt.jwt.refresh-token-expiration:43200000} #12시간
+
+slack:
+  bot-token: ${SLACK_API_TOKEN}
+  log-channel: ${SLACK_LOG_CHANNEL}

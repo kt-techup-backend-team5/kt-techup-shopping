@@ -16,11 +16,11 @@ public class ProductService {
 
 	public void create(String name, Long price, Long quantity) {
 		productRepository.save(
-			new Product(
-				name,
-				price,
-				quantity
-			)
+				new Product(
+						name,
+						price,
+						quantity
+				)
 		);
 	}
 

@@ -1,4 +1,4 @@
-package com.kt.common;
+package com.kt.common.support;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

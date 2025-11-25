@@ -7,15 +7,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kt.common.ApiResult;
-import com.kt.common.Paging;
-import com.kt.common.SwaggerAssistance;
+import com.kt.common.response.ApiResult;
+import com.kt.common.request.Paging;
+import com.kt.common.support.SwaggerAssistance;
 import com.kt.dto.order.OrderRequest;
 import com.kt.dto.order.OrderResponse;
 import com.kt.security.DefaultCurrentUser;
 import com.kt.service.OrderService;
 import com.kt.service.UserOrderService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,7 +24,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
