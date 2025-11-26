@@ -62,6 +62,14 @@ public class Order extends BaseEntity {
 		this.orderProducts.add(orderProduct);
 	}
 
+    public void changeReceiver(String name, String address, String mobile) {
+        this.receiver = new Receiver(name, address, mobile);
+    }
+
+    public boolean canUpdate() {
+        return this.status == OrderStatus.PENDING || this.status == OrderStatus.COMPLETED;
+    }
+
 	public void cancel() {
 		Preconditions.validate(this.status == OrderStatus.PENDING, ErrorCode.CANNOT_CANCEL_ORDER);
 		this.status = OrderStatus.CANCELLED;

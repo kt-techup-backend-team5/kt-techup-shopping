@@ -56,13 +56,13 @@ public class OrderController extends SwaggerAssistance {
 
 	@Operation(
 		summary = "사용자 주문 상세 조회",
-		description = "로그인한 사용자가 자신의 주문 단건 상세를 조회합니다. 소유권 검증이 적용됩니다."
+		description = "로그인한 사용자가 자신의 주문 단건 상세를 조회합니다."
 	)
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "조회 성공",
 			content = @Content(schema = @Schema(implementation = com.kt.dto.order.OrderResponse.Detail.class))),
-		@ApiResponse(responseCode = "404", description = "주문 미존재 또는 소유권 불일치"),
-		@ApiResponse(responseCode = "401", description = "인증 실패")
+		@ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "404", description = "주문 미존재 또는 소유권 불일치"),
 	})
 	@GetMapping("/{orderId}")
 	public ApiResult<OrderResponse.Detail> getById(
@@ -96,6 +96,26 @@ public class OrderController extends SwaggerAssistance {
 		return ApiResult.ok(page);
 	}
 
+    @Operation(
+            summary = "주문 수정",
+            description = "수령인 정보를 수정합니다. 주문 상태가 수정 가능해야 합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "현재 주문 상태에서는 수정할 수 없음")
+    })
+    @PutMapping("/{orderId}")
+    public ApiResult<Void> updateOrder(
+        @AuthenticationPrincipal DefaultCurrentUser currentUser,
+        @PathVariable Long orderId,
+        @RequestBody @Valid OrderRequest.Update request
+    ) {
+        userOrderService.updateOrder(currentUser.getId(), orderId, request);
+        return ApiResult.ok();
+    }
+
 	@Operation(
 		summary = "주문 취소",
 		description = "특정 주문을 취소합니다. 관리자 또는 주문자 본인만 취소 가능합니다."
@@ -109,7 +129,6 @@ public class OrderController extends SwaggerAssistance {
 	@PostMapping("/{orderId}/cancel")
 	public ApiResult<Void> cancelOrder(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
-		@Parameter(description = "취소할 주문 ID", example = "1")
 		@PathVariable Long orderId
 	) {
 		orderService.cancelOrder(orderId, currentUser);
