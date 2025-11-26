@@ -5,12 +5,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kt.common.response.ApiResult;
+import com.kt.common.support.SwaggerAssistance;
 import com.kt.dto.order.OrderResponse;
 import com.kt.dto.order.OrderSearchCondition;
+import com.kt.dto.order.OrderStatusUpdateRequest;
 import com.kt.service.OrderService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/admin/orders")
 @RequiredArgsConstructor
-public class AdminOrderController {
+public class AdminOrderController extends SwaggerAssistance {
 	private final OrderService orderService;
 
 	@Operation(
@@ -73,5 +77,24 @@ public class AdminOrderController {
 		@PathVariable Long orderId
 	) {
 		return ApiResult.ok(orderService.getAdminOrderDetail(orderId));
+	}
+
+	@Operation(
+		summary = "관리자 주문 상태 변경",
+		description = "관리자가 주문 ID로 특정 주문의 상태를 변경합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "상태 변경 성공"),
+		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
+	})
+	@PostMapping("/{orderId}/change-status")
+	@SecurityRequirement(name = "Bearer Authentication")
+	public ApiResult<Void> changeStatus(
+		@Parameter(description = "상태를 변경할 주문 ID", required = true)
+		@PathVariable Long orderId,
+		@RequestBody OrderStatusUpdateRequest request
+	) {
+		orderService.changeOrderStatus(orderId, request);
+		return ApiResult.ok();
 	}
 }
