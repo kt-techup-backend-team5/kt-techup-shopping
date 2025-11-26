@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
 public class ProductController extends SwaggerAssistance {
 	private final ProductService productService;
 	private final RedisService redisService;
@@ -40,7 +41,6 @@ public class ProductController extends SwaggerAssistance {
 					@Parameter(name = "size", description = "페이지 크기", example = "10")
 			})
 	@GetMapping
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Page<ProductResponse.Summary>> search(
 			@RequestParam(required = false) String keyword,
 			@Parameter(hidden = true) Paging paging
@@ -53,7 +53,6 @@ public class ProductController extends SwaggerAssistance {
 
 	@Operation(summary = "상품 상세 조회", description = "상품의 상세 정보를 조회합니다.")
 	@GetMapping("/{id}")
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<ProductResponse.Detail> detail(@AuthenticationPrincipal CurrentUser currentUser,
 			@PathVariable("id") Long productId) {
 		applicationEventPublisher.publishEvent(new ProductViewEvent(productId, currentUser.getId()));
