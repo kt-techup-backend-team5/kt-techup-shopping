@@ -3,7 +3,6 @@ package com.kt.controller.product;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -91,7 +90,7 @@ public class AdminProductController extends SwaggerAssistance {
 	}
 
 	@Operation(summary = "상품 비활성화")
-	@PatchMapping("/{id}/in-activate")
+	@PostMapping("/{id}/in-activate")
 	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> inActivate(@PathVariable Long id) {
 		productService.inActivate(id);
@@ -100,12 +99,11 @@ public class AdminProductController extends SwaggerAssistance {
 	}
 
 	@Operation(summary = "상품 활성화")
-	@PatchMapping("/{id}/activate")
+	@PostMapping("/{id}/activate")
 	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> activate(@PathVariable Long id) {
 		productService.activate(id);
 
 		return ApiResult.ok();
 	}
-
 }
