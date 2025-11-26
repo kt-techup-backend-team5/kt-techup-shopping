@@ -30,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/admin/products")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
 public class AdminProductController extends SwaggerAssistance {
 	private final ProductService productService;
 	private final RedisService redisService;
@@ -41,7 +42,6 @@ public class AdminProductController extends SwaggerAssistance {
 					@Parameter(name = "size", description = "페이지 크기", example = "10")
 			})
 	@GetMapping
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Page<ProductResponse.AdminSummary>> search(
 			@RequestParam(required = false) String keyword,
 			@Parameter(hidden = true) Paging paging
@@ -54,7 +54,6 @@ public class AdminProductController extends SwaggerAssistance {
 
 	@Operation(summary = "상품 상세 조회", description = "상품의 상세 정보를 조회합니다.")
 	@GetMapping("/{id}")
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<ProductResponse.AdminDetail> detail(@PathVariable Long id) {
 		var product = productService.detail(id);
 		var viewCount = redisService.getViewCount(id);
@@ -64,7 +63,6 @@ public class AdminProductController extends SwaggerAssistance {
 
 	@Operation(summary = "상품 추가")
 	@PostMapping
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> create(@RequestBody @Valid ProductRequest.Create request) {
 		productService.create(request);
 
@@ -73,7 +71,6 @@ public class AdminProductController extends SwaggerAssistance {
 
 	@Operation(summary = "상품 수정")
 	@PutMapping("/{id}")
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> update(@PathVariable Long id, @RequestBody @Valid ProductRequest.Update request) {
 		productService.update(id, request);
 
@@ -82,7 +79,6 @@ public class AdminProductController extends SwaggerAssistance {
 
 	@Operation(summary = "상품 삭제", description = "삭제된 상품은 DB에 DELETED 상태로 남아있지만 조회되지 않습니다.")
 	@DeleteMapping("/{id}")
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> delete(@PathVariable Long id) {
 		productService.delete(id);
 
@@ -91,7 +87,6 @@ public class AdminProductController extends SwaggerAssistance {
 
 	@Operation(summary = "상품 비활성화")
 	@PostMapping("/{id}/in-activate")
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> inActivate(@PathVariable Long id) {
 		productService.inActivate(id);
 
@@ -100,9 +95,16 @@ public class AdminProductController extends SwaggerAssistance {
 
 	@Operation(summary = "상품 활성화")
 	@PostMapping("/{id}/activate")
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> activate(@PathVariable Long id) {
 		productService.activate(id);
+
+		return ApiResult.ok();
+	}
+
+	@Operation(summary = "상품 품절")
+	@PostMapping("/{id}/sold-out")
+	public ApiResult<Void> soldOut(@PathVariable Long id) {
+		productService.soldOut(id);
 
 		return ApiResult.ok();
 	}
