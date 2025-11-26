@@ -16,6 +16,7 @@ import com.kt.domain.orderproduct.OrderProduct;
 import com.kt.domain.user.Role;
 import com.kt.dto.order.OrderResponse;
 import com.kt.dto.order.OrderSearchCondition;
+import com.kt.dto.order.OrderStatusUpdateRequest;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.orderproduct.OrderProductRepository;
 import com.kt.repository.product.ProductRepository;
@@ -107,14 +108,14 @@ public class OrderService {
 			}
 
 			return new OrderResponse.AdminSummary(
-				order.getId(),
-				order.getTotalPrice(),
-				order.getCreatedAt(),
-				order.getStatus(),
-				firstProductName,
-				productCount,
-				order.getUser().getId(),
-				order.getUser().getName()
+					order.getId(),
+					order.getTotalPrice(),
+					order.getCreatedAt(),
+					order.getStatus(),
+					firstProductName,
+					productCount,
+					order.getUser().getId(),
+					order.getUser().getName()
 			);
 		});
 	}
@@ -124,26 +125,31 @@ public class OrderService {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
 
 		List<OrderResponse.Item> items = order.getOrderProducts().stream()
-			.map(op -> new OrderResponse.Item(
-				op.getProduct().getId(),
-				op.getProduct().getName(),
-				op.getProduct().getPrice(),
-				op.getQuantity(),
-				op.getProduct().getPrice() * op.getQuantity()
-			))
-			.toList();
+				.map(op -> new OrderResponse.Item(
+						op.getProduct().getId(),
+						op.getProduct().getName(),
+						op.getProduct().getPrice(),
+						op.getQuantity(),
+						op.getProduct().getPrice() * op.getQuantity()
+				))
+				.toList();
 
 		return new OrderResponse.AdminDetail(
-			order.getId(),
-			order.getReceiver().getName(),
-			order.getReceiver().getAddress(),
-			order.getReceiver().getMobile(),
-			items,
-			order.getTotalPrice(),
-			order.getStatus(),
-			order.getCreatedAt(),
-			order.getUser().getId(),
-			order.getUser().getName()
+				order.getId(),
+				order.getReceiver().getName(),
+				order.getReceiver().getAddress(),
+				order.getReceiver().getMobile(),
+				items,
+				order.getTotalPrice(),
+				order.getStatus(),
+				order.getCreatedAt(),
+				order.getUser().getId(),
+				order.getUser().getName()
 		);
+	}
+
+	public void changeOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
+		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		order.changeStatus(request.status());
 	}
 }
