@@ -18,6 +18,7 @@ import com.kt.common.support.SwaggerAssistance;
 import com.kt.dto.product.ProductRequest;
 import com.kt.dto.product.ProductResponse;
 import com.kt.service.ProductService;
+import com.kt.service.RedisService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminProductController extends SwaggerAssistance {
 	private final ProductService productService;
+	private final RedisService redisService;
 
 	@Operation(summary = "상품 검색 및 조회", description = "전체 상품 목록을 검색 및 조회합니다. 키워드를 입력하지 않으면 전체 상품이 조회됩니다.",
 			parameters = {
@@ -56,8 +58,9 @@ public class AdminProductController extends SwaggerAssistance {
 	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<ProductResponse.AdminDetail> detail(@PathVariable Long id) {
 		var product = productService.detail(id);
+		var viewCount = redisService.getViewCount(id);
 
-		return ApiResult.ok(ProductResponse.AdminDetail.of(product));
+		return ApiResult.ok(ProductResponse.AdminDetail.of(product, viewCount));
 	}
 
 	@Operation(summary = "상품 추가")
