@@ -36,9 +36,9 @@ public class UserService {
 	// 환경설정을 살짝 바꿔서 일관된 서비스를 제공하는 것
 	public void create(UserRequest.Create request) {
 		// 아이디 중복 체크
-		if (isDuplicateLoginId(request.loginId())) {
-			throw new CustomException(ErrorCode.ALREADY_EXISTS_USER_ID);
-		}
+		Preconditions.validate(!isDuplicateLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
+		// 이메일 중복 체크 (나중에 이메일 인증까지 구현)
+		Preconditions.validate(!isDuplicateEmail(request.email()), ErrorCode.ALREADY_EXISTS_EMAIL);
 
 		var newUser = User.normalUser(
 			request.loginId(),
@@ -60,7 +60,7 @@ public class UserService {
 	}
 
 	public boolean isDuplicateEmail(String email) {
-		return userRepository.existsByLoginId(email);
+		return userRepository.existsByEmail(email);
 	}
 
 	public String findLoginId(String name, String email) {
