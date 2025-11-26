@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class OrderController extends SwaggerAssistance {
 
 	// 주문 생성
 	@PostMapping
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> create(
 		@AuthenticationPrincipal DefaultCurrentUser defaultCurrentUser,
 		@RequestBody @Valid OrderRequest.Create request) {
@@ -56,15 +58,16 @@ public class OrderController extends SwaggerAssistance {
 
 	@Operation(
 		summary = "사용자 주문 상세 조회",
-		description = "로그인한 사용자가 자신의 주문 단건 상세를 조회합니다. 소유권 검증이 적용됩니다."
+		description = "로그인한 사용자가 자신의 주문 단건 상세를 조회합니다."
 	)
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "조회 성공",
 			content = @Content(schema = @Schema(implementation = com.kt.dto.order.OrderResponse.Detail.class))),
-		@ApiResponse(responseCode = "404", description = "주문 미존재 또는 소유권 불일치"),
-		@ApiResponse(responseCode = "401", description = "인증 실패")
+		@ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "404", description = "주문 미존재 또는 소유권 불일치"),
 	})
 	@GetMapping("/{orderId}")
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<OrderResponse.Detail> getById(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
 		@PathVariable Long orderId
@@ -82,6 +85,7 @@ public class OrderController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "401", description = "인증 실패")
 	})
 	@GetMapping
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Page<OrderResponse.Summary>> list(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
 		@Parameter(description = "페이징 정보(page는 1부터 시작, size는 페이지 크기)", required = true)
@@ -96,9 +100,41 @@ public class OrderController extends SwaggerAssistance {
 		return ApiResult.ok(page);
 	}
 
+    @Operation(
+            summary = "주문 수정",
+            description = "수령인 정보를 수정합니다. 주문 상태가 수정 가능해야 합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패"),
+            @ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
+            @ApiResponse(responseCode = "409", description = "현재 주문 상태에서는 수정할 수 없음")
+    })
+    @PutMapping("/{orderId}")
+    public ApiResult<Void> updateOrder(
+        @AuthenticationPrincipal DefaultCurrentUser currentUser,
+        @PathVariable Long orderId,
+        @RequestBody @Valid OrderRequest.Update request
+    ) {
+        userOrderService.updateOrder(currentUser.getId(), orderId, request);
+        return ApiResult.ok();
+    }
+
+	@Operation(
+		summary = "주문 취소",
+		description = "특정 주문을 취소합니다. 관리자 또는 주문자 본인만 취소 가능합니다."
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "주문 취소 성공", content = @Content(schema = @Schema(implementation = ApiResult.class))),
+		@ApiResponse(responseCode = "401", description = "인증 실패"),
+		@ApiResponse(responseCode = "403", description = "취소 권한 없음"),
+		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
+	})
 	@PostMapping("/{orderId}/cancel")
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> cancelOrder(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
+        @Parameter(description = "취소할 주문 ID", example = "1")
 		@PathVariable Long orderId
 	) {
 		orderService.cancelOrder(orderId, currentUser);
