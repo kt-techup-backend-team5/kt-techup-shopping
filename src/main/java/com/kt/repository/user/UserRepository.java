@@ -26,7 +26,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	Boolean existsByLoginId(String loginId);
 
+	Boolean existsByEmail(String email);
+
 	Optional<User> findByLoginId(String loginId);
+
+	Optional<User> findByNameAndEmail(String name, String email);
+
+	default User findByNameAndEmailOrThrow(String name, String email, ErrorCode errorCode) {
+		return findByNameAndEmail(name, email)
+				.orElseThrow(() -> new CustomException(errorCode));
+	}
 
 	@Query("""
 			SELECT exists (SELECT u FROM User u WHERE u.loginId = ?1)

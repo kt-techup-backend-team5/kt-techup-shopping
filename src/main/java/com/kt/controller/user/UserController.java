@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
+import com.kt.dto.auth.UserFindLoginIdRequest;
 import com.kt.dto.user.UserRequest;
 import com.kt.dto.user.UserUpdatePasswordRequest;
 import com.kt.security.CurrentUser;
@@ -36,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class UserController extends SwaggerAssistance {
 	private final UserService userService;
 
+	// 회원가입
 	@Operation(
 		summary = "회원 가입",
 		description = "새로운 사용자를 생성합니다."
@@ -51,6 +53,7 @@ public class UserController extends SwaggerAssistance {
 		return ApiResult.ok();
 	}
 
+	// 로그인 아이디 중복조회
 	@Operation(
 		summary = "로그인 ID 중복 확인",
 		description = "제공된 로그인 ID의 중복 여부를 확인합니다."
@@ -70,6 +73,15 @@ public class UserController extends SwaggerAssistance {
 		return ApiResult.ok(result);
 	}
 
+	// 아이디 찾기
+	@PostMapping("/find-login-id")
+	@ResponseStatus(HttpStatus.OK)
+	public ApiResult<String> findLoginId(@RequestBody @Valid UserFindLoginIdRequest request) {
+		String loginId = userService.findLoginId(request.name(), request.email());
+		return ApiResult.ok(loginId);
+	}
+
+	// 비밀번호 변경
 	@Operation(
 		summary = "사용자 비밀번호 변경",
 		description = "인증된 사용자의 비밀번호를 변경합니다. (JWT 필요)"
@@ -92,6 +104,7 @@ public class UserController extends SwaggerAssistance {
 		return ApiResult.ok();
 	}
 
+	// 회원탈퇴
 	@Operation(
 		summary = "사용자 계정 삭제",
 		description = "특정 사용자 계정을 삭제합니다. (JWT 필요)"
