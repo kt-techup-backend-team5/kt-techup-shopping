@@ -1,9 +1,17 @@
 package com.kt.service;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.kt.domain.product.Product;
+import com.kt.domain.product.ProductStatus;
+import com.kt.dto.product.ProductRequest;
 import com.kt.repository.product.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -12,22 +20,51 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 @RequiredArgsConstructor
 public class ProductService {
+	private final static List<ProductStatus> PUBLIC_VIEWABLE_STATUS = List.of(
+			ProductStatus.ACTIVATED,
+			ProductStatus.SOLD_OUT);
+	private final static List<ProductStatus> NON_DELETED_STATUS = Arrays.stream(ProductStatus.values())
+			.filter(status -> !status.equals(ProductStatus.DELETED))
+			.toList();
+
 	private final ProductRepository productRepository;
 
-	public void create(String name, Long price, Long quantity) {
-		productRepository.save(
-				new Product(
-						name,
-						price,
-						quantity
-				)
+	public void create(ProductRequest.Create request) {
+		productRepository.save(request.toEntity());
+	}
+
+	public Page<Product> searchPublicStatus(String keyword, Pageable pageable) {
+		String searchKeyword = StringUtils.hasText(keyword) ? keyword : "";
+
+		return productRepository.findAllByKeywordAndStatuses(
+				searchKeyword,
+				PUBLIC_VIEWABLE_STATUS,
+				pageable
 		);
 	}
 
-	public void update(Long id, String name, Long price, Long quantity) {
+	public Page<Product> searchNonDeletedStatus(String keyword, Pageable pageable) {
+		String searchKeyword = StringUtils.hasText(keyword) ? keyword : "";
+
+		return productRepository.findAllByKeywordAndStatuses(
+				searchKeyword,
+				NON_DELETED_STATUS,
+				pageable
+		);
+	}
+
+	public Product detail(Long id) {
+		return productRepository.findByIdOrThrow(id);
+	}
+
+	public void update(Long id, ProductRequest.Update request) {
 		var product = productRepository.findByIdOrThrow(id);
 
-		product.update(name, price, quantity);
+		product.update(
+				request.getName(),
+				request.getPrice(),
+				request.getQuantity()
+		);
 	}
 
 	public void soldOut(Long id) {

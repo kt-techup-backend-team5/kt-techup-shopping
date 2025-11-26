@@ -13,7 +13,7 @@ import com.kt.domain.order.Order;
 
 import jakarta.validation.constraints.NotNull;
 
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends JpaRepository<Order, Long>, OrderRepositoryCustom {
 	// 주문 목록 조회 (페이징)
 	@NotNull
 	@EntityGraph(attributePaths = {"orderProducts", "orderProducts.product"})
@@ -22,6 +22,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 	// 주문 상세 조회
 	@EntityGraph(attributePaths = {"orderProducts", "orderProducts.product", "user"})
 	Optional<Order> findByIdAndUserId(Long id, Long userId);
+
+    default Order findByIdAndUserIdOrThrow(Long id, Long userId, ErrorCode errorCode) {
+        return findByIdAndUserId(id, userId)
+            .orElseThrow(() -> new CustomException(errorCode));
+    }
 
 	default Order findByOrderIdOrThrow(Long id, ErrorCode errorCode) {
 		return findById(id)

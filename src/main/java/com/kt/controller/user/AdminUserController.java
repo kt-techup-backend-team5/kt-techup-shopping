@@ -22,6 +22,7 @@ import com.kt.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ public class AdminUserController extends SwaggerAssistance {
 	)
 	@GetMapping
 	@ResponseStatus(HttpStatus.OK)
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Page<UserResponse.Search>> search(
 		@AuthenticationPrincipal CurrentUser currentUser,
 		@RequestParam(required = false) String keyword,
@@ -67,6 +69,7 @@ public class AdminUserController extends SwaggerAssistance {
 
 	@GetMapping("/{id}")
 	@ResponseStatus(HttpStatus.OK)
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<UserResponse.Detail> detail(@PathVariable Long id) {
 		var user = userService.detail(id);
 
@@ -80,6 +83,7 @@ public class AdminUserController extends SwaggerAssistance {
 	// 유저 정보 수정
 	@PutMapping("/{id}")
 	@ResponseStatus(HttpStatus.OK)
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> update(@PathVariable Long id, @RequestBody @Valid UserUpdateRequest request) {
 		userService.update(id, request.name(), request.email(), request.mobile());
 

@@ -62,6 +62,14 @@ public class Order extends BaseEntity {
 		this.orderProducts.add(orderProduct);
 	}
 
+    public void changeReceiver(String name, String address, String mobile) {
+        this.receiver = new Receiver(name, address, mobile);
+    }
+
+    public boolean canUpdate() {
+        return this.status == OrderStatus.PENDING || this.status == OrderStatus.COMPLETED;
+    }
+
 	public void cancel() {
 		Preconditions.validate(this.status == OrderStatus.PENDING, ErrorCode.CANNOT_CANCEL_ORDER);
 		this.status = OrderStatus.CANCELLED;
@@ -75,6 +83,10 @@ public class Order extends BaseEntity {
 
 	public void setPaid() {
 		this.status = OrderStatus.COMPLETED;
+	}
+
+	public void changeStatus(OrderStatus orderStatus){
+		this.status = orderStatus;
 	}
 
 	//하나의 오더는 여러개의 상품을 가질수있음
