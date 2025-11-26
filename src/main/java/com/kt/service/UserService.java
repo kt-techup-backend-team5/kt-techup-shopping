@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
 import com.kt.domain.user.User;
@@ -34,6 +35,11 @@ public class UserService {
 	// PSA - Portable Service Abstraction
 	// 환경설정을 살짝 바꿔서 일관된 서비스를 제공하는 것
 	public void create(UserRequest.Create request) {
+		// 아이디 중복 체크
+		if (isDuplicateLoginId(request.loginId())) {
+			throw new CustomException(ErrorCode.ALREADY_EXISTS_USER_ID);
+		}
+
 		var newUser = User.normalUser(
 			request.loginId(),
 			passwordEncoder.encode(request.password()),
@@ -51,6 +57,15 @@ public class UserService {
 
 	public boolean isDuplicateLoginId(String loginId) {
 		return userRepository.existsByLoginId(loginId);
+	}
+
+	public boolean isDuplicateEmail(String email) {
+		return userRepository.existsByLoginId(email);
+	}
+
+	public String findLoginId(String name, String email) {
+		var user = userRepository.findByNameAndEmailOrThrow(name, email, ErrorCode.NOT_FOUND_USER);
+		return user.getLoginId();
 	}
 
 	public void changePassword(Long id, String oldPassword, String password) {
