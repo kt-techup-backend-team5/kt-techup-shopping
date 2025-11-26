@@ -24,6 +24,8 @@ import com.kt.security.CurrentUser;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -115,5 +117,33 @@ public class OrderService {
 				order.getUser().getName()
 			);
 		});
+	}
+
+	@Transactional(readOnly = true)
+	public OrderResponse.AdminDetail getAdminOrderDetail(Long orderId) {
+		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+
+		List<OrderResponse.Item> items = order.getOrderProducts().stream()
+			.map(op -> new OrderResponse.Item(
+				op.getProduct().getId(),
+				op.getProduct().getName(),
+				op.getProduct().getPrice(),
+				op.getQuantity(),
+				op.getProduct().getPrice() * op.getQuantity()
+			))
+			.toList();
+
+		return new OrderResponse.AdminDetail(
+			order.getId(),
+			order.getReceiver().getName(),
+			order.getReceiver().getAddress(),
+			order.getReceiver().getMobile(),
+			items,
+			order.getTotalPrice(),
+			order.getStatus(),
+			order.getCreatedAt(),
+			order.getUser().getId(),
+			order.getUser().getName()
+		);
 	}
 }

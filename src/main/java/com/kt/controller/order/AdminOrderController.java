@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.kt.domain.order.OrderStatus;
 
@@ -53,5 +55,23 @@ public class AdminOrderController {
 		Pageable pageable
 	) {
 		return ApiResult.ok(orderService.getAdminOrders(condition, pageable));
+	}
+
+	@Operation(
+		summary = "관리자 주문 상세 조회",
+		description = "관리자가 주문 ID로 특정 주문의 상세 정보를 조회합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "조회 성공",
+			content = @Content(schema = @Schema(implementation = com.kt.dto.order.OrderResponse.AdminDetail.class))),
+		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
+	})
+	@GetMapping("/{orderId}")
+	@SecurityRequirement(name = "Bearer Authentication")
+	public ApiResult<OrderResponse.AdminDetail> getDetail(
+		@Parameter(description = "조회할 주문 ID", required = true)
+		@PathVariable Long orderId
+	) {
+		return ApiResult.ok(orderService.getAdminOrderDetail(orderId));
 	}
 }

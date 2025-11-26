@@ -50,5 +50,6 @@ out/
 .DS_Store
 
 # Local configurations
-/src/main/resources/application-local.yml
+src/main/resources/application-loacal.yml
+resources/application-loacal.yml
 application-local.yml

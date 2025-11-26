@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +39,7 @@ public class PaymentController {
 		@ApiResponse(responseCode = "500", description = "서버 에러 - 백엔드에 바로 문의 바랍니다.")
 	})
 	@PostMapping("/{orderId}/pay")
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> pay(
 		@Parameter(description = "결제할 주문 ID", example = "1")
 		@PathVariable Long orderId,
