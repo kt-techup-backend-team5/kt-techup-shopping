@@ -30,6 +30,6 @@ public class InternalEventListener {
 	@Async
 	@EventListener(ProductViewEvent.class)
 	public void onProductViewEvent(ProductViewEvent event) {
-		redisService.incrementViewCount(event.id());
+		redisService.incrementViewCount(event.productId(), event.userId());
 	}
 }

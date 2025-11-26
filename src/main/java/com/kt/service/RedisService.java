@@ -1,5 +1,8 @@
 package com.kt.service;
 
+import java.time.Duration;
+
+import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
@@ -9,18 +12,34 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RedisService {
 	private final static String VIEW_COUNT_PREFIX = "product:viewcount:";
+	private final static String USER_CHECK_PREFIX = "viewcheck:";
+	private final static int DUP_CHK_SECONDS = 120;
 
 	private final RedissonClient redissonClient;
 
-	public void incrementViewCount(Long id) {
-		String key = VIEW_COUNT_PREFIX + id;
+	public void incrementViewCount(Long productId, Long userId) {
+		if (isDupView(productId, userId)) {
+			return;
+		}
+
+		String key = VIEW_COUNT_PREFIX + productId;
 
 		redissonClient.getAtomicLong(key).incrementAndGet();
 	}
 
-	public Long getViewCount(Long id) {
-		String key = VIEW_COUNT_PREFIX + id;
+	public Long getViewCount(Long productId) {
+		String key = VIEW_COUNT_PREFIX + productId;
 
 		return redissonClient.getAtomicLong(key).get();
+	}
+
+	private boolean isDupView(Long productId, Long userId) {
+		String key = USER_CHECK_PREFIX + productId + ":" + userId;
+
+		RBucket<String> bucket = redissonClient.getBucket(key);
+
+		boolean isKeySet = bucket.setIfAbsent("check", Duration.ofSeconds(DUP_CHK_SECONDS));
+
+		return !isKeySet;
 	}
 }
