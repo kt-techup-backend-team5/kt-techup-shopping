@@ -93,7 +93,11 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 		List<Order> content = jpaQueryFactory
 				.selectFrom(order)
 				.join(order.user, user).fetchJoin()
-				.where(eqUsername(condition.username()), eqStatus(condition.status()))
+				.where(
+						eqUsername(condition.username()),
+						eqReceiverName(condition.receiverName()),
+						eqStatus(condition.status())
+				)
 				.offset(pageable.getOffset())
 				.limit(pageable.getPageSize())
 				.orderBy(order.id.desc())
@@ -102,7 +106,11 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 		JPAQuery<Long> countQuery = jpaQueryFactory
 				.select(order.count())
 				.from(order)
-				.where(eqUsername(condition.username()), eqStatus(condition.status()));
+				.where(
+						eqUsername(condition.username()),
+						eqReceiverName(condition.receiverName()),
+						eqStatus(condition.status())
+				);
 		
 		return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
 	}
@@ -125,6 +133,10 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 
 	private BooleanExpression eqUsername(String username) {
 		return Strings.isNotBlank(username) ? user.name.eq(username) : null;
+	}
+
+	private BooleanExpression eqReceiverName(String receiverName) {
+		return Strings.isNotBlank(receiverName) ? order.receiver.name.eq(receiverName) : null;
 	}
 
 	private BooleanExpression eqStatus(OrderStatus status) {

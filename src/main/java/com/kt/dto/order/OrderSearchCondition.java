@@ -7,6 +7,7 @@ import com.kt.domain.order.OrderStatus;
  */
 public record OrderSearchCondition(
 		String username,
+		String receiverName,
 		OrderStatus status
 ) {
 }

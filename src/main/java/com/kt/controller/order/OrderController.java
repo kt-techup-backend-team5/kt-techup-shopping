@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class OrderController extends SwaggerAssistance {
 
 	// 주문 생성
 	@PostMapping
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> create(
 		@AuthenticationPrincipal DefaultCurrentUser defaultCurrentUser,
 		@RequestBody @Valid OrderRequest.Create request) {
@@ -65,6 +67,7 @@ public class OrderController extends SwaggerAssistance {
         @ApiResponse(responseCode = "404", description = "주문 미존재 또는 소유권 불일치"),
 	})
 	@GetMapping("/{orderId}")
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<OrderResponse.Detail> getById(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
 		@PathVariable Long orderId
@@ -82,6 +85,7 @@ public class OrderController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "401", description = "인증 실패")
 	})
 	@GetMapping
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Page<OrderResponse.Summary>> list(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
 		@Parameter(description = "페이징 정보(page는 1부터 시작, size는 페이지 크기)", required = true)
@@ -127,6 +131,7 @@ public class OrderController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
 	})
 	@PostMapping("/{orderId}/cancel")
+	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> cancelOrder(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
         @Parameter(description = "취소할 주문 ID", example = "1")
