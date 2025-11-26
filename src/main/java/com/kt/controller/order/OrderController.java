@@ -129,6 +129,7 @@ public class OrderController extends SwaggerAssistance {
 	@PostMapping("/{orderId}/cancel")
 	public ApiResult<Void> cancelOrder(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
+        @Parameter(description = "취소할 주문 ID", example = "1")
 		@PathVariable Long orderId
 	) {
 		orderService.cancelOrder(orderId, currentUser);
