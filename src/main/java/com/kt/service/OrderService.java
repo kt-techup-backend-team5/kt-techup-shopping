@@ -1,5 +1,9 @@
 package com.kt.service;
 
+import com.kt.domain.order.OrderCancelDecision;
+import com.kt.domain.product.Product;
+import com.kt.dto.order.OrderCancelDecisionRequest;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +15,7 @@ import com.kt.common.support.Lock;
 import com.kt.common.support.Message;
 import com.kt.common.support.Preconditions;
 import com.kt.domain.order.Order;
+import com.kt.domain.order.OrderStatus;
 import com.kt.domain.order.Receiver;
 import com.kt.domain.orderproduct.OrderProduct;
 import com.kt.domain.user.Role;
@@ -79,20 +84,55 @@ public class OrderService {
 		);
 	}
 
-	public void cancelOrder(Long orderId, CurrentUser currentUser) {
+	public void requestCancelByUser(Long orderId, CurrentUser currentUser) {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
-
-		var requestingUser = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
-
+		// '주문'에 기록된 사용자 ID와 '현재 요청한' 사용자 ID를 바로 비교
 		Preconditions.validate(
-				requestingUser.getRole() == Role.ADMIN || order.getUser().getId().equals(currentUser.getId()),
-				ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
+				order.getUser()
+						.getId()
+						.equals(currentUser.getId()), ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
+		order.requestCancel();
+	}
 
-		order.cancel();
+	public void decideCancel(Long orderId, OrderCancelDecisionRequest request) {
+		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Preconditions.validate(order.isCancelRequestableByAdmin(), ErrorCode.INVALID_ORDER_STATUS);
 
-		for (OrderProduct orderProduct : order.getOrderProducts()) {
-			stockService.increaseStockWithLock(orderProduct.getProduct().getId(), orderProduct.getQuantity());
+		if (request.decision() == OrderCancelDecision.APPROVE) {
+			order.approveCancel(request.reason());
+			for (OrderProduct orderProduct : order.getOrderProducts()) {
+				stockService.increaseStockWithLock(orderProduct.getProduct().getId(), orderProduct.getQuantity());
+			}
+			// TODO: 결제 취소 및 환불 레코드 생성 로직 추가
+		} else {
+			order.rejectCancel(request.reason());
 		}
+	}
+
+	@Transactional(readOnly = true)
+	public Page<OrderResponse.AdminSummary> getOrdersWithCancelRequested(Pageable pageable) {
+		Page<Order> ordersPage = orderRepository.findAllByStatus(OrderStatus.CANCEL_REQUESTED, pageable);
+		return ordersPage
+				.map(order -> {
+					String firstProductName = order.getOrderProducts().stream()
+							.findFirst()
+							.map(OrderProduct::getProduct)
+							.map(Product::getName)
+							.orElse(null);
+
+					int productCount = order.getOrderProducts().size();
+
+					return new OrderResponse.AdminSummary(
+							order.getId(),
+							order.getTotalPrice(),
+							order.getCreatedAt(),
+							order.getStatus(),
+							firstProductName,
+							productCount,
+							order.getUser().getId(),
+							order.getUser().getName()
+					);
+				});
 	}
 
 	@Transactional(readOnly = true)
@@ -100,12 +140,11 @@ public class OrderService {
 		Page<Order> orders = orderRepository.findByConditions(condition, pageable);
 
 		return orders.map(order -> {
-			String firstProductName = null;
+			String firstProductName = order.getOrderProducts().stream()
+					.findFirst()
+					.map(orderProduct -> orderProduct.getProduct().getName())
+					.orElse(null);
 			int productCount = 0;
-			if (!order.getOrderProducts().isEmpty()) {
-				firstProductName = order.getOrderProducts().get(0).getProduct().getName();
-				productCount = order.getOrderProducts().size();
-			}
 
 			return new OrderResponse.AdminSummary(
 					order.getId(),
@@ -148,8 +187,8 @@ public class OrderService {
 		);
 	}
 
-	public void changeOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
-		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
-		order.changeStatus(request.status());
-	}
+	// public void changeOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
+	// 	Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+	// 	order.changeStatus(request.status());
+	// }
 }
