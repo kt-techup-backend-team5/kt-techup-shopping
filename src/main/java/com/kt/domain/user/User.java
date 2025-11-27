@@ -47,7 +47,6 @@ public class User extends BaseEntity {
 		this.mobile = mobile;
 		this.gender = gender;
 		this.birthday = birthday;
-		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 	}
 

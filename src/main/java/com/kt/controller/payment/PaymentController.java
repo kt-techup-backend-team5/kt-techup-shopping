@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
 public class PaymentController {
 	private final PaymentService paymentService;
 
@@ -39,7 +40,6 @@ public class PaymentController {
 		@ApiResponse(responseCode = "500", description = "서버 에러 - 백엔드에 바로 문의 바랍니다.")
 	})
 	@PostMapping("/{orderId}/pay")
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> pay(
 		@Parameter(description = "결제할 주문 ID", example = "1")
 		@PathVariable Long orderId,

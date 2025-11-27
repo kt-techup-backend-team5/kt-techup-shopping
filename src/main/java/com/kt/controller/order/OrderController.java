@@ -35,15 +35,24 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
 public class OrderController extends SwaggerAssistance {
 	private final OrderService orderService;
 	private final UserOrderService userOrderService;
 
-	// 주문 생성
+	@Operation(
+		summary = "주문 생성",
+		description = "새로운 주문을 생성합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "주문 생성 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 데이터 (예: 재고 부족, 유효하지 않은 상품 ID 등)"),
+		@ApiResponse(responseCode = "401", description = "인증 실패")
+	})
 	@PostMapping
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> create(
 		@AuthenticationPrincipal DefaultCurrentUser defaultCurrentUser,
+		@Parameter(description = "주문 생성 요청 정보", required = true)
 		@RequestBody @Valid OrderRequest.Create request) {
 		orderService.create(
 			defaultCurrentUser.getId(),
@@ -67,7 +76,6 @@ public class OrderController extends SwaggerAssistance {
         @ApiResponse(responseCode = "404", description = "주문 미존재 또는 소유권 불일치"),
 	})
 	@GetMapping("/{orderId}")
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<OrderResponse.Detail> getById(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
 		@PathVariable Long orderId
@@ -85,7 +93,6 @@ public class OrderController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "401", description = "인증 실패")
 	})
 	@GetMapping
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Page<OrderResponse.Summary>> list(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
 		@Parameter(description = "페이징 정보(page는 1부터 시작, size는 페이지 크기)", required = true)
@@ -131,7 +138,6 @@ public class OrderController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
 	})
 	@PostMapping("/{orderId}/cancel")
-	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> cancelOrder(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
         @Parameter(description = "취소할 주문 ID", example = "1")
