@@ -15,12 +15,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
-import com.kt.dto.auth.UserFindLoginIdRequest;
+import com.kt.dto.user.UserFindLoginIdRequest;
 import com.kt.dto.user.UserRequest;
 import com.kt.dto.user.UserUpdatePasswordRequest;
 import com.kt.security.CurrentUser;
 import com.kt.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -34,6 +37,14 @@ public class UserController extends SwaggerAssistance {
 	private final UserService userService;
 
 	// 회원가입
+	@Operation(
+			summary = "회원 가입",
+			description = "새로운 사용자를 생성합니다."
+	)
+	@ApiResponses({
+			@ApiResponse(responseCode = "201", description = "회원 가입 성공"),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청 데이터")
+	})
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public ApiResult<Void> create(@Valid @RequestBody UserRequest.Create request) {
@@ -42,6 +53,14 @@ public class UserController extends SwaggerAssistance {
 	}
 
 	// 로그인 아이디 중복조회
+	@Operation(
+			summary = "로그인 ID 중복 확인",
+			description = "제공된 로그인 ID의 중복 여부를 확인합니다."
+	)
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "확인 성공"),
+			@ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터")
+	})
 	@GetMapping("/duplicate-login-id")
 	@ResponseStatus(HttpStatus.OK)
 	@SecurityRequirement(name = "Bearer Authentication")
