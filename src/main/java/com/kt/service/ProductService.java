@@ -4,12 +4,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.kt.domain.product.Product;
+import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
 import com.kt.dto.product.ProductRequest;
 import com.kt.repository.product.ProductRepository;
@@ -33,24 +36,35 @@ public class ProductService {
 		productRepository.save(request.toEntity());
 	}
 
-	public Page<Product> searchPublicStatus(String keyword, Pageable pageable) {
+	public Page<Product> searchPublicStatus(String keyword, ProductSortType sortType, Pageable pageable) {
 		String searchKeyword = StringUtils.hasText(keyword) ? keyword : "";
+		Pageable sortedPageable = createSortedPageable(pageable, sortType);
 
 		return productRepository.findAllByKeywordAndStatuses(
 				searchKeyword,
 				PUBLIC_VIEWABLE_STATUS,
-				pageable
+				sortedPageable
 		);
 	}
 
-	public Page<Product> searchNonDeletedStatus(String keyword, Pageable pageable) {
+	public Page<Product> searchNonDeletedStatus(String keyword, ProductSortType sortType, Pageable pageable) {
 		String searchKeyword = StringUtils.hasText(keyword) ? keyword : "";
+		Pageable sortedPageable = createSortedPageable(pageable, sortType);
 
 		return productRepository.findAllByKeywordAndStatuses(
 				searchKeyword,
 				NON_DELETED_STATUS,
-				pageable
+				sortedPageable
 		);
+	}
+
+	private Pageable createSortedPageable(Pageable pageable, ProductSortType sortType) {
+		return (sortType != null) ?
+				PageRequest.of(
+						pageable.getPageNumber(),
+						pageable.getPageSize(),
+						Sort.by(sortType.getDirection(), sortType.getFieldName())
+				) : pageable;
 	}
 
 	public Product detail(Long id) {
