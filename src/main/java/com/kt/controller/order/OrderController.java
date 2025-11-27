@@ -128,22 +128,23 @@ public class OrderController extends SwaggerAssistance {
     }
 
 	@Operation(
-		summary = "주문 취소",
-		description = "특정 주문을 취소합니다. 관리자 또는 주문자 본인만 취소 가능합니다."
+		summary = "주문 취소 요청",
+		description = "사용자가 자신의 주문에 대해 취소를 요청합니다. 관리자의 승인이 필요합니다."
 	)
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "주문 취소 성공", content = @Content(schema = @Schema(implementation = ApiResult.class))),
+		@ApiResponse(responseCode = "200", description = "주문 취소 요청 성공"),
+		@ApiResponse(responseCode = "400", description = "취소 요청이 불가능한 주문 상태입니다."),
 		@ApiResponse(responseCode = "401", description = "인증 실패"),
-		@ApiResponse(responseCode = "403", description = "취소 권한 없음"),
+		@ApiResponse(responseCode = "403", description = "취소 요청 권한 없음"),
 		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
 	})
 	@PostMapping("/{orderId}/cancel")
-	public ApiResult<Void> cancelOrder(
+	public ApiResult<Void> requestCancel(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
-        @Parameter(description = "취소할 주문 ID", example = "1")
+        @Parameter(description = "취소 요청할 주문 ID", example = "1")
 		@PathVariable Long orderId
 	) {
-		orderService.cancelOrder(orderId, currentUser);
+		orderService.requestCancelByUser(orderId, currentUser);
 		return ApiResult.ok();
 	}
 }
