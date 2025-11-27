@@ -13,6 +13,7 @@ import com.kt.common.request.Paging;
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.ProductViewEvent;
 import com.kt.common.support.SwaggerAssistance;
+import com.kt.domain.product.ProductSortType;
 import com.kt.dto.product.ProductResponse;
 import com.kt.security.CurrentUser;
 import com.kt.service.ProductService;
@@ -36,16 +37,18 @@ public class ProductController extends SwaggerAssistance {
 
 	@Operation(summary = "상품 검색 및 조회", description = "활성화, 품절 상태인 전체 상품 목록을 검색 및 조회합니다. 키워드를 입력하지 않으면 전체 상품이 조회됩니다.",
 			parameters = {
-					@Parameter(name = "keyword", description = "검색 키워드", example = ""),
+					@Parameter(name = "keyword", description = "검색 키워드"),
+					@Parameter(name = "sortType", description = "정렬 기준(LATEST, POPULAR)", example = "LATEST"),
 					@Parameter(name = "page", description = "페이지 번호", example = "1"),
 					@Parameter(name = "size", description = "페이지 크기", example = "10")
 			})
 	@GetMapping
 	public ApiResult<Page<ProductResponse.Summary>> search(
 			@RequestParam(required = false) String keyword,
+			@RequestParam(required = false) ProductSortType sortType,
 			@Parameter(hidden = true) Paging paging
 	) {
-		var search = productService.searchPublicStatus(keyword, paging.toPageable())
+		var search = productService.searchPublicStatus(keyword, sortType, paging.toPageable())
 				.map(ProductResponse.Summary::of);
 
 		return ApiResult.ok(search);

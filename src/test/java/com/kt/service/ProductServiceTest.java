@@ -67,7 +67,7 @@ public class ProductServiceTest {
 		Pageable pageable = PageRequest.of(0, 10);
 
 		// When
-		productService.searchPublicStatus(keyword, pageable);
+		productService.searchPublicStatus(keyword, null, pageable);
 
 		// Then
 		Mockito.verify(productRepository).findAllByKeywordAndStatuses(
