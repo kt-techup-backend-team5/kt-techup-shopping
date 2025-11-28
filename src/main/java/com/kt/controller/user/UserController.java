@@ -1,5 +1,7 @@
 package com.kt.controller.user;
 
+import com.kt.dto.user.*;
+import com.kt.security.DefaultCurrentUser;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,9 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
-import com.kt.dto.auth.UserFindLoginIdRequest;
-import com.kt.dto.user.UserRequest;
-import com.kt.dto.user.UserUpdatePasswordRequest;
 import com.kt.security.CurrentUser;
 import com.kt.service.UserService;
 
@@ -92,19 +91,20 @@ public class UserController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "401", description = "인증 실패"),
 		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
 	})
-	@PutMapping("/{id}/update-password")
-	@ResponseStatus(HttpStatus.OK)
-	@SecurityRequirement(name = "Bearer Authentication")
-	public ApiResult<Void> updatePassword(
-		@Parameter(description = "비밀번호를 변경할 사용자 ID", required = true)
-		@PathVariable Long id,
-		@RequestBody @Valid UserUpdatePasswordRequest request
-	) {
-		userService.changePassword(id, request.oldPassword(), request.newPassword());
-		return ApiResult.ok();
-	}
+    @PutMapping("/{id}/update-password")
+    @ResponseStatus(HttpStatus.OK)
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ApiResult<Void> updatePassword(
+            @Parameter(description = "비밀번호를 변경할 사용자 ID", required = true)
+            @PathVariable Long id,
+            @RequestBody @Valid UserUpdatePasswordRequest request
+    ) {
+        userService.changePassword(id, request);
+        return ApiResult.ok();
+    }
 
-	// 회원탈퇴
+
+    // 회원탈퇴
 	@Operation(
 		summary = "사용자 계정 삭제",
 		description = "특정 사용자 계정을 삭제합니다. (JWT 필요)"
@@ -114,16 +114,28 @@ public class UserController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "401", description = "인증 실패"),
 		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
 	})
-	@DeleteMapping("/{id}")
+	@DeleteMapping("/withdrawal")
 	@ResponseStatus(HttpStatus.OK)
 	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> delete(
 		@Parameter(description = "삭제할 사용자 ID", required = true)
-		@PathVariable Long id
+        @AuthenticationPrincipal DefaultCurrentUser currentUser
 	) {
-		userService.delete(id);
+		userService.withdrawal(currentUser.getId());
 		return ApiResult.ok();
 	}
+
+    // 내 정보 조회
+    @GetMapping("/my-info")
+    public UserResponse.Detail getMyInfo() {
+        return userService.getCurrentUserInfo();
+    }
+
+    // 내 정보 변경
+    @PutMapping("/my-info")
+    public UserResponse.Detail updateMyInfo(@Valid @RequestBody UserUpdateRequest request) {
+        return userService.updateCurrentUser(request);
+    }
 
 	@Operation(
 		summary = "사용자 주문 목록 조회",

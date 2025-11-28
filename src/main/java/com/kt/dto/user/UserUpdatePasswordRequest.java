@@ -4,12 +4,17 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record UserUpdatePasswordRequest(
-	@NotBlank
+	@NotBlank(message = "현재 비밀번호를 입력해주세요.")
 	@Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^])[A-Za-z\\d!@#$%^]{8,}$")
 	String oldPassword,
-	@NotBlank
+
+	@NotBlank(message = "변경할 비밀번호를 입력해주세요.")
 	@Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^])[A-Za-z\\d!@#$%^]{8,}$")
-	String newPassword
+	String newPassword,
+
+    @NotBlank(message = "변경할 비밀번호를 한번 더 입력해주세요.")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^])[A-Za-z\\d!@#$%^]{8,}$")
+    String confirmPassword
 ){
 
 }

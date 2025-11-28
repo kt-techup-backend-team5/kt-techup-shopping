@@ -8,17 +8,16 @@ import java.util.List;
 import com.kt.common.support.BaseEntity;
 import com.kt.domain.order.Order;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 
 // 1. domain과 entity를 분리해야
 // 2. 굳이? 같이쓰지뭐
 @Getter
 @Entity
+@Where(clause = "deleted = false")
 @NoArgsConstructor
 public class User extends BaseEntity {
 	private String loginId;
@@ -91,4 +90,13 @@ public class User extends BaseEntity {
 		this.email = email;
 		this.mobile = mobile;
 	}
+
+    @Column(nullable = false)
+    private boolean deleted = false;
+    private LocalDateTime deletedAt;
+
+    public void markAsDeleted() {
+        this.deleted = true;
+        this.deletedAt = LocalDateTime.now();
+    }
 }
