@@ -18,6 +18,7 @@ public class UserRequest {
 	public record Create(
 		@NotBlank
 		String loginId,
+        @NotBlank
 		@Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^])[A-Za-z\\d!@#$%^]{8,}$")
 		String password,
 		@NotBlank
