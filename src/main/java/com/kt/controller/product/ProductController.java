@@ -38,7 +38,7 @@ public class ProductController extends SwaggerAssistance {
 	@Operation(summary = "상품 검색 및 조회", description = "활성화, 품절 상태인 전체 상품 목록을 검색 및 조회합니다. 키워드를 입력하지 않으면 전체 상품이 조회됩니다.",
 			parameters = {
 					@Parameter(name = "keyword", description = "검색 키워드"),
-					@Parameter(name = "sortType", description = "정렬 기준(LATEST, POPULAR)", example = "LATEST"),
+					@Parameter(name = "sortType", description = "정렬 기준"),
 					@Parameter(name = "page", description = "페이지 번호", example = "1"),
 					@Parameter(name = "size", description = "페이지 크기", example = "10")
 			})
