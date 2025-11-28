@@ -83,7 +83,7 @@ public class UserService {
 
         Preconditions.validate(
                 request.newPassword().equals(request.confirmPassword()),
-                ErrorCode.CAN_NOT_ALLOWED_SAME_PASSWORD
+                ErrorCode.NOT_MATCHED_CHECK_PASSWORD
         );
 
         Preconditions.validate(
@@ -91,7 +91,7 @@ public class UserService {
                 ErrorCode.CAN_NOT_ALLOWED_SAME_PASSWORD
         );
         String encoded = passwordEncoder.encode(request.newPassword());
-        user.changePassword(encoded);;
+        user.changePassword(encoded);
     }
 
 	// Pageable 인터페이스
@@ -125,8 +125,8 @@ public class UserService {
                 (DefaultCurrentUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = currentUser.getId();
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        User user = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
 
         return UserResponse.Detail.of(user);
     }
@@ -136,8 +136,8 @@ public class UserService {
         DefaultCurrentUser currentUser =
                 (DefaultCurrentUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        User user = userRepository.findById(currentUser.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        User user = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
 
         user.update(request.name(), request.email(), request.mobile());
 

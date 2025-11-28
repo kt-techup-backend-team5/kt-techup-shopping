@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Pattern;
 // 1. 요청, 응답별로 1개씩 dto 만든다 (user처럼)
 // 2. 요청, 응답으로 나눠서 static class로 묶는다.
 // 3. 인터페이스로 묶는다
+
 public class UserRequest {
 	@Schema(name = "UserRequest.Create")
 	public record Create(
