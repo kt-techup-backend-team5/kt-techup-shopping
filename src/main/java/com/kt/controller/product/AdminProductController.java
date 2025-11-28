@@ -1,5 +1,7 @@
 package com.kt.controller.product;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +41,7 @@ public class AdminProductController extends SwaggerAssistance {
 	@Operation(summary = "상품 검색 및 조회", description = "전체 상품 목록을 검색 및 조회합니다. 키워드를 입력하지 않으면 전체 상품이 조회됩니다.",
 			parameters = {
 					@Parameter(name = "keyword", description = "검색 키워드"),
-					@Parameter(name = "sortType", description = "정렬 기준(LATEST, POPULAR)", example = "LATEST"),
+					@Parameter(name = "sortType", description = "정렬 기준"),
 					@Parameter(name = "page", description = "페이지 번호", example = "1"),
 					@Parameter(name = "size", description = "페이지 크기", example = "10")
 			})
@@ -105,9 +107,19 @@ public class AdminProductController extends SwaggerAssistance {
 	}
 
 	@Operation(summary = "상품 품절")
-	@PostMapping("/{id}/sold-out")
+	@PostMapping("/{id}/toggle-sold-out")
 	public ApiResult<Void> soldOut(@PathVariable Long id) {
 		productService.soldOut(id);
+
+		return ApiResult.ok();
+	}
+
+	@Operation(summary = "다중 상품 품절")
+	@PostMapping("/sold-out")
+	public ApiResult<Void> soldOutMultiple(@RequestBody @Valid ProductRequest.Ids request) {
+		List<Long> ids = request.getProductIds();
+		
+		ids.forEach(productService::soldOut);
 
 		return ApiResult.ok();
 	}
