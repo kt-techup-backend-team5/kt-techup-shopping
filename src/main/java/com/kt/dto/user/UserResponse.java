@@ -5,24 +5,28 @@ import java.time.LocalDateTime;
 import com.kt.domain.user.User;
 
 public interface UserResponse {
-	record Search(
-		Long id,
-		String name,
-		LocalDateTime createdAt
-	) {
-	}
+    record Search(
+            Long id,
+            String name,
+            LocalDateTime createdAt
+    ) {
+    }
 
-	record Detail(
-		Long id,
-		String name,
-		String email
-	) {
-		public static Detail of(User user) {
-			return new Detail(
-				user.getId(),
-				user.getName(),
-				user.getEmail()
-			);
-		}
-	}
+    record Detail(
+            Long id,
+            String name,
+            String loginId,
+            String email,
+            String mobile
+    ) {
+        public static Detail of(User user) {
+            return new Detail(
+                    user.getId(),
+                    user.getName(),
+                    user.getLoginId(),
+                    user.getEmail(),
+                    user.getMobile()
+            );
+        }
+    }
 }
