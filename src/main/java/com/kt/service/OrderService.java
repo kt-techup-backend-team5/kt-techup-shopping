@@ -84,14 +84,14 @@ public class OrderService {
 		);
 	}
 
-	public void requestCancelByUser(Long orderId, CurrentUser currentUser) {
+	public void requestCancelByUser(Long orderId, CurrentUser currentUser, String reason) {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
 		// '주문'에 기록된 사용자 ID와 '현재 요청한' 사용자 ID를 바로 비교
 		Preconditions.validate(
 				order.getUser()
 						.getId()
 						.equals(currentUser.getId()), ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
-		order.requestCancel();
+		order.requestCancel(reason);
 	}
 
 	public void decideCancel(Long orderId, OrderCancelDecisionRequest request) {

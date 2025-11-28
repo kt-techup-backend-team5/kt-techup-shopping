@@ -36,7 +36,8 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus previousStatus;
 
-    private String cancelDecisionReason;
+	private String cancelDecisionReason;
+	private String userCancelReason;
 
 	private LocalDateTime deliveredAt;
 
@@ -73,24 +74,25 @@ public class Order extends BaseEntity {
         return this.status == OrderStatus.PENDING || this.status == OrderStatus.COMPLETED;
     }
 
-    public void requestCancel() {
-        Preconditions.validate(this.status ==
-						OrderStatus.PENDING || this.status == OrderStatus.COMPLETED,
-				ErrorCode.CANNOT_CANCEL_ORDER);
-        this.previousStatus = this.status;
-        this.status = OrderStatus.CANCEL_REQUESTED;
-    }
+	public void requestCancel(String reason) {
+
+		var cancellableStates = List.of(OrderStatus.PENDING, OrderStatus.COMPLETED, OrderStatus.PREPARING);
+
+		Preconditions.validate(cancellableStates.contains(this.status), ErrorCode.CANNOT_CANCEL_ORDER);
+
+		this.previousStatus = this.status;
+		this.status = OrderStatus.CANCEL_REQUESTED;
+		this.userCancelReason = reason;
+	}
 
     public void approveCancel(String reason) {
         Preconditions.validate(isCancelRequestableByAdmin(), ErrorCode.INVALID_ORDER_STATUS);
-        Preconditions.validate(StringUtils.hasText(reason), ErrorCode.REASON_CANNOT_BE_EMPTY);
         this.status = OrderStatus.CANCELLED;
         this.cancelDecisionReason = reason;
     }
 
     public void rejectCancel(String reason) {
         Preconditions.validate(isCancelRequestableByAdmin(), ErrorCode.INVALID_ORDER_STATUS);
-        Preconditions.validate(StringUtils.hasText(reason), ErrorCode.REASON_CANNOT_BE_EMPTY);
         this.status = this.previousStatus;
         this.cancelDecisionReason = reason;
     }
