@@ -15,12 +15,14 @@ public interface UserResponse {
 	record Detail(
 		Long id,
 		String name,
+        String loginId,
 		String email
 	) {
 		public static Detail of(User user) {
 			return new Detail(
 				user.getId(),
 				user.getName(),
+                user.getLoginId(),
 				user.getEmail()
 			);
 		}

@@ -86,6 +86,7 @@ public class AdminUserController extends SwaggerAssistance {
 		return ApiResult.ok(new UserResponse.Detail(
 			user.getId(),
 			user.getName(),
+            user.getLoginId(),
 			user.getEmail()
 		));
 	}

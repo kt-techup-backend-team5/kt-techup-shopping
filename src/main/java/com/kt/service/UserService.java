@@ -1,9 +1,15 @@
 package com.kt.service;
 
 import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 
+import com.kt.dto.user.UserResponse;
+import com.kt.dto.user.UserUpdatePasswordRequest;
+import com.kt.dto.user.UserUpdateRequest;
+import com.kt.security.DefaultCurrentUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,17 +74,25 @@ public class UserService {
 		return user.getLoginId();
 	}
 
-	public void changePassword(Long id, String oldPassword, String password) {
-		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+    public void changePassword(Long userId, UserUpdatePasswordRequest request) {
 
-		//검증 작업
-		// 긍정적인 상황만 생각하자 -> 패스워드가 이전것과 달라야 => 해피한
-		// 패스워드가 같으면 안되는데 => 넌 해피하지 않은 상황
-		Preconditions.validate(user.getPassword().equals(oldPassword), ErrorCode.DOES_NOT_MATCH_OLD_PASSWORD);
-		Preconditions.validate(!oldPassword.equals(password), ErrorCode.CAN_NOT_ALLOWED_SAME_PASSWORD);
+        User user = userRepository.findByIdOrThrow(userId, ErrorCode.NOT_FOUND_USER);
 
-		user.changePassword(password);
-	}
+        boolean matchesCurrent = passwordEncoder.matches(request.oldPassword(), user.getPassword());
+        Preconditions.validate(matchesCurrent, ErrorCode.DOES_NOT_MATCH_OLD_PASSWORD);
+
+        Preconditions.validate(
+                request.newPassword().equals(request.confirmPassword()),
+                ErrorCode.NOT_MATCHED_CHECK_PASSWORD
+        );
+
+        Preconditions.validate(
+                !passwordEncoder.matches(request.newPassword(), user.getPassword()),
+                ErrorCode.CAN_NOT_ALLOWED_SAME_PASSWORD
+        );
+        String encoded = passwordEncoder.encode(request.newPassword());
+        user.changePassword(encoded);
+    }
 
 	// Pageable 인터페이스
 	public Page<User> search(Pageable pageable, String keyword) {
@@ -95,12 +109,40 @@ public class UserService {
 		user.update(name, email, mobile);
 	}
 
-	public void delete(Long id) {
-		userRepository.deleteById(id);
+	public void withdrawal(Long id) {
+        // 회원 조회
+        User user = userRepository.findByIdAndDeletedAtIsNull(id)
+                        .orElseThrow(()->new CustomException(ErrorCode.NOT_FOUND_USER));
+        user.markAsDeleted();
+//        userRepository.deleteById(id);
 		// 삭제에는 두가지 개념 - softdelete, harddelete
-		// var user = userRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+		//var user = userRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 		// userRepository.delete(user);
 	}
+
+    public UserResponse.Detail getCurrentUserInfo() {
+        DefaultCurrentUser currentUser =
+                (DefaultCurrentUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = currentUser.getId();
+
+
+        User user = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
+
+        return UserResponse.Detail.of(user);
+    }
+
+    @Transactional
+    public UserResponse.Detail updateCurrentUser(UserUpdateRequest request) {
+        DefaultCurrentUser currentUser =
+                (DefaultCurrentUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+
+        User user = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
+
+        user.update(request.name(), request.email(), request.mobile());
+
+        return UserResponse.Detail.of(user);
+    }
 
 	public void getOrders(Long id) {
 		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
