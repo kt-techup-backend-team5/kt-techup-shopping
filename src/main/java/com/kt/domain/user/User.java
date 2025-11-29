@@ -11,13 +11,16 @@ import com.kt.domain.order.Order;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Where;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 // 1. domain과 entity를 분리해야
 // 2. 굳이? 같이쓰지뭐
 @Getter
 @Entity
-@Where(clause = "deleted = false")
+@SQLDelete(sql = "UPDATE users SET deleted = true, deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted = false")
 @NoArgsConstructor
 public class User extends BaseEntity {
 	private String loginId;
@@ -38,7 +41,7 @@ public class User extends BaseEntity {
 	private List<Order> orders = new ArrayList<>();
 
 	public User(String loginId, String password, String name, String email, String mobile, Gender gender,
-		LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt, Role role) {
+			LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt, Role role) {
 		this.loginId = loginId;
 		this.password = password;
 		this.name = name;
@@ -50,34 +53,35 @@ public class User extends BaseEntity {
 	}
 
 	public static User normalUser(String loginId, String password, String name, String email, String mobile,
-		Gender gender,
-		LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
+			Gender gender,
+			LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
 		return new User(
-			loginId,
-			password,
-			name,
-			email,
-			mobile,
-			gender,
-			birthday,
-			createdAt,
-			updatedAt,
-			Role.USER
+				loginId,
+				password,
+				name,
+				email,
+				mobile,
+				gender,
+				birthday,
+				createdAt,
+				updatedAt,
+				Role.USER
 		);
 	}
 
 	public static User admin(String loginId, String password, String name, String email, String mobile, Gender gender,
-		LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
-		return User.admin(
-			loginId,
-			password,
-			name,
-			email,
-			mobile,
-			gender,
-			birthday,
-			createdAt,
-			updatedAt
+			LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
+		return new User(
+				loginId,
+				password,
+				name,
+				email,
+				mobile,
+				gender,
+				birthday,
+				createdAt,
+				updatedAt,
+				Role.ADMIN
 		);
 	}
 
@@ -91,12 +95,12 @@ public class User extends BaseEntity {
 		this.mobile = mobile;
 	}
 
-    @Column(nullable = false)
-    private boolean deleted = false;
-    private LocalDateTime deletedAt;
+	@Column(nullable = false)
+	private boolean deleted = false;
+	private LocalDateTime deletedAt;
 
-    public void markAsDeleted() {
-        this.deleted = true;
-        this.deletedAt = LocalDateTime.now();
-    }
+	public void markAsDeleted() {
+		this.deleted = true;
+		this.deletedAt = LocalDateTime.now();
+	}
 }
