@@ -111,8 +111,8 @@ public class Order extends BaseEntity {
 		this.status = OrderStatus.COMPLETED;
 	}
 
-	// public void changeStatus(OrderStatus orderStatus){
-	// 	this.status = orderStatus;
-	// }
+	public void changeStatus(OrderStatus orderStatus){
+		this.status = orderStatus;
+	}
 
 }
