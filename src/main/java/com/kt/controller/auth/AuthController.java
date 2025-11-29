@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kt.common.response.ApiResult;
-import com.kt.dto.auth.LoginRequest;
+import com.kt.dto.auth.AuthRequest;
 import com.kt.dto.auth.LoginResponse;
 import com.kt.service.AuthService;
 
@@ -20,8 +20,8 @@ public class AuthController {
 	private final AuthService authService;
 
 	@PostMapping("/login")
-	public ApiResult<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
-		var pair = authService.login(request.loginId(), request.password());
+	public ApiResult<LoginResponse> login(@RequestBody @Valid AuthRequest.Login request) {
+		var pair = authService.login(request.getLoginId(), request.getPassword());
 
 		return ApiResult.ok(new LoginResponse(pair.getFirst(), pair.getSecond()));
 	}
