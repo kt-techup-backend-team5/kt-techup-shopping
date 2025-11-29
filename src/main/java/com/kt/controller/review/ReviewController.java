@@ -53,8 +53,8 @@ public class ReviewController {
 	}
 
 	@Operation(
-			summary = "상품 리뷰 조회",
-			description = "특정 상품의 리뷰 목록을 페이징 및 정렬하여 조회합니다."
+			summary = "리뷰 필터링 조회 (상품별)",
+			description = "전체 리뷰를 특정 상품 ID로 필터링하여 페이징 및 정렬 조회합니다. (리뷰 중심 API)"
 	)
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "조회 성공"),
