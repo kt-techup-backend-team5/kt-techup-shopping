@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.kt.domain.order.OrderStatus;
+import com.kt.dto.order.OrderStatusUpdateRequest;
 
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
@@ -124,6 +125,25 @@ public class AdminOrderController extends SwaggerAssistance {
 		@Valid @RequestBody OrderCancelDecisionRequest request
 	) {
 		orderService.decideCancel(orderId, request);
+		return ApiResult.ok();
+	}
+
+	@Operation(
+		summary = "관리자 주문 상태 변경",
+		description = "관리자가 주문 ID로 특정 주문의 상태를 변경합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "상태 변경 성공"),
+		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
+	})
+	@PostMapping("/{orderId}/change-status")
+	@SecurityRequirement(name = "Bearer Authentication")
+	public ApiResult<Void> changeStatus(
+		@Parameter(description = "상태를 변경할 주문 ID", required = true)
+		@PathVariable Long orderId,
+		@RequestBody OrderStatusUpdateRequest request
+	) {
+		orderService.changeOrderStatus(orderId, request);
 		return ApiResult.ok();
 	}
 }
