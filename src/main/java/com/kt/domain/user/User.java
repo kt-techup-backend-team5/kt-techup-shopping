@@ -41,7 +41,7 @@ public class User extends BaseEntity {
 	private List<Order> orders = new ArrayList<>();
 
 	public User(String loginId, String password, String name, String email, String mobile, Gender gender,
-		LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt, Role role) {
+			LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt, Role role) {
 		this.loginId = loginId;
 		this.password = password;
 		this.name = name;
@@ -53,34 +53,35 @@ public class User extends BaseEntity {
 	}
 
 	public static User normalUser(String loginId, String password, String name, String email, String mobile,
-		Gender gender,
-		LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
+			Gender gender,
+			LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
 		return new User(
-			loginId,
-			password,
-			name,
-			email,
-			mobile,
-			gender,
-			birthday,
-			createdAt,
-			updatedAt,
-			Role.USER
+				loginId,
+				password,
+				name,
+				email,
+				mobile,
+				gender,
+				birthday,
+				createdAt,
+				updatedAt,
+				Role.USER
 		);
 	}
 
 	public static User admin(String loginId, String password, String name, String email, String mobile, Gender gender,
-		LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
-		return User.admin(
-			loginId,
-			password,
-			name,
-			email,
-			mobile,
-			gender,
-			birthday,
-			createdAt,
-			updatedAt
+			LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
+		return new User(
+				loginId,
+				password,
+				name,
+				email,
+				mobile,
+				gender,
+				birthday,
+				createdAt,
+				updatedAt,
+				Role.ADMIN
 		);
 	}
 
@@ -94,12 +95,12 @@ public class User extends BaseEntity {
 		this.mobile = mobile;
 	}
 
-    @Column(nullable = false)
-    private boolean deleted = false;
-    private LocalDateTime deletedAt;
+	@Column(nullable = false)
+	private boolean deleted = false;
+	private LocalDateTime deletedAt;
 
-    public void markAsDeleted() {
-        this.deleted = true;
-        this.deletedAt = LocalDateTime.now();
-    }
+	public void markAsDeleted() {
+		this.deleted = true;
+		this.deletedAt = LocalDateTime.now();
+	}
 }
