@@ -2,13 +2,15 @@ package com.kt.dto.user;
 
 import java.time.LocalDateTime;
 
+import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 
 public interface UserResponse {
     record Search(
             Long id,
             String name,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            Role role
     ) {
     }
 

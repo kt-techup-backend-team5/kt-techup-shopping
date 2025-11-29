@@ -205,4 +205,10 @@ public class UserService {
         var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
         user.grantAdminRole();
     }
+
+    public void revokeAdminRole(Long id) {
+        var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+
+        user.revokeAdminRole();
+    }
 }

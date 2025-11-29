@@ -88,6 +88,13 @@ public class User extends BaseEntity {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void revokeAdminRole() {
+        if (this.role == Role.ADMIN) {
+            this.role = Role.USER;
+            this.updatedAt = LocalDateTime.now();
+        }
+    }
+
     public void changePassword(String password) {
         this.password = password;
     }

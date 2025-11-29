@@ -55,7 +55,8 @@ public class AdminUserController extends SwaggerAssistance {
                 .map(user -> new UserResponse.Search(
                         user.getId(),
                         user.getName(),
-                        user.getCreatedAt()
+                        user.getCreatedAt(),
+                        user.getRole()
                 ));
 
         return ApiResult.ok(search);
@@ -109,7 +110,6 @@ public class AdminUserController extends SwaggerAssistance {
             summary = "관리자가 사용자 권한 변경",
             description = "관리자가 특정 사용자의 권한을 변경합니다."
     )
-
     @PatchMapping("/admins/{id}/grant-admin")
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Void> grant(@PathVariable Long id) {
@@ -118,6 +118,14 @@ public class AdminUserController extends SwaggerAssistance {
         return ApiResult.ok();
     }
 
+    @Operation(summary = "관리자 권한 회수")
+    @PatchMapping("/admins/{id}/revoke-admin")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResult<Void> revoke(@PathVariable Long id) {
+        userService.revokeAdminRole(id);
+
+        return ApiResult.ok();
+    }
     // 유저 삭제
     // DELETE FROM MEMBER WHERE id = ?
     // 유저 비밀번호 초기화
