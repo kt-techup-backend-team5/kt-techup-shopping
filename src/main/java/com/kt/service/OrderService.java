@@ -187,8 +187,8 @@ public class OrderService {
 		);
 	}
 
-	// public void changeOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
-	// 	Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
-	// 	order.changeStatus(request.status());
-	// }
+	public void changeOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
+		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		order.changeStatus(request.status());
+	}
 }
