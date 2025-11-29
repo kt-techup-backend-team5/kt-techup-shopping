@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
+import com.kt.dto.auth.AuthRequest;
 import com.kt.repository.user.UserRepository;
 import com.kt.security.JwtService;
 
@@ -42,5 +43,9 @@ public class AuthService {
 		redisService.saveRefreshToken(refreshToken, user.getId(), ttlSeconds);
 
 		return Pair.of(accessToken, refreshToken);
+	}
+
+	public void deleteRefreshToken(AuthRequest.Logout request) {
+		redisService.deleteRefreshToken(request.getRefreshToken());
 	}
 }

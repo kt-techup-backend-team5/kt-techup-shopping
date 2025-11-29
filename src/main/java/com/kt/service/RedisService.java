@@ -49,4 +49,10 @@ public class RedisService {
 		RBucket<Long> bucket = redissonClient.getBucket(key);
 		bucket.set(userId, Duration.ofSeconds(expiration));
 	}
+
+	public void deleteRefreshToken(String token) {
+		String key = REFRESH_TOKEN_PREFIX + token;
+		RBucket<Long> bucket = redissonClient.getBucket(key);
+		bucket.delete();
+	}
 }
