@@ -3,6 +3,7 @@ package com.kt.domain.review;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.kt.common.support.BaseEntity;
 import com.kt.domain.orderproduct.OrderProduct;
@@ -24,6 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "reviews")
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE reviews SET deleted = true, deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class Review extends BaseEntity {
 	private String content;
 	private int rating;
