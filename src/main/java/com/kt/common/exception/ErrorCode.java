@@ -34,7 +34,7 @@ public enum ErrorCode {
 	NO_AUTHORITY_TO_CREATE_REVIEW(HttpStatus.FORBIDDEN, "리뷰를 작성할 권한이 없습니다."),
 	NO_AUTHORITY_TO_UPDATE_REVIEW(HttpStatus.FORBIDDEN, "리뷰를 수정할 권한이 없습니다."),
 	NO_AUTHORITY_TO_DELETE_REVIEW(HttpStatus.FORBIDDEN, "리뷰를 삭제할 권한이 없습니다."),
-	CANNOT_REVIEW_NOT_COMPLETED_ORDER(HttpStatus.BAD_REQUEST, "구매 확정되지 않은 주문에 대해서는 리뷰를 작성할 수 없습니다."),
+	CANNOT_REVIEW_NOT_CONFIRMED_ORDER(HttpStatus.BAD_REQUEST, "구매 확정되지 않은 주문에 대해서는 리뷰를 작성할 수 없습니다."),
 	REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 해당 상품에 대한 리뷰를 작성했습니다.");
 
 	private final HttpStatus status;

@@ -1,6 +1,5 @@
 package com.kt.service;
 
-import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
 import com.kt.domain.order.OrderStatus;
@@ -38,9 +37,9 @@ public class ReviewService {
 		Preconditions.validate(orderProduct.getOrder().getUser().getId().equals(userId),
 				ErrorCode.NO_AUTHORITY_TO_CREATE_REVIEW);
 
-		// 2. 주문이 COMPLETED 상태인지 확인
-		Preconditions.validate(orderProduct.getOrder().getStatus() == OrderStatus.COMPLETED,
-				ErrorCode.CANNOT_REVIEW_NOT_COMPLETED_ORDER);
+		// 2. 주문이 CONFIRMED 상태인지 확인
+		Preconditions.validate(orderProduct.getOrder().getStatus() == OrderStatus.CONFIRMED,
+				ErrorCode.CANNOT_REVIEW_NOT_CONFIRMED_ORDER);
 
 		// 3. 이미 리뷰를 작성했는지 확인
 		Preconditions.validate(!reviewRepository.existsByOrderProductId(request.getOrderProductId()),

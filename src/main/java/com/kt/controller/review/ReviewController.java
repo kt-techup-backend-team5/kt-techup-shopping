@@ -9,6 +9,7 @@ import com.kt.service.ReviewService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters; // Import Parameters
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -58,6 +59,11 @@ public class ReviewController {
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "조회 성공"),
 			@ApiResponse(responseCode = "404", description = "상품을 찾을 수 없음")
+	})
+	@Parameters({
+			@Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
+			@Parameter(name = "size", description = "페이지 당 항목 수", example = "10"),
+			@Parameter(name = "sort", description = "정렬 기준 (예: 'createdAt,desc' (최신순), 'rating,desc' (별점 높은순))", example = "createdAt,desc")
 	})
 	@GetMapping
 	public ApiResult<Page<ReviewResponse>> getReviewsByProductId(

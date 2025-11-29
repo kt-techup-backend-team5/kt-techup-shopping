@@ -35,8 +35,8 @@ public class AdminReviewController {
             description = "관리자가 조건(상품명, 유저명, 별점)에 따라 리뷰 목록을 검색하고 페이징 처리된 결과를 받습니다."
     )
     @Parameters({
-            @Parameter(name = "condition.productName", description = "상품명", example = "MacBook Pro"),
-            @Parameter(name = "condition.userName", description = "유저명", example = "testUser"),
+            @Parameter(name = "condition.productName", description = "상품명", example = "테스트상품명"),
+            @Parameter(name = "condition.userName", description = "유저명", example = "테스트유저"),
             @Parameter(name = "condition.rating", description = "별점", example = "5"),
             @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
             @Parameter(name = "size", description = "페이지 당 항목 수", example = "10"),
