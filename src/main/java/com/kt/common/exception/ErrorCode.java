@@ -22,6 +22,7 @@ public enum ErrorCode {
 	NOT_MATCHED_CHECK_PASSWORD(HttpStatus.BAD_REQUEST, "입력한 비밀번호가 서로 다릅니다. 다시 확인해주세요."),
 	ALREADY_HAS_ROLE(HttpStatus.BAD_REQUEST, "이미 관리자 권한을 가지고 있는 회원입니다."),
 	USER_NOT_ADMIN(HttpStatus.FORBIDDEN, "관리자 권한이 없는 회원입니다."),
+	CANNOT_DELETE_SELF(HttpStatus.BAD_REQUEST, "자기 자신을 삭제할 수 없습니다."),
 	CANNOT_UPDATE_ORDER(HttpStatus.BAD_REQUEST, "주문을 수정할 수 없는 상태입니다."),
 	CANNOT_CANCEL_ORDER(HttpStatus.BAD_REQUEST, "주문을 취소할 수 없는 상태입니다."),
 	NO_AUTHORITY_TO_CANCEL_ORDER(HttpStatus.FORBIDDEN, "주문을 취소할 권한이 없습니다."),
