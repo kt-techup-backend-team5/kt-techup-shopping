@@ -1,14 +1,17 @@
 package com.kt.service;
 
-import java.time.LocalDateTime;
-import java.util.NoSuchElementException;
-
+import com.kt.common.exception.CustomException;
+import com.kt.common.exception.ErrorCode;
+import com.kt.common.support.Preconditions;
+import com.kt.domain.user.User;
 import com.kt.dto.user.UserCreateRequest;
 import com.kt.dto.user.UserResponse;
 import com.kt.dto.user.UserUpdatePasswordRequest;
 import com.kt.dto.user.UserUpdateRequest;
+import com.kt.repository.order.OrderRepository;
+import com.kt.repository.user.UserRepository;
 import com.kt.security.DefaultCurrentUser;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
@@ -34,13 +38,8 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final OrderRepository orderRepository;
 
-	// 트랜잭션 처리해줘
-	// PSA - Portable Service Abstraction
-	// 환경설정을 살짝 바꿔서 일관된 서비스를 제공하는 것
 	public void create(UserCreateRequest request) {
-		// 아이디 중복 체크
 		Preconditions.validate(!isDuplicateLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
-		// 이메일 중복 체크 (나중에 이메일 인증까지 구현)
 		Preconditions.validate(!isDuplicateEmail(request.email()), ErrorCode.ALREADY_EXISTS_EMAIL);
 
 		var newUser = User.normalUser(
@@ -84,13 +83,12 @@ public class UserService {
 	}
 
 	public String findLoginId(String name, String email) {
-		var user = userRepository.findByNameAndEmailOrThrow(name, email, ErrorCode.NOT_FOUND_USER);
+		var user = userRepository.findByNameAndEmailOrThrow(name, email);
 		return user.getLoginId();
 	}
 
 	public void changePassword(Long userId, UserUpdatePasswordRequest request) {
-
-		User user = userRepository.findByIdOrThrow(userId, ErrorCode.NOT_FOUND_USER);
+		User user = userRepository.findByIdOrThrow(userId);
 
 		boolean matchesCurrent = passwordEncoder.matches(request.oldPassword(), user.getPassword());
 		Preconditions.validate(matchesCurrent, ErrorCode.DOES_NOT_MATCH_OLD_PASSWORD);
@@ -108,7 +106,6 @@ public class UserService {
 		user.changePassword(encoded);
 	}
 
-	// Pageable 인터페이스
 	public Page<User> search(Pageable pageable, String keyword) {
 		if (keyword == null || keyword.isBlank()) {
 			return userRepository.findAll(pageable);
@@ -121,21 +118,32 @@ public class UserService {
 	}
 
 	public User detail(Long id) {
-		return userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+		return userRepository.findByIdOrThrow(id);
 	}
 
 	@Transactional
 	public UserResponse.Detail update(Long id, String name, String email, String mobile) {
-		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+		var user = userRepository.findByIdOrThrow(id);
 		user.update(name, email, mobile);
 		return UserResponse.Detail.of(user);
 	}
 
 	public void withdrawal(Long id) {
-		// 회원 조회
 		User user = userRepository.findByIdAndDeletedAtIsNull(id)
 				.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 		user.deleted();
+	}
+
+	@Transactional
+	public void deactivateUser(Long id) {
+		User user = userRepository.findByIdOrThrow(id);
+		user.deleted();
+	}
+
+	@Transactional
+	public void activateUser(Long id) {
+		User user = userRepository.findByIdIncludeDeletedOrThrow(id);
+		user.activate();
 	}
 
 	public UserResponse.Detail getCurrentUserInfo() {
@@ -143,7 +151,7 @@ public class UserService {
 				(DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		Long userId = currentUser.getId();
 
-		User user = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
+		User user = userRepository.findByIdOrThrow(currentUser.getId());
 
 		return UserResponse.Detail.of(user);
 	}
@@ -153,7 +161,7 @@ public class UserService {
 		DefaultCurrentUser currentUser =
 				(DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-		User user = userRepository.findByIdOrThrow(currentUser.getId(), ErrorCode.NOT_FOUND_USER);
+		User user = userRepository.findByIdOrThrow(currentUser.getId());
 
 		user.update(request.name(), request.email(), request.mobile());
 
@@ -161,7 +169,7 @@ public class UserService {
 	}
 
 	public void getOrders(Long id) {
-		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+		var user = userRepository.findByIdOrThrow(id);
 		var page = orderRepository.findAllByUserId(user.getId(), Pageable.unpaged());
 		var orders = page.getContent();
 
@@ -171,13 +179,12 @@ public class UserService {
 	}
 
 	public void grantAdminRole(Long id) {
-		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+		var user = userRepository.findByIdOrThrow(id);
 		user.grantAdminRole();
 	}
 
 	public void revokeAdminRole(Long id) {
-		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
-
+		var user = userRepository.findByIdOrThrow(id);
 		user.revokeAdminRole();
 	}
 }
