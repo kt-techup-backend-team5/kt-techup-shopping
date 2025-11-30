@@ -111,15 +111,6 @@ public class UserService {
 		user.changePassword(encoded);
 	}
 
-	@Transactional
-	public String initPassword(Long userId) {
-		User user = userRepository.findByIdOrThrow(userId);
-		String temporaryPassword = generateRandomPassword();
-		String encodedPassword = passwordEncoder.encode(temporaryPassword);
-		user.changePassword(encodedPassword);
-		return temporaryPassword;
-	}
-
 	/**
 	 * 임시 비밀번호를 생성하는 메서드입니다.
 	 * 최소 8자 이상이며, 영문 소문자, 대문자, 숫자, 특수문자를 각각 1개 이상 포함합니다.
