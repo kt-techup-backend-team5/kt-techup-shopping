@@ -78,7 +78,7 @@ public class UserController extends SwaggerAssistance {
 			@ApiResponse(responseCode = "401", description = "인증 실패"),
 			@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
 	})
-	@PutMapping("/{id}/update-password")
+	@PutMapping("/{id}/change-password")
 	@ResponseStatus(HttpStatus.OK)
 	@SecurityRequirement(name = "Bearer Authentication")
 	public ApiResult<Void> updatePassword(
