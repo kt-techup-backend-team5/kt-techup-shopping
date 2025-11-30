@@ -10,17 +10,20 @@ import com.kt.dto.auth.AuthRequest;
 import com.kt.dto.auth.LoginResponse;
 import com.kt.service.AuthService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "auth", description = "인증/인가 API")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@SecurityRequirement(name = "Bearer Authentication")
 public class AuthController {
 	private final AuthService authService;
 
+	@Operation(summary = "로그인")
 	@PostMapping("/login")
 	public ApiResult<LoginResponse> login(@RequestBody @Valid AuthRequest.Login request) {
 		var pair = authService.login(request.getLoginId(), request.getPassword());
@@ -42,10 +45,13 @@ public class AuthController {
 	// 장점 => 사용자 편하려고 만든게 아니라 서버개발자들 편하려고 쓰는겁니다.
 	// 왜? => 개인정보를 취급하지 않아도 되서, 인가작업 내가 안해도되서
 
+	@Operation(summary = "로그아웃")
+	@SecurityRequirement(name = "Bearer Authentication")
 	@PostMapping("/logout")
 	public ApiResult<Void> logout(@RequestBody @Valid AuthRequest.Logout request) {
 		authService.deleteRefreshToken(request);
 
 		return ApiResult.ok();
 	}
+
 }
