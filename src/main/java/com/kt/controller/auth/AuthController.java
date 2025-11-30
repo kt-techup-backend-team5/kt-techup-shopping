@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "auth", description = "인증/인가 API")
+@Tag(name = "Auth", description = "인증/인가 API")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -52,5 +52,11 @@ public class AuthController {
 		authService.deleteRefreshToken(request);
 
 		return ApiResult.ok();
+	}
+
+	@Operation(summary = "토큰 재발급")
+	@PostMapping("/reissue")
+	public ApiResult<AuthResponse.Reissue> reissue(@RequestBody @Valid AuthRequest.Reissue request) {
+		return ApiResult.ok(authService.reissue(request));
 	}
 }

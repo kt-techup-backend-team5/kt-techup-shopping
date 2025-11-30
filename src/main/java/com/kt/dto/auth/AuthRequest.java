@@ -25,4 +25,12 @@ public class AuthRequest {
 		@NotBlank
 		private String refreshToken;
 	}
+
+	@Getter
+	@AllArgsConstructor
+	@Schema(name = "AuthRequest.Reissue")
+	public static class Reissue {
+		@NotBlank
+		private String refreshToken;
+	}
 }

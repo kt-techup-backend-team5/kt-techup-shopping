@@ -4,6 +4,10 @@ import java.util.Date;
 
 import org.springframework.stereotype.Component;
 
+import com.kt.common.exception.CustomException;
+import com.kt.common.exception.ErrorCode;
+
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 
@@ -21,13 +25,13 @@ public class JwtService {
 		// refresh token -> 긴 유효기간 : 12시간 ->만료되면 로그인 다시 해야댐
 
 		return Jwts.builder()
-			.subject("kt-cloud-shopping")
-			.issuer("roy")
-			.issuedAt(new Date())
-			.id(id.toString())
-			.expiration(expiration)
-			.signWith(jwtProperties.getSecret())
-			.compact();
+				.subject("kt-cloud-shopping")
+				.issuer("roy")
+				.issuedAt(new Date())
+				.id(id.toString())
+				.expiration(expiration)
+				.signWith(jwtProperties.getSecret())
+				.compact();
 	}
 
 	public Date getAccessExpiration() {
@@ -39,19 +43,27 @@ public class JwtService {
 	}
 
 	public boolean validate(String token) {
-		return Jwts.parser()
-			.verifyWith(jwtProperties.getSecret())
-			.build()
-			.isSigned(token);
+		try {
+			Jwts.parser()
+					.verifyWith(jwtProperties.getSecret())
+					.build()
+					.parseSignedClaims(token);
+
+			return true;
+		} catch (ExpiredJwtException e) {
+			throw new CustomException(ErrorCode.EXPIRED_JWT_TOKEN);
+		} catch (Exception e) {
+			throw new CustomException(ErrorCode.INVALID_JWT_TOKEN);
+		}
 	}
 
 	public Long parseId(String token) {
 		var id = Jwts.parser()
-			.verifyWith(jwtProperties.getSecret())
-			.build()
-			.parseSignedClaims(token)
-			.getPayload()
-			.getId();
+				.verifyWith(jwtProperties.getSecret())
+				.build()
+				.parseSignedClaims(token)
+				.getPayload()
+				.getId();
 
 		return Long.valueOf(id);
 	}

@@ -55,4 +55,10 @@ public class RedisService {
 		RBucket<Long> bucket = redissonClient.getBucket(key);
 		bucket.delete();
 	}
+
+	public Long findUserIdByRefreshToken(String token) {
+		String key = REFRESH_TOKEN_PREFIX + token;
+		RBucket<Long> bucket = redissonClient.getBucket(key);
+		return bucket.get();
+	}
 }
