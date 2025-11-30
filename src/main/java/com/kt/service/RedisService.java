@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 public class RedisService {
 	private final static String VIEW_COUNT_PREFIX = "product:viewcount:";
 	private final static String USER_CHECK_PREFIX = "viewcheck:";
+	private final static String REFRESH_TOKEN_PREFIX = "refresh-token:";
 	private final static int DUP_CHK_SECONDS = 120;
 
 	private final RedissonClient redissonClient;
@@ -41,5 +42,17 @@ public class RedisService {
 		boolean isKeySet = bucket.setIfAbsent("check", Duration.ofSeconds(DUP_CHK_SECONDS));
 
 		return !isKeySet;
+	}
+
+	public void saveRefreshToken(String token, Long userId, Long expiration) {
+		String key = REFRESH_TOKEN_PREFIX + token;
+		RBucket<Long> bucket = redissonClient.getBucket(key);
+		bucket.set(userId, Duration.ofSeconds(expiration));
+	}
+
+	public void deleteRefreshToken(String token) {
+		String key = REFRESH_TOKEN_PREFIX + token;
+		RBucket<Long> bucket = redissonClient.getBucket(key);
+		bucket.delete();
 	}
 }

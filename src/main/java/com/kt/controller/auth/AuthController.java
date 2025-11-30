@@ -6,22 +6,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kt.common.response.ApiResult;
-import com.kt.dto.auth.LoginRequest;
+import com.kt.dto.auth.AuthRequest;
 import com.kt.dto.auth.LoginResponse;
 import com.kt.service.AuthService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
 public class AuthController {
 	private final AuthService authService;
 
 	@PostMapping("/login")
-	public ApiResult<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
-		var pair = authService.login(request.loginId(), request.password());
+	public ApiResult<LoginResponse> login(@RequestBody @Valid AuthRequest.Login request) {
+		var pair = authService.login(request.getLoginId(), request.getPassword());
 
 		return ApiResult.ok(new LoginResponse(pair.getFirst(), pair.getSecond()));
 	}
@@ -39,4 +41,11 @@ public class AuthController {
 	// 내 서버에서하는게아니라 남한테 맡기는 방식(구글, 카카오, 네이버, 깃헙, 페이스북)
 	// 장점 => 사용자 편하려고 만든게 아니라 서버개발자들 편하려고 쓰는겁니다.
 	// 왜? => 개인정보를 취급하지 않아도 되서, 인가작업 내가 안해도되서
+
+	@PostMapping("/logout")
+	public ApiResult<Void> logout(@RequestBody @Valid AuthRequest.Logout request) {
+		authService.deleteRefreshToken(request);
+
+		return ApiResult.ok();
+	}
 }
