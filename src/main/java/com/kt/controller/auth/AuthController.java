@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kt.common.response.ApiResult;
 import com.kt.dto.auth.AuthRequest;
-import com.kt.dto.auth.LoginResponse;
+import com.kt.dto.auth.AuthResponse;
 import com.kt.service.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,10 +25,10 @@ public class AuthController {
 
 	@Operation(summary = "로그인")
 	@PostMapping("/login")
-	public ApiResult<LoginResponse> login(@RequestBody @Valid AuthRequest.Login request) {
+	public ApiResult<AuthResponse.Login> login(@RequestBody @Valid AuthRequest.Login request) {
 		var pair = authService.login(request.getLoginId(), request.getPassword());
 
-		return ApiResult.ok(new LoginResponse(pair.getFirst(), pair.getSecond()));
+		return ApiResult.ok(AuthResponse.Login.of(pair.getFirst(), pair.getSecond()));
 	}
 	// 인증 관련 컨트롤러를 구현
 	// 인증방식 크게 3가지가 존재함
@@ -53,5 +53,4 @@ public class AuthController {
 
 		return ApiResult.ok();
 	}
-
 }
