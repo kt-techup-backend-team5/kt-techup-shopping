@@ -18,7 +18,6 @@ import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
 import com.kt.domain.user.User;
-import com.kt.dto.user.UserRequest;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.user.UserRepository;
 
@@ -40,7 +39,7 @@ public class UserService {
 	// 트랜잭션 처리해줘
 	// PSA - Portable Service Abstraction
 	// 환경설정을 살짝 바꿔서 일관된 서비스를 제공하는 것
-	public void create(UserRequest.Create request) {
+	public void create(UserCreateRequest request) {
 		// 아이디 중복 체크
 		Preconditions.validate(!isDuplicateLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
 		// 이메일 중복 체크 (나중에 이메일 인증까지 구현)
@@ -60,6 +59,23 @@ public class UserService {
 
 		userRepository.save(newUser);
 	}
+
+    public void createAdmin(UserCreateRequest request) {
+        Preconditions.validate(!userRepository.existsByLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
+
+        var newAdmin = User.admin(
+                request.loginId(),
+                passwordEncoder.encode(request.password()),
+                request.name(),
+                request.email(),
+                request.mobile(),
+                request.gender(),
+                request.birthday(),
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+        userRepository.save(newAdmin);
+    }
 
 	public boolean isDuplicateLoginId(String loginId) {
 		return userRepository.existsByLoginId(loginId);
@@ -94,20 +110,38 @@ public class UserService {
         user.changePassword(encoded);
     }
 
-	// Pageable 인터페이스
-	public Page<User> search(Pageable pageable, String keyword) {
-		return userRepository.findAllByNameContaining(keyword, pageable);
-	}
+        Preconditions.validate(
+                request.newPassword().equals(request.confirmPassword()),
+                ErrorCode.NOT_MATCHED_CHECK_PASSWORD
+        );
 
-	public User detail(Long id) {
+        Preconditions.validate(
+                !passwordEncoder.matches(request.newPassword(), user.getPassword()),
+                ErrorCode.CAN_NOT_ALLOWED_SAME_PASSWORD
+        );
+        String encoded = passwordEncoder.encode(request.newPassword());
+        user.changePassword(encoded);
+    }
+
+	// Pageable 인터페이스
+    public Page<User> search(Pageable pageable, String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return userRepository.findAll(pageable);
+        }
+        return userRepository.findAllByNameContaining(keyword, pageable);
+    }
+
+
+    public User detail(Long id) {
 		return userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
 	}
 
-	public void update(Long id, String name, String email, String mobile) {
-		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
-
-		user.update(name, email, mobile);
-	}
+    @Transactional
+    public UserResponse.Detail update(Long id, String name, String email, String mobile) {
+        var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+        user.update(name, email, mobile);
+        return UserResponse.Detail.of(user);
+    }
 
 	public void withdrawal(Long id) {
         // 회원 조회
@@ -178,4 +212,14 @@ public class UserService {
 		// 연관관계를 아예 끊는다 -> 엔티티자체를 느슨하게 결합해둔다.
 		// JPA를 안쓴다.
 	}
+    public void grantAdminRole(Long id) {
+        var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+        user.grantAdminRole();
+    }
+
+    public void revokeAdminRole(Long id) {
+        var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+
+        user.revokeAdminRole();
+    }
 }

@@ -54,6 +54,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	@NotNull
 	Optional<User> findById(@NotNull Long id);
 
+
 	// @EntityGraph(attributePaths = "orders")
 	// @NotNull Optional<User> findById(@NotNull Long id);
 

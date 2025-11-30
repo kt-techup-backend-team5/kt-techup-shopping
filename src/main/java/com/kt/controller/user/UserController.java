@@ -47,7 +47,7 @@ public class UserController extends SwaggerAssistance {
 	})
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public ApiResult<Void> create(@Valid @RequestBody UserRequest.Create request) {
+	public ApiResult<Void> create(@Valid @RequestBody UserCreateRequest request) {
 		userService.create(request);
 		return ApiResult.ok();
 	}
@@ -145,6 +145,8 @@ public class UserController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "200", description = "주문 목록 조회 성공"),
 		@ApiResponse(responseCode = "401", description = "인증 실패")
 	})
+
+
 	@GetMapping("/orders")
 	@ResponseStatus(HttpStatus.OK)
 	@SecurityRequirement(name = "Bearer Authentication")
