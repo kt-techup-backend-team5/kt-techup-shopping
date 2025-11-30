@@ -132,9 +132,9 @@ public class AdminUserController extends SwaggerAssistance {
             @ApiResponse(responseCode = "200", description = "사용자 비활성화 성공"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    @PutMapping("/{id}/deactivate")
+    @PutMapping("/{id}/in-activate")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<Void> deactivateUser(
+    public ApiResult<Void> inactivateUser(
             @Parameter(description = "비활성화할 사용자 ID", required = true)
             @PathVariable Long id
     ) {
