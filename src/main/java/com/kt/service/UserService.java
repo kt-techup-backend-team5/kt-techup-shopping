@@ -4,6 +4,7 @@ import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
 import com.kt.domain.user.User;
+import com.kt.dto.user.UserChangePasswordRequest;
 import com.kt.dto.user.UserCreateRequest;
 import com.kt.dto.user.UserResponse;
 import com.kt.dto.user.UserUpdatePasswordRequest;
@@ -11,6 +12,10 @@ import com.kt.dto.user.UserUpdateRequest;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.user.UserRepository;
 import com.kt.security.DefaultCurrentUser;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -104,6 +109,63 @@ public class UserService {
 		);
 		String encoded = passwordEncoder.encode(request.newPassword());
 		user.changePassword(encoded);
+	}
+
+	@Transactional
+	public String initPassword(Long userId) {
+		User user = userRepository.findByIdOrThrow(userId);
+		String temporaryPassword = generateRandomPassword();
+		String encodedPassword = passwordEncoder.encode(temporaryPassword);
+		user.changePassword(encodedPassword);
+		return temporaryPassword;
+	}
+
+	/**
+	 * 임시 비밀번호를 생성하는 메서드입니다.
+	 * 최소 8자 이상이며, 영문 소문자, 대문자, 숫자, 특수문자를 각각 1개 이상 포함합니다.
+	 * @return 생성된 임시 비밀번호 문자열
+	 */
+	private String generateRandomPassword() {
+		final String lower = "abcdefghijklmnopqrstuvwxyz";
+		final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		final String digits = "0123456789";
+		final String special = "!@#$%^";
+
+		// 모든 문자 세트를 하나로 합칩니다.
+		final String allCharacters = lower + upper + digits + special;
+		final int passwordLength = 8;
+		final SecureRandom random = new SecureRandom();
+
+		List<Character> passwordChars = new ArrayList<>();
+
+		// 1. 각 문자 세트에서 최소 1개의 문자를 보장합니다.
+		passwordChars.add(lower.charAt(random.nextInt(lower.length())));
+		passwordChars.add(upper.charAt(random.nextInt(upper.length())));
+		passwordChars.add(digits.charAt(random.nextInt(digits.length())));
+		passwordChars.add(special.charAt(random.nextInt(special.length())));
+
+		// 2. 전체 문자 세트에서 나머지 길이만큼 랜덤하게 문자를 추가합니다.
+		for (int i = passwordChars.size(); i < passwordLength; i++) {
+			passwordChars.add(allCharacters.charAt(random.nextInt(allCharacters.length())));
+		}
+
+		// 3. 생성된 비밀번호의 문자 순서를 무작위로 섞습니다.
+		Collections.shuffle(passwordChars, random);
+
+		// 4. 최종 비밀번호를 문자열 형태로 조합합니다.
+		StringBuilder password = new StringBuilder(passwordLength);
+		for (Character ch : passwordChars) {
+			password.append(ch);
+		}
+
+		return password.toString();
+	}
+
+	@Transactional
+	public void changePasswordByAdmin(Long userId, UserChangePasswordRequest request) {
+		User user = userRepository.findByIdOrThrow(userId);
+		String encodedPassword = passwordEncoder.encode(request.newPassword());
+		user.changePassword(encodedPassword);
 	}
 
 	public Page<User> search(Pageable pageable, String keyword) {

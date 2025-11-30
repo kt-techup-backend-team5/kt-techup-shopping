@@ -1,14 +1,10 @@
 package com.kt.controller.user;
 
-import com.kt.domain.user.Role;
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
 
 import com.kt.common.request.Paging;
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
+import com.kt.dto.user.UserChangePasswordRequest;
 import com.kt.dto.user.UserResponse;
 import com.kt.dto.user.UserUpdateRequest;
 import com.kt.security.CurrentUser;
@@ -22,6 +18,19 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Admin-User", description = "관리자 사용자 관리 API")
 @RestController
@@ -150,16 +159,50 @@ public class AdminUserController extends SwaggerAssistance {
             @ApiResponse(responseCode = "200", description = "사용자 활성화 성공"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    @PutMapping("/{id}/in-activate")
+    @PutMapping("/{id}/activate")
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Void> activateUser(
             @Parameter(description = "활성화할 사용자 ID", required = true)
-            @PathVariable Long id
+            @PathVariable("id") Long userId
     ) {
-        userService.activateUser(id);
+        userService.activateUser(userId);
         return ApiResult.ok();
     }
-    // 유저 삭제
-    // DELETE FROM MEMBER WHERE id = ?
-    // 유저 비밀번호 초기화
+
+    @Operation(
+            summary = "사용자 비밀번호 초기화",
+            description = "관리자가 사용자의 비밀번호를 임시 비밀번호로 초기화합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "비밀번호 초기화 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @PostMapping("/{user_id}/init-password")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResult<String> initPassword(
+            @Parameter(description = "초기화할 사용자 ID", required = true)
+            @PathVariable("user_id") Long userId
+    ) {
+        String temporaryPassword = userService.initPassword(userId);
+        return ApiResult.ok("임시 비밀번호: " + temporaryPassword);
+    }
+
+    @Operation(
+            summary = "사용자 비밀번호 변경",
+            description = "관리자가 특정 사용자의 비밀번호를 직접 변경합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "비밀번호 변경 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @PutMapping("/{user_id}/change-password")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResult<Void> changePassword(
+            @Parameter(description = "변경할 사용자 ID", required = true)
+            @PathVariable("user_id") Long userId,
+            @RequestBody @Valid UserChangePasswordRequest request
+    ) {
+        userService.changePasswordByAdmin(userId, request);
+        return ApiResult.ok();
+    }
 }
