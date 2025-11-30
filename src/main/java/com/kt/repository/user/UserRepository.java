@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
+import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 
 import jakarta.validation.constraints.NotNull;
@@ -43,6 +44,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 			SELECT exists (SELECT u FROM User u WHERE u.loginId = ?1)
 		""")
 	Boolean existsByLoginIdJPQL(String loginId);
+
+	Page<User> findAllByRole(Role role, Pageable pageable);
 
 	Page<User> findAllByNameContaining(String name, Pageable pageable);
 

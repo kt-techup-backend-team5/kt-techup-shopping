@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
+import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.user.UserRepository;
@@ -113,6 +114,10 @@ public class UserService {
 			return userRepository.findAll(pageable);
 		}
 		return userRepository.findAllByNameContaining(keyword, pageable);
+	}
+
+	public Page<User> searchAdmins(Pageable pageable) {
+		return userRepository.findAllByRole(Role.ADMIN, pageable);
 	}
 
 	public User detail(Long id) {
