@@ -3,8 +3,6 @@ package com.kt.service;
 import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 
-import com.kt.domain.user.Role;
-import com.kt.dto.user.UserCreateRequest;
 import com.kt.dto.user.UserResponse;
 import com.kt.dto.user.UserUpdatePasswordRequest;
 import com.kt.dto.user.UserUpdateRequest;
@@ -112,6 +110,19 @@ public class UserService {
         user.changePassword(encoded);
     }
 
+        Preconditions.validate(
+                request.newPassword().equals(request.confirmPassword()),
+                ErrorCode.NOT_MATCHED_CHECK_PASSWORD
+        );
+
+        Preconditions.validate(
+                !passwordEncoder.matches(request.newPassword(), user.getPassword()),
+                ErrorCode.CAN_NOT_ALLOWED_SAME_PASSWORD
+        );
+        String encoded = passwordEncoder.encode(request.newPassword());
+        user.changePassword(encoded);
+    }
+
 	// Pageable 인터페이스
     public Page<User> search(Pageable pageable, String keyword) {
         if (keyword == null || keyword.isBlank()) {
@@ -136,7 +147,7 @@ public class UserService {
         // 회원 조회
         User user = userRepository.findByIdAndDeletedAtIsNull(id)
                         .orElseThrow(()->new CustomException(ErrorCode.NOT_FOUND_USER));
-        user.deleted();
+        user.markAsDeleted();
 //        userRepository.deleteById(id);
 		// 삭제에는 두가지 개념 - softdelete, harddelete
 		//var user = userRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
