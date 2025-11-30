@@ -97,19 +97,16 @@ public class AdminUserController extends SwaggerAssistance {
     })
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<UserResponse.Detail> update(
+    public ApiResult<Void> update(
             @Parameter(description = "수정할 사용자 ID", required = true)
             @PathVariable Long id,
             @RequestBody @Valid UserUpdateRequest request
     ) {
-        var updatedUser = userService.update(id, request.name(), request.email(), request.mobile());
-        return ApiResult.ok(updatedUser);
+        userService.update(id, request.name(), request.email(), request.mobile());
+        return ApiResult.ok();
     }
 
-    @Operation(
-            summary = "관리자가 사용자 권한 변경",
-            description = "관리자가 특정 사용자의 권한을 변경합니다."
-    )
+    @Operation(summary = "관리자 권한 부여")
     @PatchMapping("/admins/{id}/grant-admin")
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Void> grant(@PathVariable Long id) {
