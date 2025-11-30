@@ -6,9 +6,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
+import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 
 import jakarta.validation.constraints.NotNull;
@@ -34,15 +36,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByNameAndEmail(String name, String email);
 
-	default User findByNameAndEmailOrThrow(String name, String email, ErrorCode errorCode) {
+	default User findByNameAndEmailOrThrow(String name, String email) {
 		return findByNameAndEmail(name, email)
-				.orElseThrow(() -> new CustomException(errorCode));
+				.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 	}
 
 	@Query("""
 			SELECT exists (SELECT u FROM User u WHERE u.loginId = ?1)
 		""")
 	Boolean existsByLoginIdJPQL(String loginId);
+
+	Page<User> findAllByRole(Role role, Pageable pageable);
 
 	Page<User> findAllByNameContaining(String name, Pageable pageable);
 
@@ -58,7 +62,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	// @EntityGraph(attributePaths = "orders")
 	// @NotNull Optional<User> findById(@NotNull Long id);
 
-	default User findByIdOrThrow(Long id, ErrorCode errorCode) {
-		return findById(id).orElseThrow(() -> new CustomException(errorCode));
+	default User findByIdOrThrow(Long id) {
+		return findById(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+	}
+
+	@Query(value = "SELECT * FROM user WHERE id = :id", nativeQuery = true)
+	Optional<User> findByIdIncludeDeleted(@Param("id") Long id);
+
+	default User findByIdIncludeDeletedOrThrow(Long id) {
+		return findByIdIncludeDeleted(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 	}
 }

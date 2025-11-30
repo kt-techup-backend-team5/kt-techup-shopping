@@ -11,6 +11,7 @@ import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
 import com.kt.dto.auth.AuthRequest;
+import com.kt.dto.auth.AuthResponse;
 import com.kt.repository.user.UserRepository;
 import com.kt.security.JwtService;
 
@@ -47,5 +48,26 @@ public class AuthService {
 
 	public void deleteRefreshToken(AuthRequest.Logout request) {
 		redisService.deleteRefreshToken(request.getRefreshToken());
+	}
+
+	public AuthResponse.Reissue reissue(AuthRequest.Reissue request) {
+		String oldRefreshToken = request.getRefreshToken();
+
+		jwtService.validate(oldRefreshToken);
+
+		Long userId = redisService.findUserIdByRefreshToken(oldRefreshToken);
+		if (userId == null || !userId.equals(jwtService.parseId(oldRefreshToken))) {
+			throw new CustomException(ErrorCode.INVALID_JWT_TOKEN);
+		}
+
+		redisService.deleteRefreshToken(oldRefreshToken);
+
+		var accessToken = jwtService.issue(userId, jwtService.getAccessExpiration());
+		var refreshToken = jwtService.issue(userId, jwtService.getRefreshExpiration());
+
+		Long ttlSeconds = (jwtService.getRefreshExpiration().getTime() - new Date().getTime()) / 1000;
+		redisService.saveRefreshToken(refreshToken, userId, ttlSeconds);
+
+		return AuthResponse.Reissue.of(accessToken, refreshToken);
 	}
 }
