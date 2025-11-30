@@ -63,7 +63,7 @@ public class OrderService {
 		System.out.println(product.getStock());
 		Preconditions.validate(product.canProvide(quantity), ErrorCode.NOT_ENOUGH_STOCK);
 
-		var user = userRepository.findByIdOrThrow(userId, ErrorCode.NOT_FOUND_USER);
+		var user = userRepository.findByIdOrThrow(userId);
 
 		var receiver = new Receiver(
 				receiverName,

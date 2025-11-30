@@ -123,6 +123,42 @@ public class AdminUserController extends SwaggerAssistance {
 
         return ApiResult.ok();
     }
+    
+    @Operation(
+            summary = "관리자 사용자 비활성화",
+            description = "관리자가 특정 사용자를 비활성화합니다. (소프트 삭제 처리)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "사용자 비활성화 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @PutMapping("/{id}/deactivate")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResult<Void> deactivateUser(
+            @Parameter(description = "비활성화할 사용자 ID", required = true)
+            @PathVariable Long id
+    ) {
+        userService.deactivateUser(id);
+        return ApiResult.ok();
+    }
+
+    @Operation(
+            summary = "관리자 사용자 활성화",
+            description = "관리자가 비활성화된 특정 사용자를 다시 활성화합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "사용자 활성화 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @PutMapping("/{id}/activate")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResult<Void> activateUser(
+            @Parameter(description = "활성화할 사용자 ID", required = true)
+            @PathVariable Long id
+    ) {
+        userService.activateUser(id);
+        return ApiResult.ok();
+    }
     // 유저 삭제
     // DELETE FROM MEMBER WHERE id = ?
     // 유저 비밀번호 초기화
