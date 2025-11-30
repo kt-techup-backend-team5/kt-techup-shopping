@@ -121,6 +121,10 @@ public class UserService {
 		return userRepository.findByIdOrThrow(id);
 	}
 
+	public User detailIncludeDeleted(Long id) {
+		return userRepository.findByIdIncludeDeletedOrThrow(id);
+	}
+
 	@Transactional
 	public UserResponse.Detail update(Long id, String name, String email, String mobile) {
 		var user = userRepository.findByIdOrThrow(id);
@@ -186,5 +190,14 @@ public class UserService {
 	public void revokeAdminRole(Long id) {
 		var user = userRepository.findByIdOrThrow(id);
 		user.revokeAdminRole();
+	}
+
+	@Transactional
+	public String initPassword(Long userId) {
+		User user = userRepository.findByIdOrThrow(userId);
+		String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8); // e.g., "123e4567"
+		String encodedPassword = passwordEncoder.encode(tempPassword);
+		user.changePassword(encodedPassword);
+		return tempPassword;
 	}
 }
