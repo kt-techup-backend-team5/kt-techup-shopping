@@ -1,12 +1,28 @@
 # kt-techup-shopping
 KT Cloud TECH-UP Backend 1st Cohort Team 5’s e-commerce backend project. Implements RESTful APIs for shopping with Spring Boot.
 
-# 🛒 KT Cloud TECH-UP 백엔드 1기 5조 - 쇼핑 프로젝트
+# 🛒 KT Cloud TECH-UP 백엔드 1기 5조(JavaChip Frappuccino) - 쇼핑 프로젝트
+
+## 📋 목차
+
+- [프로젝트 소개](#-프로젝트-소개)
+- [주요 기능](#-주요-기능)
+- [기술 스택](#-기술-스택)
+- [시스템 아키텍처](#-시스템-아키텍처)
+- [API 문서](#-api-문서)
+- [시작하기](#-시작하기)
+- [팀원 소개](#-팀원-소개)
+
+---
 
 ## 📘 프로젝트 소개
-KT Cloud TECH-UP 백엔드 1기 **5조**의 전자상거래 백엔드 프로젝트입니다.  
+KT Cloud TECH-UP 백엔드 1기 **5조**의 전자상거래 백엔드 프로젝트입니다.
 Spring Boot 기반으로 **전자상거래(쇼핑)** 의 기능을 제공하는 RESTful API를 설계하고 구현합니다.  
 확장성과 유지보수성을 고려한 백엔드 아키텍처를 구축하여, 실제 배포 가능한 형태로 완성하는 것을 목표로 합니다.
+- **확장 가능한 아키텍처**: 마이크로서비스 전환을 고려한 모듈식 설계
+- **보안 강화**: JWT 기반 인증, BCrypt 암호화, Spring Security 적용
+- **성능 최적화**: Redis 캐싱, 분산 락, QueryDSL을 통한 동적 쿼리 최적화
+- **실시간 모니터링**: Slack 연동 알림 시스템
 
 ### 🪜 하위 목표
 - **프로젝트 : 전자상거래 백엔드**
@@ -16,6 +32,330 @@ Spring Boot 기반으로 **전자상거래(쇼핑)** 의 기능을 제공하는 
     - 리뷰 및 평점 시스템 구현
     - 관리자용 상품 관리 기능
     - 재고 관리 시스템
+---
+## ✨ 주요 기능
+
+### 👤 회원 관리
+- 회원가입 및 로그인 (JWT 토큰 기반)
+- 아이디/비밀번호 찾기
+- 회원 정보 수정 및 탈퇴
+- 관리자 권한 관리
+
+### 🛍️ 상품 관리
+- 상품 CRUD (등록, 조회, 수정, 삭제)
+- 상품 검색 및 정렬 (최신순, 인기순)
+- 상품 상태 관리 (활성화, 비활성화, 품절, 삭제)
+- 실시간 조회수 추적 (Redis 기반)
+
+### 📦 주문 관리
+- 주문 생성 및 조회
+- 주문 상태 관리 (결제대기, 결제완료, 배송중, 배송완료, 구매확정)
+- 주문 취소 요청 및 관리자 승인/거절
+- 수령인 정보 수정
+- 분산 락을 통한 재고 관리
+
+### 💳 결제 시스템
+- 다중 결제 수단 지원 (현금, 카드, 간편결제)
+- 결제 정보 관리
+- 배송비 계산
+
+### ⭐ 리뷰 시스템
+- 구매 확정 후 리뷰 작성
+- 리뷰 수정 및 삭제
+- 상품별 리뷰 조회 (페이징, 정렬)
+- 관리자 리뷰 관리 (검색, 삭제)
+
+### 🔐 보안
+- JWT Access/Refresh 토큰 인증
+- BCrypt 비밀번호 암호화
+- Spring Security 기반 접근 제어
+- 비밀번호 정책 적용 (대소문자, 숫자, 특수문자 포함)
+
+### 📊 통계 및 모니터링
+- 방문자 통계 수집
+- 상품 조회수 추적
+- Slack 실시간 알림 시스템
+- 관리자 대시보드용 통계 API
+
+---
+## 🛠 기술 스택
+
+### Backend
+- **언어**: Java 21
+- **프레임워크**: Spring Boot 3.
+- **ORM**: Spring Data JPA, QueryDSL
+- **보안**: Spring Security, JWT
+- **데이터베이스**: MySQL (RDB)
+- **캐싱**: Redis, Redisson (분산 락)
+- **빌드 도구**: Gradle
+
+### Infrastructure
+- **문서화**: Swagger (OpenAPI 3.0)
+- **모니터링**: Slack API
+- **형상 관리**: Git, GitHub
+
+### 디자인 패턴 및 아키텍처
+- Layered Architecture (Controller - Service - Repository)
+- AOP (Aspect-Oriented Programming)
+- 이벤트 기반 아키텍처 (Spring Events)
+- DTO 패턴
+- Repository 패턴
+
+---
+## 🏗 시스템 아키텍처
+```
+┌─────────────────┐
+│   API Gateway   │
+│   (Future)      │
+└────────┬────────┘
+         │
+┌────────▼────────────────────────────────────────┐
+│           Spring Boot Application               │
+│  ┌──────────────────────────────────────────┐  │
+│  │         Controller Layer                 │  │
+│  │  (REST API Endpoints)                    │  │
+│  └──────────────┬───────────────────────────┘  │
+│                 │                               │
+│  ┌──────────────▼───────────────────────────┐  │
+│  │         Service Layer                    │  │
+│  │  (Business Logic)                        │  │
+│  └──────────────┬───────────────────────────┘  │
+│                 │                               │
+│  ┌──────────────▼───────────────────────────┐  │
+│  │         Repository Layer                 │  │
+│  │  (Data Access)                           │  │
+│  └──────────────┬───────────────────────────┘  │
+└─────────────────┼───────────────────────────────┘
+                  │
+     ┌────────────┼────────────┐
+     │            │            │
+┌────▼────┐  ┌───▼────┐  ┌───▼────┐
+│  MySQL  │  │ Redis  │  │ Slack  │
+│   DB    │  │ Cache  │  │  API   │
+└─────────┘  └────────┘  └────────┘
+```
+---
+
+## 📚 API 문서
+
+### Swagger UI
+프로젝트 실행 후 아래 URL로 접속하여 전체 API 문서를 확인할 수 있습니다:
+```
+http://localhost:8080/swagger-ui/index.html
+```
+
+### 주요 API 엔드포인트
+
+#### 인증 (Authentication)
+```
+POST   /auth/signup          # 회원가입
+POST   /auth/login           # 로그인
+POST   /auth/logout          # 로그아웃
+POST   /auth/reissue         # 토큰 재발급
+```
+
+#### 회원 (Users)
+```
+GET    /users/duplicate-login-id   # 아이디 중복 확인
+POST   /users/find-login-id        # 아이디 찾기
+GET    /users/my-info              # 내 정보 조회
+PUT    /users/my-info              # 내 정보 수정
+PUT    /users/{id}/change-password # 비밀번호 변경
+DELETE /users/withdrawal           # 회원 탈퇴
+```
+
+#### 상품 (Products)
+```
+GET    /products                   # 상품 목록 조회
+GET    /products/{id}              # 상품 상세 조회
+GET    /products/{id}/reviews      # 상품 리뷰 목록
+```
+
+#### 관리자 - 상품 (Admin Products)
+```
+GET    /admin/products             # 상품 관리 목록
+POST   /admin/products             # 상품 등록
+PUT    /admin/products/{id}        # 상품 수정
+DELETE /admin/products/{id}        # 상품 삭제
+POST   /admin/products/{id}/activate        # 상품 활성화
+POST   /admin/products/{id}/in-activate     # 상품 비활성화
+POST   /admin/products/{id}/toggle-sold-out # 상품 품절 처리
+```
+
+#### 주문 (Orders)
+```
+POST   /orders                     # 주문 생성
+GET    /orders                     # 내 주문 목록
+GET    /orders/{id}                # 주문 상세 조회
+PUT    /orders/{id}                # 주문 수정
+POST   /orders/{id}/cancel         # 주문 취소 요청
+POST   /orders/{id}/pay            # 주문 결제
+```
+
+#### 관리자 - 주문 (Admin Orders)
+```
+GET    /admin/orders               # 주문 목록 조회
+GET    /admin/orders/{id}          # 주문 상세 조회
+GET    /admin/orders/cancel        # 취소 요청 목록
+POST   /admin/orders/{id}/cancel   # 취소 승인/거절
+POST   /admin/orders/{id}/change-status  # 주문 상태 변경
+```
+
+#### 리뷰 (Reviews)
+```
+POST   /reviews                    # 리뷰 작성
+GET    /reviews                    # 리뷰 목록 조회
+PUT    /reviews/{id}               # 리뷰 수정
+DELETE /reviews/{id}               # 리뷰 삭제
+```
+
+#### 관리자 - 리뷰 (Admin Reviews)
+```
+GET    /admin/reviews              # 리뷰 관리 목록
+DELETE /admin/reviews/{id}         # 리뷰 삭제
+```
+---
+## 🚀 시작하기
+
+### 🗒️ 사전 요구사항
+프로젝트를 실행하기 전에 다음 소프트웨어가 설치되어 있어야 합니다.
+| 소프트웨어 | 버전 | 다운로드 링크 | 비고 |
+|----------|------|------------|------|
+| **Java** | 21 이상 | [Oracle JDK](https://www.oracle.com/java/technologies/downloads/) 또는 [OpenJDK](https://adoptium.net/) | JDK 21 필수 |
+| **MySQL** | 8.0 이상 | [MySQL Community Server](https://dev.mysql.com/downloads/mysql/) | 데이터베이스 서버 |
+| **Redis** | 6.0 이상 | [Redis](https://redis.io/download) | 캐싱 및 분산 락 |
+| **Git** | 최신 버전 | [Git](https://git-scm.com/downloads) | 소스 코드 관리 |
+
+#### 선택 사항
+- **Docker Desktop**: MySQL과 Redis를 Docker로 실행할 경우
+- **IntelliJ IDEA** : IDE
+- **Postman**: API 테스트용
+
+### 설치 및 실행
+
+1. **레포지토리 클론**
+```bash
+git clone https://github.com/kt-techup-backend-team5/kt-techup-shopping.git
+cd kt-techup-shopping
+```
+
+2. **데이터베이스 설정**
+```sql
+CREATE DATABASE shopping;
+```
+
+3. **application.yml 설정**
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/shopping
+    username: your_username
+    password: your_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          time_zone: Asia/Seoul
+        show_sql: true
+  
+  data:
+    redis:
+      host: ${redis.host:localhost}
+      port: ${redis.port:6379}
+
+jwt:
+  secret: your-secret-key-here
+  access-token-expiration: 3600000    # 1시간
+  refresh-token-expiration: 43200000  # 12시간
+
+slack:
+  bot-token: your-slack-bot-token
+  log-channel: your-channel-id
+```
+
+4. **프로젝트 빌드 및 실행**
+```bash
+./gradlew clean build
+./gradlew bootRun
+```
+
+5. **API 테스트**
+```
+브라우저에서 http://localhost:8080/swagger-ui/index.html 접속
+```
+
+### 환경별 프로파일
+
+- **local**: 로컬 개발 환경
+- **dev**: 개발 서버 환경
+- **prod**: 운영 서버 환경
+```bash
+# 프로파일 지정 실행
+./gradlew bootRun --args='--spring.profiles.active=dev'
+```
+---
+
+## 🔑 주요 구현 기능
+
+### 1. 분산 락을 통한 동시성 제어
+Redisson을 활용한 분산 락으로 재고 관리의 동시성 문제를 해결했습니다.
+```java
+@Lock(key = Lock.Key.STOCK, index = 1)
+public void create(Long userId, Long productId, ...) {
+    // 재고 확인 및 차감 로직
+}
+```
+
+### 2. QueryDSL 동적 쿼리
+복잡한 검색 조건을 QueryDSL로 구현하여 유연한 조회 기능을 제공합니다.
+
+### 3. 이벤트 기반 아키텍처
+Spring Events를 활용한 느슨한 결합의 비즈니스 로직 구현:
+- 상품 조회 이벤트 → 조회수 증가
+- 방문 이벤트 → 통계 수집
+- 시스템 이벤트 → Slack 알림
+
+### 4. 소프트 삭제 (Soft Delete)
+사용자와 리뷰 데이터는 물리적 삭제 대신 논리적 삭제를 적용했습니다.
+```java
+@SQLDelete(sql = "UPDATE user SET deleted = true, deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("deleted = false")
+public class User extends BaseEntity { ... }
+```
+
+---
+
+## 📊 ERD
+<img width="3656" height="1972" alt="image" src="https://github.com/user-attachments/assets/69e09a12-b85f-4e83-82ef-24c626424244" />
+
+
+
+### 주요 엔티티
+
+- **User**: 회원 정보 (일반/관리자)
+- **Product**: 상품 정보
+- **Order**: 주문 정보
+- **OrderProduct**: 주문-상품 매핑 (다대다 해소)
+- **Payment**: 결제 정보
+- **Review**: 리뷰 정보
+
+---
+## 📐 코딩 컨벤션
+
+본 프로젝트는 **Naver 코딩 컨벤션(Naver Hackday Java Convention)**을 따릅니다.
+
+### Checkstyle 설정
+
+프로젝트에는 코드 품질 관리를 위한 Checkstyle이 적용되어 있습니다:
+
+- **컨벤션**: Naver Coding Convention
+- **설정 파일**: `naver-checkstyle-suppressions.xml`
+- **적용 범위**: Java 소스 코드 전체
 
 ---
 
@@ -28,8 +368,7 @@ Spring Boot 기반으로 **전자상거래(쇼핑)** 의 기능을 제공하는 
 | **양승희** | 백엔드 개발 | [seungh22](https://github.com/seungh22/kt_cloud_study.git) |
 | **이동현** | 백엔드 개발 | [donghyeon95](https://github.com/donghyeon95/kt-techup-donghyoen) |
 
----
-## 자기소개
+## 팀원 자기소개
 **[강슬기]**
 >안녕하세요, KT Cloud TECH-UP 백엔드 1기에서 학습 중인 강슬기입니다.
 현재 5조 전자상거래 백엔드 프로젝트의 팀 리더로, 팀원들과 함께 Spring Boot 기반의 전자상거래 시스템을 설계·개발할 예정입니다.
@@ -50,35 +389,11 @@ TECH UP에서 백엔드 개발을 공부 중인 이신영입니다.
 >안녕하세요! 양승희입니다!!! 반갑습니다
 
 ---
+## 📜 라이선스
 
-## 🎯 프로젝트 목표
-- Spring Boot와 JPA를 활용한 **전자상거래 서비스용 RESTful API 구현**
-- **회원 관리, 상품 등록, 주문, 결제, 채팅, 블로그 기능** 제공
-- **클라우드 환경(KT Cloud, AWS 등)** 기반의 배포 환경 구축
-- 팀 단위로 **효율적인 협업 및 브랜치 전략(Git Flow)** 적용
+이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조.
 
----
+## 🙏 감사의 말
 
-## ⚙️ 기술 스택 [미정]
-- **언어(Language)**: Java 
-- **프레임워크(Framework)**: Spring Boot  
-- **데이터베이스(Database)**:   
-- **빌드 도구(Build Tool)**:   
-- **형상 관리(Version Control)**: GitHub  
-- **협업 도구(Collaboration)**: GitHub Projects, Issues, Pull Requests  
-
----
-
-## 📍 레포지토리 정보
-- **조직(Organization)**: [kt-techup-backend-team5](https://github.com/kt-techup-backend-team5)  
-- **개인 개발용 레포에서 작업 후 취합**
-- **이 통합 레포**: 팀 프로젝트 통합용 Repository로, 각 개인 작업을 병합하고 배포용 브랜치를 관리합니다.
-
----
-
-## 🌱 진행 방식
-- **개인별 기능 단위 브랜치**에서 개발 → **Pull Request(PR)** 로 코드 리뷰 후 병합  
-- **`develop` 브랜치**: 통합 개발용
-- **`feature` 브랜치**: 개인별 기능 단위 브랜치
-- **`main` 브랜치**: 안정 버전 및 배포용  
+KT Cloud TECH-UP 프로그램과 멘토님들께 감사드립니다.
 ---
