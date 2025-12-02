@@ -30,6 +30,13 @@ import com.kt.security.CurrentUser;
 
 import lombok.RequiredArgsConstructor;
 
+import com.kt.domain.refund.Refund;
+import com.kt.domain.refund.RefundStatus;
+import com.kt.domain.refund.RefundType;
+import com.kt.dto.refund.RefundRejectRequest;
+import com.kt.dto.refund.RefundRequest;
+import com.kt.dto.refund.RefundResponse;
+import com.kt.repository.refund.RefundRepository;
 import java.util.List;
 
 @Service
@@ -40,6 +47,7 @@ public class OrderService {
 	private final ProductRepository productRepository;
 	private final OrderRepository orderRepository;
 	private final OrderProductRepository orderProductRepository;
+	private final RefundRepository refundRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final StockService stockService;
 
@@ -94,6 +102,24 @@ public class OrderService {
 		order.requestCancel(reason);
 	}
 
+	public void requestRefundByUser(Long orderId, CurrentUser currentUser, RefundRequest request) {
+		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Preconditions.validate(
+				order.getUser().getId().equals(currentUser.getId()),
+				ErrorCode.NO_AUTHORITY_TO_REFUND
+		);
+		Preconditions.validate(order.isRefundable(), ErrorCode.INVALID_ORDER_STATUS);
+
+		Refund refund = new Refund(order, request.getRefundType(), request.getReason());
+		refundRepository.save(refund);
+
+		if (request.getRefundType() == RefundType.REFUND) {
+			order.changeStatus(OrderStatus.REFUND_REQUESTED);
+		} else {
+			order.changeStatus(OrderStatus.RETURN_REQUESTED);
+		}
+	}
+
 	public void decideCancel(Long orderId, OrderCancelDecisionRequest request) {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
 		Preconditions.validate(order.isCancelRequestableByAdmin(), ErrorCode.INVALID_ORDER_STATUS);
@@ -133,6 +159,43 @@ public class OrderService {
 							order.getUser().getName()
 					);
 				});
+	}
+
+	@Transactional(readOnly = true)
+	public Page<RefundResponse> getRefunds(Pageable pageable) {
+		return refundRepository.findAll(pageable).map(RefundResponse::of);
+	}
+
+
+	public void approveRefund(Long orderId) {
+		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Refund refund = refundRepository.findRefundRequestByOrderOrThrow(order);
+
+		refund.approve();
+
+		if (refund.getType() == RefundType.REFUND) {
+			order.changeStatus(OrderStatus.REFUND_COMPLETED);
+			// 재고 복원 (배송 전 환불이므로)
+			order.getOrderProducts().forEach(op -> stockService.increaseStockWithLock(op.getProduct().getId(), op.getQuantity()));
+		} else { // RETURN
+			order.changeStatus(OrderStatus.RETURN_COMPLETED);
+			// TODO: 반품된 상품의 상태 확인 후 재고 복원 여부 결정 필요 (일단 복원)
+			order.getOrderProducts().forEach(op -> stockService.increaseStockWithLock(op.getProduct().getId(), op.getQuantity()));
+		}
+		// TODO: 실제 결제 취소/환불 API 호출
+	}
+
+	public void rejectRefund(Long refundId, RefundRejectRequest request) {
+		Refund refund = refundRepository.findByIdOrThrow(refundId);
+
+		Preconditions.validate(refund.getStatus() == RefundStatus.REQUESTED, ErrorCode.INVALID_REFUND_STATUS);
+
+		refund.reject(request.getReason());
+
+		// 주문 상태를 이전 상태(배송완료 등)로 복원
+		Order order = refund.getOrder();
+		// TODO: 간소화를 위해 배송완료 상태로 변경. 이전 상태를 저장해두었다가 복원하는 하는 방식으로 해야할듯?
+		order.changeStatus(OrderStatus.DELIVERED);
 	}
 
 	@Transactional(readOnly = true)
@@ -192,3 +255,4 @@ public class OrderService {
 		order.changeStatus(request.status());
 	}
 }
+
