@@ -115,4 +115,8 @@ public class Order extends BaseEntity {
 		this.status = orderStatus;
 	}
 
+	public boolean isRefundable() {
+		return List.of(OrderStatus.COMPLETED, OrderStatus.SHIPPING, OrderStatus.DELIVERED).contains(this.status);
+	}
+
 }

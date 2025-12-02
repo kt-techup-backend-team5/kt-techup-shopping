@@ -1,5 +1,6 @@
 package com.kt.controller.order;
 
+import com.kt.dto.refund.RefundRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -146,6 +147,28 @@ public class OrderController extends SwaggerAssistance {
 		@RequestBody @Valid com.kt.dto.order.OrderCancelRequest request
 	) {
 		orderService.requestCancelByUser(orderId, currentUser, request.reason());
+		return ApiResult.ok();
+	}
+
+	@Operation(
+			summary = "환불/반품 요청",
+			description = "결제 완료 혹은 배송된 주문에 대해 환불 또는 반품을 요청합니다."
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "환불/반품 요청 성공"),
+			@ApiResponse(responseCode = "400", description = "요청이 불가능한 주문 상태입니다."),
+			@ApiResponse(responseCode = "401", description = "인증 실패"),
+			@ApiResponse(responseCode = "403", description = "권한 없음"),
+			@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
+	})
+	@PostMapping("/{orderId}/refund")
+	public ApiResult<Void> requestRefund(
+			@AuthenticationPrincipal DefaultCurrentUser currentUser,
+			@Parameter(description = "환불/반품 요청할 주문 ID", example = "1")
+			@PathVariable Long orderId,
+			@RequestBody @Valid RefundRequest request
+	) {
+		orderService.requestRefundByUser(orderId, currentUser, request);
 		return ApiResult.ok();
 	}
 }
