@@ -51,6 +51,7 @@ Spring Boot 기반으로 **전자상거래(쇼핑)** 의 기능을 제공하는 
 - 주문 생성 및 조회
 - 주문 상태 관리 (결제대기, 결제완료, 배송중, 배송완료, 구매확정)
 - 주문 취소 요청 및 관리자 승인/거절
+- 주문 환불/반품 요청 및 관리자 승인/거절
 - 수령인 정보 수정
 - 분산 락을 통한 재고 관리
 
@@ -82,7 +83,7 @@ Spring Boot 기반으로 **전자상거래(쇼핑)** 의 기능을 제공하는 
 
 ### Backend
 - **언어**: Java 21
-- **프레임워크**: Spring Boot 3.
+- **프레임워크**: Spring Boot 3.5.7
 - **ORM**: Spring Data JPA, QueryDSL
 - **보안**: Spring Security, JWT
 - **데이터베이스**: MySQL (RDB)
@@ -331,7 +332,7 @@ public class User extends BaseEntity { ... }
 ---
 
 ## 📊 ERD
-<img width="3656" height="1972" alt="image" src="https://github.com/user-attachments/assets/69e09a12-b85f-4e83-82ef-24c626424244" />
+<img width="3752" height="1986" alt="Image" src="https://github.com/user-attachments/assets/45725255-9eb4-4bda-873e-cb6c62a3927e" />
 
 ### 주요 엔티티
 
