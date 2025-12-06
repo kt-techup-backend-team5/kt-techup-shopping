@@ -1,6 +1,8 @@
 package com.kt.controller.order;
 
 import com.kt.dto.order.OrderCancelDecisionRequest;
+import com.kt.dto.refund.RefundRejectRequest;
+import com.kt.dto.refund.RefundResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +37,7 @@ import jakarta.validation.Valid;
 
 @Tag(name = "Admin Order", description = "관리자 주문 관련 API")
 @RestController
-@RequestMapping("/admin/orders")
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 public class AdminOrderController extends SwaggerAssistance {
@@ -60,7 +62,7 @@ public class AdminOrderController extends SwaggerAssistance {
 			@ApiResponse(responseCode = "403", description = "권한 없음"),
 			@ApiResponse(responseCode = "500", description = "서버 내부 오류")
 	})
-	@GetMapping
+	@GetMapping("/orders")
 	public ApiResult<Page<OrderResponse.AdminSummary>> search(
 			@ModelAttribute OrderSearchCondition condition,
 			Pageable pageable
@@ -79,7 +81,7 @@ public class AdminOrderController extends SwaggerAssistance {
 			@ApiResponse(responseCode = "403", description = "권한 없음"),
 			@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
 	})
-	@GetMapping("/{orderId}")
+	@GetMapping("/orders/{orderId}")
 	public ApiResult<OrderResponse.AdminDetail> getDetail(
 			@Parameter(description = "조회할 주문 ID", required = true)
 			@PathVariable Long orderId
@@ -102,7 +104,7 @@ public class AdminOrderController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
 		@ApiResponse(responseCode = "403", description = "권한 없음"),
 	})
-	@GetMapping("/cancel")
+	@GetMapping("/orders/cancel")
 	public ApiResult<Page<OrderResponse.AdminSummary>> getCancelRequests(Pageable pageable) {
 		return ApiResult.ok(orderService.getOrdersWithCancelRequested(pageable));
 	}
@@ -118,7 +120,7 @@ public class AdminOrderController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "403", description = "권한 없음"),
 		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
 	})
-	@PostMapping("/{orderId}/cancel")
+	@PostMapping("/orders/{orderId}/cancel")
 	public ApiResult<Void> decideCancel(
 		@Parameter(description = "처리할 주문 ID", required = true)
 		@PathVariable Long orderId,
@@ -144,6 +146,42 @@ public class AdminOrderController extends SwaggerAssistance {
 		@RequestBody OrderStatusUpdateRequest request
 	) {
 		orderService.changeOrderStatus(orderId, request);
+		return ApiResult.ok();
+	}
+
+	@Operation(
+			summary = "환불/반품 요청 목록 조회",
+			description = "사용자들이 요청한 환불/반품 건들의 목록을 페이징하여 조회합니다."
+	)
+	@GetMapping("/refunds")
+	public ApiResult<Page<RefundResponse>> getRefunds(Pageable pageable) {
+		return ApiResult.ok(orderService.getRefunds(pageable));
+	}
+
+	@Operation(
+			summary = "환불/반품 요청 승인",
+			description = "사용자의 환불/반품 요청을 승인 처리합니다."
+	)
+	@PostMapping("/orders/{orderId}/refund")
+	public ApiResult<Void> approveRefund(
+			@Parameter(description = "처리할 주문 ID", required = true)
+			@PathVariable Long orderId
+	) {
+		orderService.approveRefund(orderId);
+		return ApiResult.ok();
+	}
+
+	@Operation(
+			summary = "환불/반품 요청 거절",
+			description = "사용자의 환불/반품 요청을 거절하고, 사유를 기록합니다."
+	)
+	@PostMapping("/refunds/{refundId}/reject")
+	public ApiResult<Void> rejectRefund(
+			@Parameter(description = "거절할 환불/반품 요청 ID", required = true)
+			@PathVariable Long refundId,
+			@Valid @RequestBody RefundRejectRequest request
+	) {
+		orderService.rejectRefund(refundId, request);
 		return ApiResult.ok();
 	}
 }
