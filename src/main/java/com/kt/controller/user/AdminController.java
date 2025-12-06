@@ -4,6 +4,8 @@ import com.kt.common.exception.ErrorCode;
 import com.kt.common.request.Paging;
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.Preconditions;
+import com.kt.common.support.SwaggerAssistance;
+import com.kt.domain.user.Role;
 import com.kt.dto.user.UserCreateRequest;
 import com.kt.dto.user.UserResponse;
 import com.kt.dto.user.UserUpdateRequest;
@@ -25,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/admin/admins")
-public class AdminController {
+public class AdminController extends SwaggerAssistance {
     private final UserService userService;
 
     // 관리자가 관리자 생성
@@ -73,7 +75,7 @@ public class AdminController {
             @PathVariable Long id
     ) {
         var user = userService.detail(id);
-        Preconditions.validate(user.getRole() == com.kt.domain.user.Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
         return ApiResult.ok(UserResponse.Detail.of(user));
     }
 
@@ -93,7 +95,7 @@ public class AdminController {
             @RequestBody @Valid UserUpdateRequest request
     ) {
         var user = userService.detail(id);
-        Preconditions.validate(user.getRole() == com.kt.domain.user.Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
         var updatedUser = userService.update(id, request.name(), request.email(), request.mobile());
         return ApiResult.ok(updatedUser);
     }
@@ -116,7 +118,7 @@ public class AdminController {
     ) {
         Preconditions.validate(!currentUser.getId().equals(id), ErrorCode.CANNOT_DELETE_SELF);
         var user = userService.detail(id);
-        Preconditions.validate(user.getRole() == com.kt.domain.user.Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
         userService.deactivateUser(id);
         return ApiResult.ok();
     }
@@ -136,7 +138,7 @@ public class AdminController {
             @PathVariable Long id
     ) {
         var user = userService.detail(id);
-        Preconditions.validate(user.getRole() == com.kt.domain.user.Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
         String tempPassword = userService.initPassword(id);
         return ApiResult.ok(tempPassword);
     }

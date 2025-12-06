@@ -1,6 +1,7 @@
 package com.kt.controller.review;
 
 import com.kt.common.response.ApiResult;
+import com.kt.common.support.SwaggerAssistance;
 import com.kt.dto.review.ReviewResponse;
 import com.kt.dto.review.ReviewSearchCondition;
 import com.kt.service.ReviewService;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/admin/reviews")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
-public class AdminReviewController {
+public class AdminReviewController extends SwaggerAssistance {
 
     private final ReviewService reviewService;
 
