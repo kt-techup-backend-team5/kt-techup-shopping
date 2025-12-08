@@ -20,7 +20,7 @@ jobs:
         id: set-envs
         run: |
           PROFILE=dev
-          APPLICATION_NAME=java-chip-backend
+          APPLICATION_NAME=java-chip-dev
           API_ZIP=java-chip-$PROFILE-$(date +'%Y%m%dT%H%M%S%Z').zip
           ORIGINAL_ZIP_NAME=shopping.zip
           DIR=build/distributions
