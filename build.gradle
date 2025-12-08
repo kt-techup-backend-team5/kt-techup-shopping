@@ -74,6 +74,6 @@ tasks.register("zip", Zip.class) {
     archiveFileName = "shopping.zip"
 
     from("build/libs/shopping.jar") { into("") }
-    from(".ebextentions") { into(".ebextentions") }
+    from(".ebextensions") { into(".ebextensions") }
     from("procfiles/Procfile") { into("") }
 }
