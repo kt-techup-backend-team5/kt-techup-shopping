@@ -6,7 +6,7 @@ on:
 
 env:
   DB_PASSWORD: root
-  SLACK_WEB_HOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 jobs:
   dev-deploy:
