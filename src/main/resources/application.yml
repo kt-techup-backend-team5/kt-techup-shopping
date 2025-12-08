@@ -23,8 +23,11 @@ spring:
     show-sql: true
   data:
     redis:
-      host: ${redis.host:localhost}
-      port: ${redis.port:6379}
+      ssl:
+        enabled: true
+      cluster:
+        nodes: ${redis.host:localhost:6379}
+        max-redirects: 3
 
 jwt:
   secret: ${kt.jwt.secret:kt-cloud-tech-up-shopping-202511171107}
