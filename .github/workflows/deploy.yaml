@@ -6,7 +6,7 @@ on:
 
 env:
   DB_PASSWORD: root
-  SLACK_WEB_HOOK_URL: ${{ secrets.SLACK_WEB_HOOK_URL }}
+  SLACK_WEB_HOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 jobs:
   dev-deploy:
@@ -29,7 +29,7 @@ jobs:
           echo "PROFILE=$PROFILE" >> $GITHUB_ENV
           echo "API_ZIP=$API_ZIP" >> $GITHUB_ENV
           echo "ORIGINAL_ZIP_NAME=$ORIGINAL_ZIP_NAME" >> $GITHUB_ENV
-          echo "DIR=$DIR" >> $GITHUB_EN
+          echo "DIR=$DIR" >> $GITHUB_ENV
           
           echo "APPLICATION_NAME=$APPLICATION_NAME" >> $GITHUB_ENV
           echo "PROFILE=$PROFILE" >> $GITHUB_OUTPUT
