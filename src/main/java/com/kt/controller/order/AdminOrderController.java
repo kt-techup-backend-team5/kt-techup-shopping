@@ -153,6 +153,9 @@ public class AdminOrderController extends SwaggerAssistance {
 			summary = "환불/반품 요청 목록 조회",
 			description = "사용자들이 요청한 환불/반품 건들의 목록을 페이징하여 조회합니다."
 	)
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "조회 성공"),
+	})
 	@GetMapping("/refunds")
 	public ApiResult<Page<RefundResponse>> getRefunds(Pageable pageable) {
 		return ApiResult.ok(orderService.getRefunds(pageable));
@@ -162,6 +165,10 @@ public class AdminOrderController extends SwaggerAssistance {
 			summary = "환불/반품 요청 승인",
 			description = "사용자의 환불/반품 요청을 승인 처리합니다."
 	)
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "처리 성공"),
+			@ApiResponse(responseCode = "404", description = "요청을 찾을 수 없음"),
+	})
 	@PostMapping("/orders/{orderId}/refund")
 	public ApiResult<Void> approveRefund(
 			@Parameter(description = "처리할 주문 ID", required = true)
@@ -175,6 +182,9 @@ public class AdminOrderController extends SwaggerAssistance {
 			summary = "환불/반품 요청 거절",
 			description = "사용자의 환불/반품 요청을 거절하고, 사유를 기록합니다."
 	)
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "처리 성공"),
+	})
 	@PostMapping("/refunds/{refundId}/reject")
 	public ApiResult<Void> rejectRefund(
 			@Parameter(description = "거절할 환불/반품 요청 ID", required = true)
