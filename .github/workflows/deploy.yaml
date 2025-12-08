@@ -25,13 +25,13 @@ jobs:
           ORIGINAL_ZIP_NAME=shopping.zip
           DIR=build/distributions
           
-          echo "PROJECT_NAME=$PROJECT_NAME" >> $GITHUB_ENV
+          echo "APPLICATION_NAME=$APPLICATION_NAME" >> $GITHUB_ENV
           echo "PROFILE=$PROFILE" >> $GITHUB_ENV
           echo "API_ZIP=$API_ZIP" >> $GITHUB_ENV
           echo "ORIGINAL_ZIP_NAME=$ORIGINAL_ZIP_NAME" >> $GITHUB_ENV
           echo "DIR=$DIR" >> $GITHUB_EN
           
-          echo "PROJECT_NAME=$PROJECT_NAME" >> $GITHUB_OUTPUT
+          echo "APPLICATION_NAME=$APPLICATION_NAME" >> $GITHUB_ENV
           echo "PROFILE=$PROFILE" >> $GITHUB_OUTPUT
           echo "API_ZIP=$API_ZIP" >> $GITHUB_OUTPUT
           echo "ORIGINAL_ZIP_NAME=$ORIGINAL_ZIP_NAME" >> $GITHUB_OUTPUT
