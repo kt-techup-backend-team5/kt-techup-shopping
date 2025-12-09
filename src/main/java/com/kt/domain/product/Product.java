@@ -62,6 +62,7 @@ public class Product extends BaseEntity {
 	private String name;
 	private Long price;
 	private Long stock;
+	private Long viewCount;
 	@Enumerated(EnumType.STRING)
 	private ProductStatus status = ProductStatus.ACTIVATED;
 
@@ -81,6 +82,7 @@ public class Product extends BaseEntity {
 		this.name = name;
 		this.price = price;
 		this.stock = stock;
+		this.viewCount = 1L;
 		this.createdAt = LocalDateTime.now();
 		this.updatedAt = LocalDateTime.now();
 	}
@@ -127,5 +129,9 @@ public class Product extends BaseEntity {
 
 	public void mapToOrderProduct(OrderProduct orderProduct) {
 		this.orderProducts.add(orderProduct);
+	}
+
+	public void addViewCountIncrement(Long viewCountIncrement) {
+		this.viewCount += viewCountIncrement;
 	}
 }

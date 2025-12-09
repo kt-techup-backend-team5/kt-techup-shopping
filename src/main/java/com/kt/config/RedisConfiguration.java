@@ -1,11 +1,16 @@
 package com.kt.config;
 
+import org.apache.tomcat.util.http.parser.Host;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.kt.common.profile.AppProfile;
+import com.kt.common.profile.DevProfile;
+import com.kt.common.profile.LocalProfile;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,12 +31,29 @@ public class RedisConfiguration {
 	// 100개의 요청을처리하는데 100*5 = 500초가 걸릴수도?
 
 	@Bean
+	@DevProfile
+	@AppProfile
 	public RedissonClient redissonClient() {
 		var config = new Config();
-		var uri = String.format("redis://%s:%s", redisProperties.getHost(), redisProperties.getPort());
+		var host = redisProperties.getCluster().getNodes().getFirst();
+		var uri = String.format("rediss://%s", host);
 
-		config.useSingleServer().setAddress(uri);
+		config
+				.useClusterServers()
+				.addNodeAddress(uri);
 
+		return Redisson.create(config);
+	}
+
+	@Bean
+	@LocalProfile
+	public RedissonClient localRedissonClient() {
+		var config = new Config();
+		var host = redisProperties.getCluster().getNodes().getFirst();
+		var uri = String.format("redis://%s", host);
+
+		config
+				.useSingleServer().setAddress(uri);
 		return Redisson.create(config);
 	}
 }

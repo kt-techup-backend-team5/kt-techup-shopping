@@ -1,0 +1,99 @@
+name: dev-deploy
+on:
+  push:
+    branches:
+      - dev
+
+env:
+  DB_PASSWORD: root
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  dev-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@main
+
+      # 변수들 설정
+      - name: set env
+        id: set-envs
+        run: |
+          PROFILE=dev
+          APPLICATION_NAME=java-chip-dev
+          API_ZIP=java-chip-$PROFILE-$(date +'%Y%m%dT%H%M%S%Z').zip
+          ORIGINAL_ZIP_NAME=shopping.zip
+          DIR=build/distributions
+          
+          echo "APPLICATION_NAME=$APPLICATION_NAME" >> $GITHUB_ENV
+          echo "PROFILE=$PROFILE" >> $GITHUB_ENV
+          echo "API_ZIP=$API_ZIP" >> $GITHUB_ENV
+          echo "ORIGINAL_ZIP_NAME=$ORIGINAL_ZIP_NAME" >> $GITHUB_ENV
+          echo "DIR=$DIR" >> $GITHUB_ENV
+          
+          echo "APPLICATION_NAME=$APPLICATION_NAME" >> $GITHUB_ENV
+          echo "PROFILE=$PROFILE" >> $GITHUB_OUTPUT
+          echo "API_ZIP=$API_ZIP" >> $GITHUB_OUTPUT
+          echo "ORIGINAL_ZIP_NAME=$ORIGINAL_ZIP_NAME" >> $GITHUB_OUTPUT
+          echo "DIR=$DIR" >> $GITHUB_OUTPUT
+          
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.1.0
+        with:
+          redis-version: 6
+
+      - name: Start Mysql Service
+        run: |
+          sudo /etc/init.d/mysql start
+          mysql -e 'CREATE DATABASE shoppingtest;' -uroot -proot
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@main
+        with:
+          java-version: '21'
+          cache: 'gradle'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: 8.5
+
+      - name: Run Test
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: wrapper
+          arguments: test
+          # arguments test는 gradle test 한거랑 똑같음.
+          # 멀티모듈이라 user, admin 모듈이 분리되어 있다?
+          # arguments: user:test admin:test 이렇게 하면됨. 그럼 따로따로 되고, 그냥 test하면 admin, user 둘다 됨
+
+      - name: Run Build
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: wrapper
+          arguments: zip -x test
+
+      - name: Move Api ZIP
+        run: |
+          mv ${{ env.DIR }}/${{ env.ORIGINAL_ZIP_NAME }} ${{ env.DIR }}/${{ env.API_ZIP }}
+
+      - name: deploy to AWS Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.BACK_END_DEPLOYER_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.BACK_END_DEPLOYER_SECRET_KEY }}
+          application_name: ${{ env.APPLICATION_NAME }}
+          environment_name: ${{ env.APPLICATION_NAME }}-env
+          version_label: ${{ env.API_ZIP }}
+          region: ap-northeast-2
+          deployment_package: ${{ env.DIR }}/${{ env.API_ZIP }}
+
+      - name: send slack notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: Github Actions
+          fields: repo, commit, author, ref, workflow, job, took
+        if: always()

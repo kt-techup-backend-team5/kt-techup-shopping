@@ -1,26 +1,39 @@
 package com.kt.service;
 
-import java.time.LocalDateTime;
-
+import com.kt.common.exception.CustomException;
+import com.kt.common.exception.ErrorCode;
+import com.kt.common.support.Preconditions;
+import com.kt.domain.user.User;
+import com.kt.dto.user.UserChangePasswordRequest;
+import com.kt.dto.user.UserCreateRequest;
+import com.kt.dto.user.UserResponse;
+import com.kt.dto.user.UserUpdatePasswordRequest;
+import com.kt.dto.user.UserUpdateRequest;
+import com.kt.repository.order.OrderRepository;
+import com.kt.repository.user.UserRepository;
+import com.kt.security.DefaultCurrentUser;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
+import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
-import com.kt.dto.user.UserRequest;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
-
-// 구현체가 하나 이상 필요로해야 인터페이스가 의미가있다
-// 인터페이스 : 구현체 1:1로 다 나눠야하나
-// 관례를 지키려고 추상화를 굳이하는 것을 관습적추상화
-// 인터페이스로 굳이 나눴을때 불편한 점
 
 @Service
 @RequiredArgsConstructor
@@ -30,95 +43,214 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final OrderRepository orderRepository;
 
-	// 트랜잭션 처리해줘
-	// PSA - Portable Service Abstraction
-	// 환경설정을 살짝 바꿔서 일관된 서비스를 제공하는 것
-	public void create(UserRequest.Create request) {
+	public void create(UserCreateRequest request) {
+		Preconditions.validate(!isDuplicateLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
+		Preconditions.validate(!isDuplicateEmail(request.email()), ErrorCode.ALREADY_EXISTS_EMAIL);
+
 		var newUser = User.normalUser(
-			request.loginId(),
-			passwordEncoder.encode(request.password()),
-			request.name(),
-			request.email(),
-			request.mobile(),
-			request.gender(),
-			request.birthday(),
-			LocalDateTime.now(),
-			LocalDateTime.now()
+				request.loginId(),
+				passwordEncoder.encode(request.password()),
+				request.name(),
+				request.email(),
+				request.mobile(),
+				request.gender(),
+				request.birthday(),
+				LocalDateTime.now(),
+				LocalDateTime.now()
 		);
 
 		userRepository.save(newUser);
+	}
+
+	public void createAdmin(UserCreateRequest request) {
+		Preconditions.validate(!userRepository.existsByLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
+
+		var newAdmin = User.admin(
+				request.loginId(),
+				passwordEncoder.encode(request.password()),
+				request.name(),
+				request.email(),
+				request.mobile(),
+				request.gender(),
+				request.birthday(),
+				LocalDateTime.now(),
+				LocalDateTime.now()
+		);
+		userRepository.save(newAdmin);
 	}
 
 	public boolean isDuplicateLoginId(String loginId) {
 		return userRepository.existsByLoginId(loginId);
 	}
 
-	public void changePassword(Long id, String oldPassword, String password) {
-		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
-
-		//검증 작업
-		// 긍정적인 상황만 생각하자 -> 패스워드가 이전것과 달라야 => 해피한
-		// 패스워드가 같으면 안되는데 => 넌 해피하지 않은 상황
-		Preconditions.validate(user.getPassword().equals(oldPassword), ErrorCode.DOES_NOT_MATCH_OLD_PASSWORD);
-		Preconditions.validate(!oldPassword.equals(password), ErrorCode.CAN_NOT_ALLOWED_SAME_PASSWORD);
-
-		user.changePassword(password);
+	public boolean isDuplicateEmail(String email) {
+		return userRepository.existsByEmail(email);
 	}
 
-	// Pageable 인터페이스
+	public String findLoginId(String name, String email) {
+		var user = userRepository.findByNameAndEmailOrThrow(name, email);
+		return user.getLoginId();
+	}
+
+	public void changePassword(Long userId, UserUpdatePasswordRequest request) {
+		User user = userRepository.findByIdOrThrow(userId);
+
+		boolean matchesCurrent = passwordEncoder.matches(request.oldPassword(), user.getPassword());
+		Preconditions.validate(matchesCurrent, ErrorCode.DOES_NOT_MATCH_OLD_PASSWORD);
+
+		Preconditions.validate(
+				request.newPassword().equals(request.confirmPassword()),
+				ErrorCode.NOT_MATCHED_CHECK_PASSWORD
+		);
+
+		Preconditions.validate(
+				!passwordEncoder.matches(request.newPassword(), user.getPassword()),
+				ErrorCode.CAN_NOT_ALLOWED_SAME_PASSWORD
+		);
+		String encoded = passwordEncoder.encode(request.newPassword());
+		user.changePassword(encoded);
+	}
+
+	/**
+	 * 임시 비밀번호를 생성하는 메서드입니다.
+	 * 최소 8자 이상이며, 영문 소문자, 대문자, 숫자, 특수문자를 각각 1개 이상 포함합니다.
+	 * @return 생성된 임시 비밀번호 문자열
+	 */
+	private String generateRandomPassword() {
+		final String lower = "abcdefghijklmnopqrstuvwxyz";
+		final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		final String digits = "0123456789";
+		final String special = "!@#$%^";
+
+		// 모든 문자 세트를 하나로 합칩니다.
+		final String allCharacters = lower + upper + digits + special;
+		final int passwordLength = 8;
+		final SecureRandom random = new SecureRandom();
+
+		List<Character> passwordChars = new ArrayList<>();
+
+		// 1. 각 문자 세트에서 최소 1개의 문자를 보장합니다.
+		passwordChars.add(lower.charAt(random.nextInt(lower.length())));
+		passwordChars.add(upper.charAt(random.nextInt(upper.length())));
+		passwordChars.add(digits.charAt(random.nextInt(digits.length())));
+		passwordChars.add(special.charAt(random.nextInt(special.length())));
+
+		// 2. 전체 문자 세트에서 나머지 길이만큼 랜덤하게 문자를 추가합니다.
+		for (int i = passwordChars.size(); i < passwordLength; i++) {
+			passwordChars.add(allCharacters.charAt(random.nextInt(allCharacters.length())));
+		}
+
+		// 3. 생성된 비밀번호의 문자 순서를 무작위로 섞습니다.
+		Collections.shuffle(passwordChars, random);
+
+		// 4. 최종 비밀번호를 문자열 형태로 조합합니다.
+		StringBuilder password = new StringBuilder(passwordLength);
+		for (Character ch : passwordChars) {
+			password.append(ch);
+		}
+
+		return password.toString();
+	}
+
+	@Transactional
+	public void changePasswordByAdmin(Long userId, UserChangePasswordRequest request) {
+		User user = userRepository.findByIdOrThrow(userId);
+		String encodedPassword = passwordEncoder.encode(request.newPassword());
+		user.changePassword(encodedPassword);
+	}
+
 	public Page<User> search(Pageable pageable, String keyword) {
+		if (keyword == null || keyword.isBlank()) {
+			return userRepository.findAll(pageable);
+		}
 		return userRepository.findAllByNameContaining(keyword, pageable);
 	}
 
+	public Page<User> searchAdmins(Pageable pageable) {
+		return userRepository.findAllByRole(Role.ADMIN, pageable);
+	}
+
 	public User detail(Long id) {
-		return userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+		return userRepository.findByIdOrThrow(id);
 	}
 
-	public void update(Long id, String name, String email, String mobile) {
-		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+	public User detailIncludeDeleted(Long id) {
+		return userRepository.findByIdIncludeDeletedOrThrow(id);
+	}
 
+	@Transactional
+	public UserResponse.Detail update(Long id, String name, String email, String mobile) {
+		var user = userRepository.findByIdOrThrow(id);
 		user.update(name, email, mobile);
+		return UserResponse.Detail.of(user);
 	}
 
-	public void delete(Long id) {
-		userRepository.deleteById(id);
-		// 삭제에는 두가지 개념 - softdelete, harddelete
-		// var user = userRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
-		// userRepository.delete(user);
+	public void withdrawal(Long id) {
+		User user = userRepository.findByIdAndDeletedAtIsNull(id)
+				.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+		user.deleted();
+	}
+
+	@Transactional
+	public void deactivateUser(Long id) {
+		User user = userRepository.findByIdOrThrow(id);
+		user.deleted();
+	}
+
+	@Transactional
+	public void activateUser(Long id) {
+		User user = userRepository.findByIdIncludeDeletedOrThrow(id);
+		user.activate();
+	}
+
+	public UserResponse.Detail getCurrentUserInfo() {
+		DefaultCurrentUser currentUser =
+				(DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		Long userId = currentUser.getId();
+
+		User user = userRepository.findByIdOrThrow(currentUser.getId());
+
+		return UserResponse.Detail.of(user);
+	}
+
+	@Transactional
+	public UserResponse.Detail updateCurrentUser(UserUpdateRequest request) {
+		DefaultCurrentUser currentUser =
+				(DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+		User user = userRepository.findByIdOrThrow(currentUser.getId());
+
+		user.update(request.name(), request.email(), request.mobile());
+
+		return UserResponse.Detail.of(user);
 	}
 
 	public void getOrders(Long id) {
-		var user = userRepository.findByIdOrThrow(id, ErrorCode.NOT_FOUND_USER);
+		var user = userRepository.findByIdOrThrow(id);
 		var page = orderRepository.findAllByUserId(user.getId(), Pageable.unpaged());
 		var orders = page.getContent();
 
 		var products = orders.stream()
-			.flatMap(order -> order.getOrderProducts().stream()
-				.map(orderProduct -> orderProduct.getProduct().getName())).toList();
+				.flatMap(order -> order.getOrderProducts().stream()
+						.map(orderProduct -> orderProduct.getProduct().getName())).toList();
+	}
 
-		// var statuses = orders.stream()
-		// 	.flatMap(order -> order.getOrderProducts().stream()
-		// 		.map(orderProduct -> orderProduct.getOrder().getStatus())).toList();
+	public void grantAdminRole(Long id) {
+		var user = userRepository.findByIdOrThrow(id);
+		user.grantAdminRole();
+	}
 
-		// N개의 주문이 있는데 N개의 주문엔 상품이 존재하는데 가짓수가 1만개
+	public void revokeAdminRole(Long id) {
+		var user = userRepository.findByIdOrThrow(id);
+		user.revokeAdminRole();
+	}
 
-		// Stream의 연산과정
-		// 1. 스트림생성
-		// 2. 중간연산 -> 여러번 가능 O
-		// 3. 최종연산 -> 여러번 가능 X -> 재사용 불가능
-
-		// List<List<Product>> -> List<Product>
-
-		// N + 1 문제를 해결하는 방법
-		// 1. fetch join 사용 -> JPQL전용 -> 딱 1번 사용 2번사용하면 에러남
-		// 2. @EntityGraph 사용 -> JPA표준기능 -> 여러번 사용가능
-		// 3. batch fetch size 옵션 사용 -> 전역설정 -> paging동작원리와 같아서 성능이슈가 있을 수 있음
-		// 4. @BatchSize 어노테이션 사용 -> 특정 엔티티에만 적용 가능
-		// 5. native query 사용해서 해결
-
-		// Collection, stream, foreach
-
-		// 연관관계를 아예 끊는다 -> 엔티티자체를 느슨하게 결합해둔다.
-		// JPA를 안쓴다.
+	@Transactional
+	public String initPassword(Long userId) {
+		User user = userRepository.findByIdOrThrow(userId);
+		String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8); // e.g., "123e4567"
+		String encodedPassword = passwordEncoder.encode(tempPassword);
+		user.changePassword(encodedPassword);
+		return tempPassword;
 	}
 }

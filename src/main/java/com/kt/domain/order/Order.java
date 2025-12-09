@@ -20,6 +20,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.util.StringUtils;
 
 @Getter
 @Entity
@@ -28,15 +29,18 @@ import lombok.NoArgsConstructor;
 public class Order extends BaseEntity {
 	@Embedded
 	private Receiver receiver;
+
 	@Enumerated(EnumType.STRING)
 	private OrderStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus previousStatus;
+
+	private String cancelDecisionReason;
+	private String userCancelReason;
+
 	private LocalDateTime deliveredAt;
 
-	// 연관관계
-	// 주문 <-> 회원
-	// N : 1 => 다대일
-	// ManyToOne
-	// FK => 많은 쪽에 생김
 	@ManyToOne
 	@JoinColumn(name = "user_id")
 	private User user;
@@ -70,10 +74,32 @@ public class Order extends BaseEntity {
         return this.status == OrderStatus.PENDING || this.status == OrderStatus.COMPLETED;
     }
 
-	public void cancel() {
-		Preconditions.validate(this.status == OrderStatus.PENDING, ErrorCode.CANNOT_CANCEL_ORDER);
-		this.status = OrderStatus.CANCELLED;
+	public void requestCancel(String reason) {
+
+		var cancellableStates = List.of(OrderStatus.PENDING, OrderStatus.COMPLETED, OrderStatus.PREPARING);
+
+		Preconditions.validate(cancellableStates.contains(this.status), ErrorCode.CANNOT_CANCEL_ORDER);
+
+		this.previousStatus = this.status;
+		this.status = OrderStatus.CANCEL_REQUESTED;
+		this.userCancelReason = reason;
 	}
+
+    public void approveCancel(String reason) {
+        Preconditions.validate(isCancelRequestableByAdmin(), ErrorCode.INVALID_ORDER_STATUS);
+        this.status = OrderStatus.CANCELLED;
+        this.cancelDecisionReason = reason;
+    }
+
+    public void rejectCancel(String reason) {
+        Preconditions.validate(isCancelRequestableByAdmin(), ErrorCode.INVALID_ORDER_STATUS);
+        this.status = this.previousStatus;
+        this.cancelDecisionReason = reason;
+    }
+
+    public boolean isCancelRequestableByAdmin() {
+        return this.status == OrderStatus.CANCEL_REQUESTED;
+    }
 
 	public long getTotalPrice() {
 		return orderProducts.stream()
@@ -85,14 +111,12 @@ public class Order extends BaseEntity {
 		this.status = OrderStatus.COMPLETED;
 	}
 
-	//하나의 오더는 여러개의 상품을 가질수있음
-	// 1:N
-	//하나의 상품은 여러개의 오더를 가질수있음
-	// 1:N
+	public void changeStatus(OrderStatus orderStatus){
+		this.status = orderStatus;
+	}
 
-	// 주문생성
-	// 주문상태변경
-	// 주문생성완료재고차감
-	// 배송받는사람정보변경
-	// 주문취소
+	public boolean isRefundable() {
+		return List.of(OrderStatus.COMPLETED, OrderStatus.SHIPPING, OrderStatus.DELIVERED).contains(this.status);
+	}
+
 }

@@ -1,5 +1,6 @@
 package com.kt.controller.order;
 
+import com.kt.dto.refund.RefundRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,14 +36,24 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
 public class OrderController extends SwaggerAssistance {
 	private final OrderService orderService;
 	private final UserOrderService userOrderService;
 
-	// 주문 생성
+	@Operation(
+		summary = "주문 생성",
+		description = "새로운 주문을 생성합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(responseCode = "200", description = "주문 생성 성공"),
+		@ApiResponse(responseCode = "400", description = "잘못된 요청 데이터 (예: 재고 부족, 유효하지 않은 상품 ID 등)"),
+		@ApiResponse(responseCode = "401", description = "인증 실패")
+	})
 	@PostMapping
 	public ApiResult<Void> create(
 		@AuthenticationPrincipal DefaultCurrentUser defaultCurrentUser,
+		@Parameter(description = "주문 생성 요청 정보", required = true)
 		@RequestBody @Valid OrderRequest.Create request) {
 		orderService.create(
 			defaultCurrentUser.getId(),
@@ -117,22 +129,46 @@ public class OrderController extends SwaggerAssistance {
     }
 
 	@Operation(
-		summary = "주문 취소",
-		description = "특정 주문을 취소합니다. 관리자 또는 주문자 본인만 취소 가능합니다."
+		summary = "주문 취소 요청",
+		description = "사용자가 자신의 주문에 대해 취소를 요청합니다. 사유를 반드시 포함해야 하며, 관리자의 승인이 필요합니다."
 	)
 	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "주문 취소 성공", content = @Content(schema = @Schema(implementation = ApiResult.class))),
+		@ApiResponse(responseCode = "200", description = "주문 취소 요청 성공"),
+		@ApiResponse(responseCode = "400", description = "취소 요청이 불가능한 주문 상태이거나, 사유가 누락되었습니다."),
 		@ApiResponse(responseCode = "401", description = "인증 실패"),
-		@ApiResponse(responseCode = "403", description = "취소 권한 없음"),
+		@ApiResponse(responseCode = "403", description = "취소 요청 권한 없음"),
 		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
 	})
 	@PostMapping("/{orderId}/cancel")
-	public ApiResult<Void> cancelOrder(
+	public ApiResult<Void> requestCancel(
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
-        @Parameter(description = "취소할 주문 ID", example = "1")
-		@PathVariable Long orderId
+        @Parameter(description = "취소 요청할 주문 ID", example = "1")
+		@PathVariable Long orderId,
+		@RequestBody @Valid com.kt.dto.order.OrderCancelRequest request
 	) {
-		orderService.cancelOrder(orderId, currentUser);
+		orderService.requestCancelByUser(orderId, currentUser, request.reason());
+		return ApiResult.ok();
+	}
+
+	@Operation(
+			summary = "환불/반품 요청",
+			description = "결제 완료 혹은 배송된 주문에 대해 환불 또는 반품을 요청합니다."
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "환불/반품 요청 성공"),
+			@ApiResponse(responseCode = "400", description = "요청이 불가능한 주문 상태입니다."),
+			@ApiResponse(responseCode = "401", description = "인증 실패"),
+			@ApiResponse(responseCode = "403", description = "권한 없음"),
+			@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
+	})
+	@PostMapping("/{orderId}/refund")
+	public ApiResult<Void> requestRefund(
+			@AuthenticationPrincipal DefaultCurrentUser currentUser,
+			@Parameter(description = "환불/반품 요청할 주문 ID", example = "1")
+			@PathVariable Long orderId,
+			@RequestBody @Valid RefundRequest request
+	) {
+		orderService.requestRefundByUser(orderId, currentUser, request);
 		return ApiResult.ok();
 	}
 }

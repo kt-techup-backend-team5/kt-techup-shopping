@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "Bearer Authentication")
 public class PaymentController {
 	private final PaymentService paymentService;
 
