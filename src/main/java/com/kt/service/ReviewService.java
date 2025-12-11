@@ -65,21 +65,13 @@ public class ReviewService {
 	}
 
 	public void updateReview(Long reviewId, Long userId, ReviewUpdateRequest request) {
-		Review review = reviewRepository.findByIdOrThrow(reviewId);
-
-		// 1. 리뷰 작성자가 맞는지 확인
-		Preconditions.validate(review.getUser().getId().equals(userId), ErrorCode.NO_AUTHORITY_TO_UPDATE_REVIEW);
-
+		Review review = findReviewByIdAndValidateOwner(reviewId, userId, ErrorCode.NO_AUTHORITY_TO_UPDATE_REVIEW);
 		review.update(request.getContent(), request.getRating());
 	}
 
 	public void deleteReview(Long reviewId, Long userId) {
-		Review review = reviewRepository.findByIdOrThrow(reviewId);
-
-		// 1. 리뷰 작성자가 맞는지 확인
-		Preconditions.validate(review.getUser().getId().equals(userId), ErrorCode.NO_AUTHORITY_TO_DELETE_REVIEW);
-
-		reviewRepository.deleteById(reviewId);
+		Review review = findReviewByIdAndValidateOwner(reviewId, userId, ErrorCode.NO_AUTHORITY_TO_DELETE_REVIEW);
+		reviewRepository.delete(review);
 	}
 
 	@Transactional(readOnly = true)
@@ -92,5 +84,11 @@ public class ReviewService {
 		reviewRepository.findByIdOrThrow(reviewId);
 
 		reviewRepository.deleteById(reviewId);
+	}
+
+	private Review findReviewByIdAndValidateOwner(Long reviewId, Long userId, ErrorCode errorCode) {
+		Review review = reviewRepository.findByIdOrThrow(reviewId);
+		Preconditions.validate(review.getUser().getId().equals(userId), errorCode);
+		return review;
 	}
 }
