@@ -37,8 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest(
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		properties = {
-				"spring.data.redis.cluster.nodes=",
-				"spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration"
+				"spring.data.redis.cluster.nodes="
 		}
 )
 @Transactional
