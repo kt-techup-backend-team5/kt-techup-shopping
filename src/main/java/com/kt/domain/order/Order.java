@@ -48,7 +48,7 @@ public class Order extends BaseEntity {
 	@OneToMany(mappedBy = "order")
 	private List<OrderProduct> orderProducts = new ArrayList<>();
 
-	private Order(Receiver receiver, User user) {
+	public Order(Receiver receiver, User user) {
 		this.receiver = receiver;
 		this.user = user;
 		this.deliveredAt = LocalDateTime.now().plusDays(3);
