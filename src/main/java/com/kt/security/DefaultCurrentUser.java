@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DefaultCurrentUser implements UserDetails, CurrentUser {
-	//jwt파싱해서 넣어주면 될 것 같음
+
 	private Long id;
 	private String loginId;
 

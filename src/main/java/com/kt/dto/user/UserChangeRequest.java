@@ -3,7 +3,7 @@ package com.kt.dto.user;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
-public record UserUpdateRequest(
+public record UserChangeRequest(
 	@NotBlank
 	String name,
 	@NotBlank

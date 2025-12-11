@@ -8,7 +8,7 @@ import com.kt.common.support.SwaggerAssistance;
 import com.kt.domain.user.Role;
 import com.kt.dto.user.UserCreateRequest;
 import com.kt.dto.user.UserResponse;
-import com.kt.dto.user.UserUpdateRequest;
+import com.kt.dto.user.UserChangeRequest;
 import com.kt.security.CurrentUser;
 import com.kt.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -92,7 +92,7 @@ public class AdminController extends SwaggerAssistance {
     public ApiResult<UserResponse.Detail> updateAdmin(
             @Parameter(description = "수정할 관리자 ID", required = true)
             @PathVariable Long id,
-            @RequestBody @Valid UserUpdateRequest request
+            @RequestBody @Valid UserChangeRequest request
     ) {
         var user = userService.detail(id);
         Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);

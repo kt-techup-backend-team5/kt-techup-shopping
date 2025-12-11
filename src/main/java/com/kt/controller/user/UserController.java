@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,8 +16,8 @@ import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
 import com.kt.dto.user.UserFindLoginIdRequest;
 import com.kt.dto.user.UserResponse;
-import com.kt.dto.user.UserUpdatePasswordRequest;
-import com.kt.dto.user.UserUpdateRequest;
+import com.kt.dto.user.UserChangePasswordRequest;
+import com.kt.dto.user.UserChangeRequest;
 import com.kt.security.CurrentUser;
 import com.kt.security.DefaultCurrentUser;
 import com.kt.service.UserService;
@@ -39,7 +38,6 @@ import lombok.RequiredArgsConstructor;
 public class UserController extends SwaggerAssistance {
 	private final UserService userService;
 
-	// 로그인 아이디 중복조회
 	@Operation(
 			summary = "로그인 ID 중복 확인",
 			description = "제공된 로그인 ID의 중복 여부를 확인합니다."
@@ -78,17 +76,16 @@ public class UserController extends SwaggerAssistance {
 			@ApiResponse(responseCode = "401", description = "인증 실패"),
 			@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
 	})
-	@PutMapping("/{id}/change-password")
+	@PutMapping("/change-password")
 	@ResponseStatus(HttpStatus.OK)
 	@SecurityRequirement(name = "Bearer Authentication")
-	public ApiResult<Void> updatePassword(
-			@Parameter(description = "비밀번호를 변경할 사용자 ID", required = true)
-			@PathVariable Long id,
-			@RequestBody @Valid UserUpdatePasswordRequest request
-	) {
-		userService.changePassword(id, request);
-		return ApiResult.ok();
-	}
+    public ApiResult<Void> changePassword(
+            @AuthenticationPrincipal DefaultCurrentUser currentUser,
+            @RequestBody @Valid UserChangePasswordRequest request
+    ) {
+        userService.changePassword(currentUser.getId(), request);
+        return ApiResult.ok();
+    }
 
 	// 회원탈퇴
 	@Operation(
@@ -119,7 +116,7 @@ public class UserController extends SwaggerAssistance {
 
 	// 내 정보 변경
 	@PutMapping("/my-info")
-	public UserResponse.Detail updateMyInfo(@Valid @RequestBody UserUpdateRequest request) {
+	public UserResponse.Detail changeMyInfo(@Valid @RequestBody UserChangeRequest request) {
 		return userService.updateCurrentUser(request);
 	}
 

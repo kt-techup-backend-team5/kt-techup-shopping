@@ -4,9 +4,9 @@ package com.kt.controller.user;
 import com.kt.common.request.Paging;
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
-import com.kt.dto.user.UserChangePasswordRequest;
+import com.kt.dto.user.AdminChangePasswordRequest;
 import com.kt.dto.user.UserResponse;
-import com.kt.dto.user.UserUpdateRequest;
+import com.kt.dto.user.UserChangeRequest;
 import com.kt.security.CurrentUser;
 import com.kt.service.UserService;
 
@@ -106,10 +106,10 @@ public class AdminUserController extends SwaggerAssistance {
     })
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<Void> update(
+    public ApiResult<Void> change(
             @Parameter(description = "수정할 사용자 ID", required = true)
             @PathVariable Long id,
-            @RequestBody @Valid UserUpdateRequest request
+            @RequestBody @Valid UserChangeRequest request
     ) {
         userService.update(id, request.name(), request.email(), request.mobile());
         return ApiResult.ok();
@@ -200,7 +200,7 @@ public class AdminUserController extends SwaggerAssistance {
     public ApiResult<Void> changePassword(
             @Parameter(description = "변경할 사용자 ID", required = true)
             @PathVariable("user_id") Long userId,
-            @RequestBody @Valid UserChangePasswordRequest request
+            @RequestBody @Valid AdminChangePasswordRequest request
     ) {
         userService.changePasswordByAdmin(userId, request);
         return ApiResult.ok();

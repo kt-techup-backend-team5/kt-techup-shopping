@@ -4,11 +4,7 @@ import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
 import com.kt.domain.user.User;
-import com.kt.dto.user.UserChangePasswordRequest;
-import com.kt.dto.user.UserCreateRequest;
-import com.kt.dto.user.UserResponse;
-import com.kt.dto.user.UserUpdatePasswordRequest;
-import com.kt.dto.user.UserUpdateRequest;
+import com.kt.dto.user.*;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.user.UserRepository;
 import com.kt.security.DefaultCurrentUser;
@@ -25,15 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import com.kt.common.exception.CustomException;
-import com.kt.common.exception.ErrorCode;
-import com.kt.common.support.Preconditions;
-import com.kt.domain.user.Role;
-import com.kt.domain.user.User;
-import com.kt.repository.order.OrderRepository;
-import com.kt.repository.user.UserRepository;
 
-import lombok.RequiredArgsConstructor;
+import com.kt.domain.user.Role;
 
 @Service
 @RequiredArgsConstructor
@@ -92,7 +81,7 @@ public class UserService {
 		return user.getLoginId();
 	}
 
-	public void changePassword(Long userId, UserUpdatePasswordRequest request) {
+	public void changePassword(Long userId, UserChangePasswordRequest request) {
 		User user = userRepository.findByIdOrThrow(userId);
 
 		boolean matchesCurrent = passwordEncoder.matches(request.oldPassword(), user.getPassword());
@@ -153,7 +142,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public void changePasswordByAdmin(Long userId, UserChangePasswordRequest request) {
+	public void changePasswordByAdmin(Long userId, AdminChangePasswordRequest request) {
 		User user = userRepository.findByIdOrThrow(userId);
 		String encodedPassword = passwordEncoder.encode(request.newPassword());
 		user.changePassword(encodedPassword);
@@ -174,11 +163,7 @@ public class UserService {
 		return userRepository.findByIdOrThrow(id);
 	}
 
-	public User detailIncludeDeleted(Long id) {
-		return userRepository.findByIdIncludeDeletedOrThrow(id);
-	}
-
-	@Transactional
+    @Transactional
 	public UserResponse.Detail update(Long id, String name, String email, String mobile) {
 		var user = userRepository.findByIdOrThrow(id);
 		user.update(name, email, mobile);
@@ -206,7 +191,6 @@ public class UserService {
 	public UserResponse.Detail getCurrentUserInfo() {
 		DefaultCurrentUser currentUser =
 				(DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Long userId = currentUser.getId();
 
 		User user = userRepository.findByIdOrThrow(currentUser.getId());
 
@@ -214,7 +198,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public UserResponse.Detail updateCurrentUser(UserUpdateRequest request) {
+	public UserResponse.Detail updateCurrentUser(UserChangeRequest request) {
 		DefaultCurrentUser currentUser =
 				(DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -248,8 +232,8 @@ public class UserService {
 	@Transactional
 	public String initPassword(Long userId) {
 		User user = userRepository.findByIdOrThrow(userId);
-		String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8); // e.g., "123e4567"
-		String encodedPassword = passwordEncoder.encode(tempPassword);
+        String tempPassword = generateRandomPassword();
+        String encodedPassword = passwordEncoder.encode(tempPassword);
 		user.changePassword(encodedPassword);
 		return tempPassword;
 	}
