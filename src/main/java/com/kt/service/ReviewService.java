@@ -81,9 +81,8 @@ public class ReviewService {
 	}
 
 	public void deleteReviewByAdmin(Long reviewId) {
-		reviewRepository.findByIdOrThrow(reviewId);
-
-		reviewRepository.deleteById(reviewId);
+		Review review = reviewRepository.findByIdOrThrow(reviewId);
+		reviewRepository.delete(review);
 	}
 
 	private Review findReviewByIdAndValidateOwner(Long reviewId, Long userId, ErrorCode errorCode) {
