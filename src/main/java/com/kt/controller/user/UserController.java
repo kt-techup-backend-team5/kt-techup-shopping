@@ -141,7 +141,7 @@ public class UserController extends SwaggerAssistance {
     public ApiResult<UserResponse.Detail> changeMyInfo(
             @Valid @RequestBody UserChangeRequest request
     ) {
-        return ApiResult.ok(userService.updateCurrentUser(request));
+        return ApiResult.ok(userService.changeCurrentUser(request));
     }
 
 	@Operation(

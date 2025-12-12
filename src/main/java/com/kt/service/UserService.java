@@ -181,7 +181,7 @@ public class UserService {
 	}
 
     @Transactional
-    public UserResponse.Detail updateCurrentUser(UserChangeRequest request) {
+    public UserResponse.Detail changeCurrentUser(UserChangeRequest request) {
         DefaultCurrentUser currentUser =
                 (DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
