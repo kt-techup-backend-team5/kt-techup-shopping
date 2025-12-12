@@ -20,6 +20,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Admin-User", description = "관리자 사용자 관리 API")
 @RestController
+@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
@@ -114,6 +116,7 @@ public class AdminUserController extends SwaggerAssistance {
         return ApiResult.ok();
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "관리자 권한 부여")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "권한 부여 성공"),
@@ -129,6 +132,7 @@ public class AdminUserController extends SwaggerAssistance {
         return ApiResult.ok();
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @Operation(summary = "관리자 권한 회수")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "권한 회수 성공"),

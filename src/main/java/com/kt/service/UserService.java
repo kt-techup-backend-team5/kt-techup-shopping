@@ -36,7 +36,7 @@ public class UserService {
 		Preconditions.validate(!isDuplicateLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
 		Preconditions.validate(!isDuplicateEmail(request.email()), ErrorCode.ALREADY_EXISTS_EMAIL);
 
-		var newUser = User.normalUser(
+		var newUser = User.customer(
 				request.loginId(),
 				passwordEncoder.encode(request.password()),
 				request.name(),
@@ -49,23 +49,6 @@ public class UserService {
 		);
 
 		userRepository.save(newUser);
-	}
-
-	public void createAdmin(UserCreateRequest request) {
-		Preconditions.validate(!userRepository.existsByLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
-
-		var newAdmin = User.admin(
-				request.loginId(),
-				passwordEncoder.encode(request.password()),
-				request.name(),
-				request.email(),
-				request.mobile(),
-				request.gender(),
-				request.birthday(),
-				LocalDateTime.now(),
-				LocalDateTime.now()
-		);
-		userRepository.save(newAdmin);
 	}
 
 	public boolean isDuplicateLoginId(String loginId) {
