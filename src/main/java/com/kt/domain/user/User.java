@@ -20,7 +20,8 @@ import org.hibernate.annotations.SQLRestriction;
 // 2. 굳이? 같이쓰지뭐
 @Getter
 @Entity
-@SQLDelete(sql = "UPDATE user SET deleted = true, deleted_at = NOW() WHERE id = ?")
+@Table(name = "users")
+@SQLDelete(sql = "UPDATE users SET deleted = true, deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted = false")
 @NoArgsConstructor
 public class User extends BaseEntity {
