@@ -42,12 +42,7 @@ public class AdminUserController extends SwaggerAssistance {
 
     @Operation(
             summary = "관리자 사용자 목록 조회",
-            description = "관리자가 사용자 목록을 이름으로 검색하고 페이징하여 조회합니다.",
-            parameters = {
-                    @Parameter(name = "keyword", description = "검색 키워드(이름)"),
-                    @Parameter(name = "page", description = "페이지 번호", example = "1"),
-                    @Parameter(name = "size", description = "페이지 크기", example = "10")
-            }
+            description = "관리자가 사용자 목록을 이름으로 검색하고 페이징하여 조회합니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공")
@@ -55,8 +50,12 @@ public class AdminUserController extends SwaggerAssistance {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Page<UserResponse.Search>> search(
+            @Parameter(hidden = true)
             @AuthenticationPrincipal CurrentUser currentUser,
+
+            @Parameter(description = "검색 키워드(이름)")
             @RequestParam(required = false) String keyword,
+
             @Parameter(hidden = true) Paging paging
     ) {
         System.out.println(currentUser.getId());
@@ -116,20 +115,32 @@ public class AdminUserController extends SwaggerAssistance {
     }
 
     @Operation(summary = "관리자 권한 부여")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "권한 부여 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
     @PatchMapping("/admins/{id}/grant-admin")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<Void> grant(@PathVariable Long id) {
+    public ApiResult<Void> grant(
+            @Parameter(description = "관리자 권한을 부여할 사용자 ID", required = true)
+            @PathVariable Long id
+    ) {
         userService.grantAdminRole(id);
-
         return ApiResult.ok();
     }
 
     @Operation(summary = "관리자 권한 회수")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "권한 회수 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
     @PatchMapping("/admins/{id}/revoke-admin")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResult<Void> revoke(@PathVariable Long id) {
+    public ApiResult<Void> revoke(
+            @Parameter(description = "관리자 권한을 회수할 사용자 ID", required = true)
+            @PathVariable Long id
+    ) {
         userService.revokeAdminRole(id);
-
         return ApiResult.ok();
     }
     
@@ -177,14 +188,14 @@ public class AdminUserController extends SwaggerAssistance {
             @ApiResponse(responseCode = "200", description = "비밀번호 초기화 성공"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    @PostMapping("/{user_id}/init-password")
+    @PostMapping("/{id}/init-password")
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<String> initPassword(
             @Parameter(description = "초기화할 사용자 ID", required = true)
-            @PathVariable("user_id") Long userId
+            @PathVariable Long id
     ) {
-        String temporaryPassword = userService.initPassword(userId);
-        return ApiResult.ok("임시 비밀번호: " + temporaryPassword);
+        String temporaryPassword = userService.initPassword(id);
+        return ApiResult.ok(temporaryPassword);
     }
 
     @Operation(
@@ -195,14 +206,14 @@ public class AdminUserController extends SwaggerAssistance {
             @ApiResponse(responseCode = "200", description = "비밀번호 변경 성공"),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    @PutMapping("/{user_id}/change-password")
+    @PutMapping("/{id}/change-password")
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Void> changePassword(
             @Parameter(description = "변경할 사용자 ID", required = true)
-            @PathVariable("user_id") Long userId,
+            @PathVariable Long id,
             @RequestBody @Valid AdminChangePasswordRequest request
     ) {
-        userService.changePasswordByAdmin(userId, request);
+        userService.changePasswordByAdmin(id, request);
         return ApiResult.ok();
     }
 }

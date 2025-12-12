@@ -197,17 +197,17 @@ public class UserService {
 		return UserResponse.Detail.of(user);
 	}
 
-	@Transactional
-	public UserResponse.Detail updateCurrentUser(UserChangeRequest request) {
-		DefaultCurrentUser currentUser =
-				(DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @Transactional
+    public UserResponse.Detail updateCurrentUser(UserChangeRequest request) {
+        DefaultCurrentUser currentUser =
+                (DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-		User user = userRepository.findByIdOrThrow(currentUser.getId());
+        User user = userRepository.findByIdOrThrow(currentUser.getId());
 
-		user.update(request.name(), request.email(), request.mobile());
+        user.update(request.name(), request.email(), request.mobile());
 
-		return UserResponse.Detail.of(user);
-	}
+        return UserResponse.Detail.of(user);
+    }
 
 	public void getOrders(Long id) {
 		var user = userRepository.findByIdOrThrow(id);
@@ -219,6 +219,21 @@ public class UserService {
 						.map(orderProduct -> orderProduct.getProduct().getName())).toList();
 	}
 
+    @Transactional
+    public User getAdminOrThrow(Long id) {
+        User user = detail(id);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        return user;
+    }
+
+    @Transactional
+    public void deleteAdmin(Long currentUserId, Long targetUserId) {
+        Preconditions.validate(!currentUserId.equals(targetUserId), ErrorCode.CANNOT_DELETE_SELF);
+        var user = detail(targetUserId);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        deactivateUser(targetUserId);
+    }
+
 	public void grantAdminRole(Long id) {
 		var user = userRepository.findByIdOrThrow(id);
 		user.grantAdminRole();
@@ -229,7 +244,14 @@ public class UserService {
 		user.revokeAdminRole();
 	}
 
-	@Transactional
+    @Transactional
+    public String initAdminPassword(Long targetUserId) {
+        var user = detail(targetUserId);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        return initPassword(targetUserId);
+    }
+
+    @Transactional
 	public String initPassword(Long userId) {
 		User user = userRepository.findByIdOrThrow(userId);
         String tempPassword = generateRandomPassword();

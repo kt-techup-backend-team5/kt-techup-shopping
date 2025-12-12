@@ -1,12 +1,8 @@
 package com.kt.controller.user;
 
-import com.kt.common.exception.ErrorCode;
 import com.kt.common.request.Paging;
 import com.kt.common.response.ApiResult;
-import com.kt.common.support.Preconditions;
 import com.kt.common.support.SwaggerAssistance;
-import com.kt.domain.user.Role;
-import com.kt.dto.user.UserCreateRequest;
 import com.kt.dto.user.UserResponse;
 import com.kt.dto.user.UserChangeRequest;
 import com.kt.security.CurrentUser;
@@ -29,14 +25,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/admin/admins")
 public class AdminController extends SwaggerAssistance {
     private final UserService userService;
-
-    // 관리자가 관리자 생성
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResult<Void> create(@RequestBody @Valid UserCreateRequest request) {
-        userService.createAdmin(request);
-        return ApiResult.ok();
-    }
 
     @Operation(
             summary = "관리자 목록 조회",
@@ -74,9 +62,7 @@ public class AdminController extends SwaggerAssistance {
             @Parameter(description = "조회할 관리자 ID", required = true)
             @PathVariable Long id
     ) {
-        var user = userService.detail(id);
-        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
-        return ApiResult.ok(UserResponse.Detail.of(user));
+        return ApiResult.ok(UserResponse.Detail.of(userService.getAdminOrThrow(id)));
     }
 
     @Operation(
@@ -94,10 +80,8 @@ public class AdminController extends SwaggerAssistance {
             @PathVariable Long id,
             @RequestBody @Valid UserChangeRequest request
     ) {
-        var user = userService.detail(id);
-        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
-        var updatedUser = userService.update(id, request.name(), request.email(), request.mobile());
-        return ApiResult.ok(updatedUser);
+        userService.getAdminOrThrow(id);
+        return ApiResult.ok(userService.update(id, request.name(), request.email(), request.mobile()));
     }
 
     @Operation(
@@ -116,10 +100,7 @@ public class AdminController extends SwaggerAssistance {
             @Parameter(description = "삭제할 관리자 ID", required = true)
             @PathVariable Long id
     ) {
-        Preconditions.validate(!currentUser.getId().equals(id), ErrorCode.CANNOT_DELETE_SELF);
-        var user = userService.detail(id);
-        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
-        userService.deactivateUser(id);
+        userService.deleteAdmin(currentUser.getId(), id);
         return ApiResult.ok();
     }
 
@@ -137,9 +118,7 @@ public class AdminController extends SwaggerAssistance {
             @Parameter(description = "비밀번호를 초기화할 관리자 ID", required = true)
             @PathVariable Long id
     ) {
-        var user = userService.detail(id);
-        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
-        String tempPassword = userService.initPassword(id);
+        String tempPassword = userService.initAdminPassword(id);
         return ApiResult.ok(tempPassword);
     }
 }

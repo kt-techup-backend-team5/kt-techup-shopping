@@ -37,7 +37,8 @@ public class AuthController {
 	)
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", description = "회원 가입 성공"),
-			@ApiResponse(responseCode = "400", description = "잘못된 요청 데이터")
+			@ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
+            @ApiResponse(responseCode = "409", description = "로그인 ID 또는 이메일이 이미 존재")
 	})
 	@PostMapping("/signup")
 	@ResponseStatus(HttpStatus.CREATED)
