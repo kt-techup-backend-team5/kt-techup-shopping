@@ -49,12 +49,11 @@ class UserOrderServiceTest {
         Receiver receiver = createReceiver("홍길동", "서울시 어딘가 1-1", "010-0000-0000");
         Order order = createOrder(receiver, user, OrderStatus.ORDER_CREATED);
 
-        Product product1 = createProduct("상품1", 1_000L, 10L);
-        Product product2 = createProduct("상품2", 2_000L, 5L);
-
-        OrderProduct op1 = createOrderProduct(order, product1, 2L);
-        OrderProduct op2 = createOrderProduct(order, product2, 1L);
-        addOrderProductsToOrder(order, List.of(op1, op2));
+        Product product1 = createProduct("상품1", 1_000L, 10L, "상품 상세설명");
+        Product product2 = createProduct("상품2", 2_000L, 5L, "상품 상세설명");
+        createOrderProduct(order, product1, 2L);
+        createOrderProduct(order, product2, 1L);
+        long expectedTotalPrice = 1_000L * 2 + 2_000L * 1;
 
         given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER))
             .willReturn(order);
@@ -69,8 +68,7 @@ class UserOrderServiceTest {
 
         assertThat(detail.items()).hasSize(2);
 
-        long expectedTotal = order.getTotalPrice();
-        assertThat(detail.totalPrice()).isEqualTo(expectedTotal);
+        assertThat(detail.totalPrice()).isEqualTo(expectedTotalPrice);
 
         assertThat(detail.status()).isEqualTo(order.getStatus());
         assertThat(detail.createdAt()).isEqualTo(order.getCreatedAt());
@@ -93,17 +91,15 @@ class UserOrderServiceTest {
         Order order1 = createOrder(receiver1, user, OrderStatus.ORDER_CREATED);
         Order order2 = createOrder(receiver2, user, OrderStatus.ORDER_ACCEPTED);
 
-        // order1에 상품 2개
-        Product o1Product1 = createProduct("주문1-상품1", 1_000L, 10L);
-        Product o1Product2 = createProduct("주문1-상품2", 2_000L, 5L);
-        OrderProduct o1Op1 = createOrderProduct(order1, o1Product1, 2L);
-        OrderProduct o1Op2 = createOrderProduct(order1, o1Product2, 1L);
-        addOrderProductsToOrder(order1, List.of(o1Op1, o1Op2));
+        // order1: 상품 2개
+        Product o1Product1 = createProduct("주문1-상품1", 1_000L, 10L, "상품 상세설명");
+        Product o1Product2 = createProduct("주문1-상품2", 2_000L, 5L, "상품 상세설명");
+        createOrderProduct(order1, o1Product1, 2L);
+        createOrderProduct(order1, o1Product2, 1L);
 
-        // order2에 상품 1개
-        Product o2Product1 = createProduct("주문2-상품1", 3_000L, 3L);
-        OrderProduct o2Op1 = createOrderProduct(order2, o2Product1, 1L);
-        addOrderProductsToOrder(order2, List.of(o2Op1));
+        // order2: 상품 1개
+        Product o2Product1 = createProduct("주문2-상품1", 3_000L, 3L, "상품 상세설명");
+        createOrderProduct(order2, o2Product1, 1L);
 
         Page<Order> page = new PageImpl<>(List.of(order1, order2), pageable, 2);
 
@@ -119,15 +115,13 @@ class UserOrderServiceTest {
 
         OrderResponse.Summary firstSummary = result.getContent().get(0);
 
-        long expectedTotal = order1.getTotalPrice();
-        String expectedFirstProductName = order1.getOrderProducts().stream()
-            .map(op -> op.getProduct().getName())
-            .findFirst()
-            .orElse(null);
+        long expectedTotalPrice = 1_000L * 2 + 2_000L * 1;
+        String expectedFirstProductName = "주문1-상품1";
+        int expectedProductCount = 2;
 
-        assertThat(firstSummary.totalPrice()).isEqualTo(expectedTotal);
+        assertThat(firstSummary.totalPrice()).isEqualTo(expectedTotalPrice);
         assertThat(firstSummary.firstProductName()).isEqualTo(expectedFirstProductName);
-        assertThat(firstSummary.productCount()).isEqualTo(order1.getOrderProducts().size());
+        assertThat(firstSummary.productCount()).isEqualTo(expectedProductCount);
         assertThat(firstSummary.status()).isEqualTo(order1.getStatus());
         assertThat(firstSummary.createdAt()).isEqualTo(order1.getCreatedAt());
 
@@ -224,8 +218,8 @@ class UserOrderServiceTest {
         return new Receiver(name, address, mobile);
     }
 
-    private Product createProduct(String name, Long price, Long stock) {
-        return new Product(name, price, stock, "상품 상세 설명");
+    private Product createProduct(String name, Long price, Long stock, String description) {
+        return new Product(name, price, stock, description);
     }
 
     private Order createOrder(Receiver receiver, User user, OrderStatus status) {
@@ -235,13 +229,8 @@ class UserOrderServiceTest {
     }
 
     private OrderProduct createOrderProduct(Order order, Product product, Long quantity) {
-        return new OrderProduct(order, product, quantity);
-    }
-
-    private void addOrderProductsToOrder(Order order, List<OrderProduct> orderProducts) {
-        orderProducts.forEach(op -> {
-            order.mapToOrderProduct(op);
-            op.getProduct().mapToOrderProduct(op);
-        });
+        OrderProduct op = new OrderProduct(order, product, quantity);
+        order.mapToOrderProduct(op);
+        return op;
     }
 }
