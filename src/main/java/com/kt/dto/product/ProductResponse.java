@@ -45,8 +45,8 @@ public interface ProductResponse {
 			String name,
 			Long price,
 			Boolean isSoldOut,
-			Long viewCount
-			// 상품 상세 정보, 이미지 등등
+			Long viewCount,
+			String description
 	) {
 		public static Detail of(Product product, Long viewCount) {
 			return new Detail(
@@ -54,7 +54,8 @@ public interface ProductResponse {
 					product.getName(),
 					product.getPrice(),
 					product.getStatus().equals(ProductStatus.SOLD_OUT),
-					product.getViewCount() + viewCount
+					product.getViewCount() + viewCount,
+					product.getDescription()
 			);
 		}
 	}
@@ -66,9 +67,9 @@ public interface ProductResponse {
 			Long stock,
 			ProductStatus status,
 			Long viewCount,
+			String description,
 			LocalDateTime createdAt,
 			LocalDateTime updatedAt
-			// 상품 상세 정보, 이미지 등등
 	) {
 		public static AdminDetail of(Product product, Long viewCount) {
 			return new AdminDetail(
@@ -78,6 +79,7 @@ public interface ProductResponse {
 					product.getStock(),
 					product.getStatus(),
 					product.getViewCount() + viewCount,
+					product.getDescription(),
 					product.getCreatedAt(),
 					product.getUpdatedAt()
 			);

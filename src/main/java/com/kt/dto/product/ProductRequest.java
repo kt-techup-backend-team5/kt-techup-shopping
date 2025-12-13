@@ -26,9 +26,10 @@ public class ProductRequest {
 		private Long price;
 		@NotNull
 		private Long quantity;
+		private String description;
 
 		public Product toEntity() {
-			return new Product(name, price, quantity);
+			return new Product(name, price, quantity, description);
 		}
 	}
 
@@ -42,6 +43,7 @@ public class ProductRequest {
 		private Long price;
 		@NotNull
 		private Long quantity;
+		private String description;
 	}
 
 	@Getter
