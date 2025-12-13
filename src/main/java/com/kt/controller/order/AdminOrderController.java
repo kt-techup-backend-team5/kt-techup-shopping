@@ -49,7 +49,7 @@ public class AdminOrderController extends SwaggerAssistance {
 	)
 	@Parameters({
 			@Parameter(name = "condition.username", description = "구매자 이름", example = "testUser"),
-			@Parameter(name = "condition.status", description = "주문 상태", example = "PENDING", schema = @Schema(implementation = OrderStatus.class)),
+			@Parameter(name = "condition.status", description = "주문 상태", example = "ORDER_CREATED", schema = @Schema(implementation = OrderStatus.class)),
 			@Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
 			@Parameter(name = "size", description = "페이지 당 항목 수", example = "10"),
 			@Parameter(name = "sort", description = "정렬 기준 (예: id,desc)", example = "id,desc")
@@ -89,9 +89,11 @@ public class AdminOrderController extends SwaggerAssistance {
 		return ApiResult.ok(orderService.getAdminOrderDetail(orderId));
 	}
 
+	@Deprecated
 	@Operation(
-		summary = "주문 취소 요청 목록 조회",
-		description = "사용자들이 요청한 주문 취소 건들의 목록을 페이징하여 조회합니다."
+		summary = "[DEPRECATED] 주문 취소 요청 목록 조회",
+		description = "⚠️ DEPRECATED: 취소는 즉시 처리됩니다. 향후 Refund 도메인으로 이동 예정입니다.",
+		deprecated = true
 	)
 	@Parameters({
 			@Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
@@ -103,15 +105,18 @@ public class AdminOrderController extends SwaggerAssistance {
 				content = @Content(schema = @Schema(implementation = Page.class))),
 		@ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
 		@ApiResponse(responseCode = "403", description = "권한 없음"),
+		@ApiResponse(responseCode = "500", description = "UnsupportedOperationException - 이 기능은 더 이상 지원되지 않습니다")
 	})
 	@GetMapping("/orders/cancel")
 	public ApiResult<Page<OrderResponse.AdminSummary>> getCancelRequests(Pageable pageable) {
 		return ApiResult.ok(orderService.getOrdersWithCancelRequested(pageable));
 	}
 
+	@Deprecated
 	@Operation(
-		summary = "주문 취소 요청 처리 (승인/거절)",
-		description = "사용자의 주문 취소 요청에 대해 승인 또는 거절 처리를 합니다."
+		summary = "[DEPRECATED] 주문 취소 요청 처리 (승인/거절)",
+		description = "⚠️ DEPRECATED: 취소는 즉시 처리됩니다. requestCancelByUser를 사용하세요. 향후 Refund 도메인으로 이동 예정입니다.",
+		deprecated = true
 	)
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "처리 성공"),
@@ -119,6 +124,7 @@ public class AdminOrderController extends SwaggerAssistance {
 		@ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
 		@ApiResponse(responseCode = "403", description = "권한 없음"),
 		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음"),
+		@ApiResponse(responseCode = "500", description = "UnsupportedOperationException - 이 기능은 더 이상 지원되지 않습니다")
 	})
 	@PostMapping("/orders/{orderId}/cancel")
 	public ApiResult<Void> decideCancel(

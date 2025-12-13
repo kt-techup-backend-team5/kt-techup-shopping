@@ -7,6 +7,7 @@ import org.redisson.api.RedissonClient;
 
 import com.kt.common.exception.CustomException;
 import com.kt.domain.order.Order;
+import com.kt.domain.order.OrderStatus;
 import com.kt.domain.order.Receiver;
 import com.kt.domain.orderproduct.OrderProduct;
 import com.kt.domain.product.Product;
@@ -14,6 +15,7 @@ import com.kt.domain.user.Gender;
 import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 import com.kt.dto.review.ReviewCreateRequest;
+import com.kt.dto.review.ReviewSearchCondition;
 import com.kt.dto.review.ReviewUpdateRequest;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.orderproduct.OrderProductRepository;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,12 +81,12 @@ class ReviewServiceTest {
 		user = userRepository.save(
 				new User("testuser", "password", "Test User", "email@test.com",
 						"010-0000-0000", Gender.MALE, LocalDate.now(), LocalDateTime.now(), LocalDateTime.now(),
-						Role.USER)
+						Role.CUSTOMER)
 		);
 
-		product = productRepository.save(new Product("테스트 상품", 10000L, 10L));
+		product = productRepository.save(new Product("테스트 상품", 10000L, 10L, "상품 상세 설명"));
 		Order order = orderRepository.save(new Order(new Receiver("name", "address", "111-222"), user));
-		order.changeStatus(com.kt.domain.order.OrderStatus.CONFIRMED);
+		order.changeStatus(OrderStatus.ORDER_CONFIRMED);
 		orderProduct = orderProductRepository.save(new OrderProduct(order, product, 1L));
 	}
 
@@ -159,12 +162,12 @@ class ReviewServiceTest {
 		ReviewCreateRequest createRequest = new ReviewCreateRequest(orderProduct.getId(), 3, "원래 내용");
 		reviewService.createReview(user.getId(), createRequest);
 		var review = reviewRepository.findAll().getFirst();
-		var updateRequest = new com.kt.dto.review.ReviewUpdateRequest(5, "수정된 내용");
+		var updateRequest = new ReviewUpdateRequest(5, "수정된 내용");
 
 		User otherUser = userRepository.save(
 				new User("otheruser", "password", "Other User", "other@test.com",
 						"010-1111-1111", Gender.FEMALE, LocalDate.now(), LocalDateTime.now(), LocalDateTime.now(),
-						Role.USER)
+						Role.CUSTOMER)
 		);
 
 		// when & then
@@ -198,7 +201,7 @@ class ReviewServiceTest {
 
 		User otherUser = userRepository.save(
 				new User("otheruser", "password", "Other User", "other@test.com", "010-1111-1111", Gender.FEMALE,
-						LocalDate.now(), LocalDateTime.now(), LocalDateTime.now(), Role.USER)
+						LocalDate.now(), LocalDateTime.now(), LocalDateTime.now(), Role.CUSTOMER)
 		);
 
 		// when & then
@@ -228,14 +231,14 @@ class ReviewServiceTest {
 		// given
 		// Another order for the same user and product to create a second review
 		Order anotherOrder = orderRepository.save(new Order(new Receiver("name", "address", "111-222"), user));
-		anotherOrder.changeStatus(com.kt.domain.order.OrderStatus.CONFIRMED);
+		anotherOrder.changeStatus(OrderStatus.ORDER_CONFIRMED);
 		OrderProduct anotherOrderProduct = orderProductRepository.save(new OrderProduct(anotherOrder, product, 1L));
 
 		reviewService.createReview(user.getId(), new ReviewCreateRequest(orderProduct.getId(), 5, "리뷰 1"));
 		reviewService.createReview(user.getId(), new ReviewCreateRequest(anotherOrderProduct.getId(), 4, "리뷰 2"));
 
 		// when
-		var pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+		var pageable = PageRequest.of(0, 10);
 		var result = reviewService.getReviewsByProductId(product.getId(), pageable);
 
 		// then
@@ -252,25 +255,25 @@ class ReviewServiceTest {
 		// Create another user and product for a more complex scenario
 		User otherUser = userRepository.save(
 				new User("otheruser", "password", "Other User", "other@test.com", "010-1111-1111", Gender.FEMALE,
-						LocalDate.now(), LocalDateTime.now(), LocalDateTime.now(), Role.USER));
-		Product otherProduct = productRepository.save(new Product("다른 상품", 20000L, 5L));
+						LocalDate.now(), LocalDateTime.now(), LocalDateTime.now(), Role.CUSTOMER));
+		Product otherProduct = productRepository.save(new Product("다른 상품", 20000L, 5L, "상품상세설명"));
 
 		Order order1 = orderRepository.save(new Order(new Receiver("name", "address", "111-222"), user));
-		order1.changeStatus(com.kt.domain.order.OrderStatus.CONFIRMED);
+		order1.changeStatus(OrderStatus.ORDER_CONFIRMED);
 		OrderProduct orderProduct1 = orderProductRepository.save(new OrderProduct(order1, product, 1L));
 		reviewService.createReview(user.getId(),
 				new ReviewCreateRequest(orderProduct1.getId(), 5, "리뷰 from Test User"));
 
 		Order order2 = orderRepository.save(new Order(new Receiver("name", "address", "111-222"), otherUser));
-		order2.changeStatus(com.kt.domain.order.OrderStatus.CONFIRMED);
+		order2.changeStatus(OrderStatus.ORDER_CONFIRMED);
 		OrderProduct orderProduct2 = orderProductRepository.save(new OrderProduct(order2, otherProduct, 1L));
 		reviewService.createReview(otherUser.getId(),
 				new ReviewCreateRequest(orderProduct2.getId(), 4, "리뷰 from Other User"));
 
 		// when
-		var condition = new com.kt.dto.review.ReviewSearchCondition(null, null, 5);
+		var condition = new ReviewSearchCondition(null, null, 5);
 
-		var pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+		var pageable = PageRequest.of(0, 10);
 		var result = reviewService.getAdminReviews(condition, pageable);
 
 		// then
