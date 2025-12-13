@@ -72,7 +72,7 @@ class OrderServiceTest {
 				LocalDate.now(),
 				LocalDateTime.now(),
 				LocalDateTime.now(),
-				Role.USER
+				Role.CUSTOMER
 			)
 		);
 
@@ -117,7 +117,7 @@ class OrderServiceTest {
 				LocalDate.now(),
 				LocalDateTime.now(),
 				LocalDateTime.now(),
-				Role.USER
+				Role.CUSTOMER
 			));
 		}
 

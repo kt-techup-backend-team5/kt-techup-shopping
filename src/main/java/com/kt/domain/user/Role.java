@@ -1,6 +1,7 @@
 package com.kt.domain.user;
 
 public enum Role {
-	ADMIN,
-	USER
+    SUPER_ADMIN,
+    ADMIN,
+    CUSTOMER
 }

@@ -51,11 +51,12 @@ public class User extends BaseEntity {
         this.mobile = mobile;
         this.gender = gender;
         this.birthday = birthday;
+        this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.role = role;
     }
 
-    public static User normalUser(String loginId, String password, String name, String email, String mobile,
+    public static User customer(String loginId, String password, String name, String email, String mobile,
                                   Gender gender,
                                   LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new User(
@@ -68,23 +69,7 @@ public class User extends BaseEntity {
                 birthday,
                 createdAt,
                 updatedAt,
-                Role.USER
-        );
-    }
-
-    public static User admin(String loginId, String password, String name, String email, String mobile, Gender gender,
-                             LocalDate birthday, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new User(
-                loginId,
-                password,
-                name,
-                email,
-                mobile,
-                gender,
-                birthday,
-                createdAt,
-                updatedAt,
-                Role.USER
+                Role.CUSTOMER
         );
     }
 
@@ -95,7 +80,7 @@ public class User extends BaseEntity {
 
     public void revokeAdminRole() {
         if (this.role == Role.ADMIN) {
-            this.role = Role.USER;
+            this.role = Role.CUSTOMER;
             this.updatedAt = LocalDateTime.now();
         }
     }

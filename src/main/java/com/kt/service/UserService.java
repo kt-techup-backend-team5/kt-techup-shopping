@@ -4,11 +4,7 @@ import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.common.support.Preconditions;
 import com.kt.domain.user.User;
-import com.kt.dto.user.UserChangePasswordRequest;
-import com.kt.dto.user.UserCreateRequest;
-import com.kt.dto.user.UserResponse;
-import com.kt.dto.user.UserUpdatePasswordRequest;
-import com.kt.dto.user.UserUpdateRequest;
+import com.kt.dto.user.*;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.user.UserRepository;
 import com.kt.security.DefaultCurrentUser;
@@ -25,15 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import com.kt.common.exception.CustomException;
-import com.kt.common.exception.ErrorCode;
-import com.kt.common.support.Preconditions;
-import com.kt.domain.user.Role;
-import com.kt.domain.user.User;
-import com.kt.repository.order.OrderRepository;
-import com.kt.repository.user.UserRepository;
 
-import lombok.RequiredArgsConstructor;
+import com.kt.domain.user.Role;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +36,7 @@ public class UserService {
 		Preconditions.validate(!isDuplicateLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
 		Preconditions.validate(!isDuplicateEmail(request.email()), ErrorCode.ALREADY_EXISTS_EMAIL);
 
-		var newUser = User.normalUser(
+		var newUser = User.customer(
 				request.loginId(),
 				passwordEncoder.encode(request.password()),
 				request.name(),
@@ -60,23 +49,6 @@ public class UserService {
 		);
 
 		userRepository.save(newUser);
-	}
-
-	public void createAdmin(UserCreateRequest request) {
-		Preconditions.validate(!userRepository.existsByLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
-
-		var newAdmin = User.admin(
-				request.loginId(),
-				passwordEncoder.encode(request.password()),
-				request.name(),
-				request.email(),
-				request.mobile(),
-				request.gender(),
-				request.birthday(),
-				LocalDateTime.now(),
-				LocalDateTime.now()
-		);
-		userRepository.save(newAdmin);
 	}
 
 	public boolean isDuplicateLoginId(String loginId) {
@@ -92,7 +64,7 @@ public class UserService {
 		return user.getLoginId();
 	}
 
-	public void changePassword(Long userId, UserUpdatePasswordRequest request) {
+	public void changePassword(Long userId, UserChangePasswordRequest request) {
 		User user = userRepository.findByIdOrThrow(userId);
 
 		boolean matchesCurrent = passwordEncoder.matches(request.oldPassword(), user.getPassword());
@@ -153,7 +125,7 @@ public class UserService {
 	}
 
 	@Transactional
-	public void changePasswordByAdmin(Long userId, UserChangePasswordRequest request) {
+	public void changePasswordByAdmin(Long userId, AdminChangePasswordRequest request) {
 		User user = userRepository.findByIdOrThrow(userId);
 		String encodedPassword = passwordEncoder.encode(request.newPassword());
 		user.changePassword(encodedPassword);
@@ -174,11 +146,7 @@ public class UserService {
 		return userRepository.findByIdOrThrow(id);
 	}
 
-	public User detailIncludeDeleted(Long id) {
-		return userRepository.findByIdIncludeDeletedOrThrow(id);
-	}
-
-	@Transactional
+    @Transactional
 	public UserResponse.Detail update(Long id, String name, String email, String mobile) {
 		var user = userRepository.findByIdOrThrow(id);
 		user.update(name, email, mobile);
@@ -206,24 +174,23 @@ public class UserService {
 	public UserResponse.Detail getCurrentUserInfo() {
 		DefaultCurrentUser currentUser =
 				(DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Long userId = currentUser.getId();
 
 		User user = userRepository.findByIdOrThrow(currentUser.getId());
 
 		return UserResponse.Detail.of(user);
 	}
 
-	@Transactional
-	public UserResponse.Detail updateCurrentUser(UserUpdateRequest request) {
-		DefaultCurrentUser currentUser =
-				(DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @Transactional
+    public UserResponse.Detail changeCurrentUser(UserChangeRequest request) {
+        DefaultCurrentUser currentUser =
+                (DefaultCurrentUser)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-		User user = userRepository.findByIdOrThrow(currentUser.getId());
+        User user = userRepository.findByIdOrThrow(currentUser.getId());
 
-		user.update(request.name(), request.email(), request.mobile());
+        user.update(request.name(), request.email(), request.mobile());
 
-		return UserResponse.Detail.of(user);
-	}
+        return UserResponse.Detail.of(user);
+    }
 
 	public void getOrders(Long id) {
 		var user = userRepository.findByIdOrThrow(id);
@@ -235,6 +202,21 @@ public class UserService {
 						.map(orderProduct -> orderProduct.getProduct().getName())).toList();
 	}
 
+    @Transactional
+    public User getAdminOrThrow(Long id) {
+        User user = detail(id);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        return user;
+    }
+
+    @Transactional
+    public void deleteAdmin(Long currentUserId, Long targetUserId) {
+        Preconditions.validate(!currentUserId.equals(targetUserId), ErrorCode.CANNOT_DELETE_SELF);
+        var user = detail(targetUserId);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        deactivateUser(targetUserId);
+    }
+
 	public void grantAdminRole(Long id) {
 		var user = userRepository.findByIdOrThrow(id);
 		user.grantAdminRole();
@@ -245,11 +227,18 @@ public class UserService {
 		user.revokeAdminRole();
 	}
 
-	@Transactional
+    @Transactional
+    public String initAdminPassword(Long targetUserId) {
+        var user = detail(targetUserId);
+        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        return initPassword(targetUserId);
+    }
+
+    @Transactional
 	public String initPassword(Long userId) {
 		User user = userRepository.findByIdOrThrow(userId);
-		String tempPassword = java.util.UUID.randomUUID().toString().substring(0, 8); // e.g., "123e4567"
-		String encodedPassword = passwordEncoder.encode(tempPassword);
+        String tempPassword = generateRandomPassword();
+        String encodedPassword = passwordEncoder.encode(tempPassword);
 		user.changePassword(encodedPassword);
 		return tempPassword;
 	}
