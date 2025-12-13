@@ -1,0 +1,132 @@
+package com.kt.controller.product;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kt.domain.product.Product;
+import com.kt.domain.product.ProductSortType;
+import com.kt.domain.product.ProductStatus;
+import com.kt.security.JwtService;
+import com.kt.security.WithMockCustomUser;
+import com.kt.service.ProductService;
+import com.kt.service.RedisService;
+
+@WebMvcTest(controllers = AdminProductController.class)
+@WithMockCustomUser(id = 1L)
+class AdminProductControllerTest {
+	@Autowired
+	private MockMvc mockMvc;
+
+	@MockitoBean
+	private ProductService productService;
+	@MockitoBean
+	private RedisService redisService;
+	@MockitoBean
+	private JwtService jwtService;
+	@Autowired
+	private ObjectMapper objectMapper;
+
+	@Test
+	@DisplayName("GET /admin/products")
+	void 관리자_상품_검색_API() throws Exception {
+		// given
+		String keyword = "모니터";
+		ProductSortType sortType = ProductSortType.LATEST;
+
+		Product productA = Product.builder().name("삼성 모니터").status(ProductStatus.ACTIVATED).build();
+		Product productB = Product.builder().name("LG 모니터").status(ProductStatus.ACTIVATED).build();
+		List<Product> content = List.of(productA, productB);
+		Page<Product> mockPage = new PageImpl<>(content, PageRequest.of(0, 10), 100);
+
+		given(productService.searchNonDeletedStatus(eq(keyword), eq(ProductSortType.LATEST), any(Pageable.class)))
+				.willReturn(mockPage);
+
+		// when
+		ResultActions resultActions = mockMvc.perform(get("/admin/products")
+				.param("keyword", keyword)
+				.param("sortType", sortType.name())
+				.param("page", "1")
+				.param("size", "10")
+				.contentType(MediaType.APPLICATION_JSON));
+
+		// then
+		resultActions.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.content[0].name").value(productA.getName()))
+				.andExpect(jsonPath("$.data.content.length()").value(content.size()));
+		verify(productService, times(1)).searchNonDeletedStatus(eq(keyword), eq(sortType), any(Pageable.class));
+	}
+
+	@Test
+	@DisplayName("GET /admin/products/{product_id}")
+	void 관리자_상품_상세_조회_API() throws Exception {
+		// given
+		Long productId = 1L;
+		Product mockProduct = Product.builder()
+				.name("product")
+				.price(10000L)
+				.stock(100L)
+				.viewCount(100L)
+				.description("설명")
+				.status(ProductStatus.ACTIVATED)
+				.build();
+		Long redisViewCount = 10L;
+
+		given(productService.detail(productId)).willReturn(mockProduct);
+		given(redisService.getViewCount(productId)).willReturn(redisViewCount);
+
+		// when
+		ResultActions resultActions = mockMvc.perform(get("/admin/products/{id}", productId));
+
+		// then
+		resultActions.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.name").value(mockProduct.getName()))
+				.andExpect(jsonPath("$.data.viewCount").value(mockProduct.getViewCount() + redisViewCount));
+		verify(productService, times(1)).detail(productId);
+		verify(redisService, times(1)).getViewCount(productId);
+	}
+
+/*	@Test
+	@DisplayName("POST /admin/products")
+	void 관리자_상품_추가_API() throws Exception {
+		// given
+		ProductRequest.Create request = new ProductRequest.Create(
+				"테스트 상품",
+				10000L,
+				10L,
+				"설명"
+		);
+		doNothing().when(productService).create(any(ProductRequest.Create.class));
+
+		// when
+		ResultActions resultActions = mockMvc.perform(post("/admin/products")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)));
+
+		// then
+		resultActions.andExpect(status().isOk());
+		verify(productService, times(1)).create(any(ProductRequest.Create.class));
+	}
+
+	권한 문제로 인한 추후 작업 예정
+
+	*/
+
+}
