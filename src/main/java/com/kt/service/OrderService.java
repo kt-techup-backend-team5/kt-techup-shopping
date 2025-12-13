@@ -113,52 +113,29 @@ public class OrderService {
 		Refund refund = new Refund(order, request.getRefundType(), request.getReason());
 		refundRepository.save(refund);
 
+		// TODO(seulgi): 여기 환불 관련 도메인 작업 해줘야됨.
+
 		if (request.getRefundType() == RefundType.REFUND) {
-			order.changeStatus(OrderStatus.REFUND_REQUESTED);
+			order.changeStatus(OrderStatus.ORDER_REFUND_REQUESTED);
 		} else {
-			order.changeStatus(OrderStatus.RETURN_REQUESTED);
+			order.changeStatus(OrderStatus.ORDER_RETURN_REQUESTED);
 		}
 	}
 
+	// TODO(seulgi): 취소 요청 기능은 Refund 도메인으로 이동 예정
+	// 현재는 즉시 취소 처리로 변경되어 이 메서드는 사용되지 않음
+	@Deprecated
 	public void decideCancel(Long orderId, OrderCancelDecisionRequest request) {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
-		Preconditions.validate(order.isCancelRequestableByAdmin(), ErrorCode.INVALID_ORDER_STATUS);
-
-		if (request.decision() == OrderCancelDecision.APPROVE) {
-			order.approveCancel(request.reason());
-			for (OrderProduct orderProduct : order.getOrderProducts()) {
-				stockService.increaseStockWithLock(orderProduct.getProduct().getId(), orderProduct.getQuantity());
-			}
-			// TODO: 결제 취소 및 환불 레코드 생성 로직 추가
-		} else {
-			order.rejectCancel(request.reason());
-		}
+		// 즉시 취소로 변경되어 승인 프로세스 제거됨
+		throw new UnsupportedOperationException("취소는 즉시 처리됩니다. requestCancelByUser를 사용하세요.");
 	}
 
 	@Transactional(readOnly = true)
+	@Deprecated
 	public Page<OrderResponse.AdminSummary> getOrdersWithCancelRequested(Pageable pageable) {
-		Page<Order> ordersPage = orderRepository.findAllByStatus(OrderStatus.CANCEL_REQUESTED, pageable);
-		return ordersPage
-				.map(order -> {
-					String firstProductName = order.getOrderProducts().stream()
-							.findFirst()
-							.map(OrderProduct::getProduct)
-							.map(Product::getName)
-							.orElse(null);
-
-					int productCount = order.getOrderProducts().size();
-
-					return new OrderResponse.AdminSummary(
-							order.getId(),
-							order.getTotalPrice(),
-							order.getCreatedAt(),
-							order.getStatus(),
-							firstProductName,
-							productCount,
-							order.getUser().getId(),
-							order.getUser().getName()
-					);
-				});
+		// CANCEL_REQUESTED 상태 제거로 인해 사용 불가
+		throw new UnsupportedOperationException("취소 요청 조회 기능은 Refund 도메인으로 이동 예정");
 	}
 
 	@Transactional(readOnly = true)
@@ -174,11 +151,11 @@ public class OrderService {
 		refund.approve();
 
 		if (refund.getType() == RefundType.REFUND) {
-			order.changeStatus(OrderStatus.REFUND_COMPLETED);
+			order.changeStatus(OrderStatus.ORDER_REFUND_COMPLETED);
 			// 재고 복원 (배송 전 환불이므로)
 			order.getOrderProducts().forEach(op -> stockService.increaseStockWithLock(op.getProduct().getId(), op.getQuantity()));
 		} else { // RETURN
-			order.changeStatus(OrderStatus.RETURN_COMPLETED);
+			order.changeStatus(OrderStatus.ORDER_RETURN_COMPLETED);
 			// TODO: 반품된 상품의 상태 확인 후 재고 복원 여부 결정 필요 (일단 복원)
 			order.getOrderProducts().forEach(op -> stockService.increaseStockWithLock(op.getProduct().getId(), op.getQuantity()));
 		}
@@ -195,7 +172,7 @@ public class OrderService {
 		// 주문 상태를 이전 상태(배송완료 등)로 복원
 		Order order = refund.getOrder();
 		// TODO: 간소화를 위해 배송완료 상태로 변경. 이전 상태를 저장해두었다가 복원하는 하는 방식으로 해야할듯?
-		order.changeStatus(OrderStatus.DELIVERED);
+		order.changeStatus(OrderStatus.ORDER_DELIVERED);
 	}
 
 	@Transactional(readOnly = true)
@@ -207,7 +184,7 @@ public class OrderService {
 					.findFirst()
 					.map(orderProduct -> orderProduct.getProduct().getName())
 					.orElse(null);
-			int productCount = 0;
+			int productCount = order.getOrderProducts().size();
 
 			return new OrderResponse.AdminSummary(
 					order.getId(),

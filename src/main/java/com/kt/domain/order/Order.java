@@ -36,6 +36,8 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus previousStatus;
 
+	private Long paymentId;
+
 	private String cancelDecisionReason;
 	private String userCancelReason;
 
@@ -52,7 +54,7 @@ public class Order extends BaseEntity {
 		this.receiver = receiver;
 		this.user = user;
 		this.deliveredAt = LocalDateTime.now().plusDays(3);
-		this.status = OrderStatus.PENDING;
+		this.status = OrderStatus.ORDER_CREATED;
 	}
 
 	public static Order create(Receiver receiver, User user) {
@@ -71,35 +73,18 @@ public class Order extends BaseEntity {
     }
 
     public boolean canUpdate() {
-        return this.status == OrderStatus.PENDING || this.status == OrderStatus.COMPLETED;
+        return this.status == OrderStatus.ORDER_CREATED || this.status == OrderStatus.ORDER_ACCEPTED;
     }
 
+	// TODO(seulgi): 여기 주문 취소부분은 다른 서비스로 들어가야 될것같음. refund로. 일단은 그냥 둠
 	public void requestCancel(String reason) {
-
-		var cancellableStates = List.of(OrderStatus.PENDING, OrderStatus.COMPLETED, OrderStatus.PREPARING);
-
+		var cancellableStates = List.of(OrderStatus.ORDER_CREATED, OrderStatus.ORDER_ACCEPTED, OrderStatus.ORDER_PREPARING);
 		Preconditions.validate(cancellableStates.contains(this.status), ErrorCode.CANNOT_CANCEL_ORDER);
-
 		this.previousStatus = this.status;
-		this.status = OrderStatus.CANCEL_REQUESTED;
 		this.userCancelReason = reason;
+		// 즉시 취소 처리 (관리자 승인 불필요)
+		this.status = OrderStatus.ORDER_CANCELLED;
 	}
-
-    public void approveCancel(String reason) {
-        Preconditions.validate(isCancelRequestableByAdmin(), ErrorCode.INVALID_ORDER_STATUS);
-        this.status = OrderStatus.CANCELLED;
-        this.cancelDecisionReason = reason;
-    }
-
-    public void rejectCancel(String reason) {
-        Preconditions.validate(isCancelRequestableByAdmin(), ErrorCode.INVALID_ORDER_STATUS);
-        this.status = this.previousStatus;
-        this.cancelDecisionReason = reason;
-    }
-
-    public boolean isCancelRequestableByAdmin() {
-        return this.status == OrderStatus.CANCEL_REQUESTED;
-    }
 
 	public long getTotalPrice() {
 		return orderProducts.stream()
@@ -107,8 +92,29 @@ public class Order extends BaseEntity {
 			.sum();
 	}
 
+	/**
+	 * 결제 성공 이벤트 수신 시 호출
+	 */
+	public void acceptPayment(Long paymentId) {
+		Preconditions.validate(this.status == OrderStatus.ORDER_CREATED, ErrorCode.INVALID_ORDER_STATUS);
+		this.paymentId = paymentId;
+		this.status = OrderStatus.ORDER_ACCEPTED;
+	}
+
+	/**
+	 * 결제 실패 이벤트 수신 시 호출
+	 */
+	public void cancelByPaymentFailure() {
+		Preconditions.validate(this.status == OrderStatus.ORDER_CREATED, ErrorCode.INVALID_ORDER_STATUS);
+		this.status = OrderStatus.ORDER_CANCELLED;
+	}
+
+	/**
+	 * @deprecated 이벤트 기반 결제로 전환. acceptPayment() 사용 권장
+	 */
+	@Deprecated
 	public void setPaid() {
-		this.status = OrderStatus.COMPLETED;
+		this.status = OrderStatus.ORDER_ACCEPTED;
 	}
 
 	public void changeStatus(OrderStatus orderStatus){
@@ -116,7 +122,7 @@ public class Order extends BaseEntity {
 	}
 
 	public boolean isRefundable() {
-		return List.of(OrderStatus.COMPLETED, OrderStatus.SHIPPING, OrderStatus.DELIVERED).contains(this.status);
+		return List.of(OrderStatus.ORDER_SHIPPING, OrderStatus.ORDER_DELIVERED).contains(this.status);
 	}
 
 }

@@ -49,7 +49,7 @@ public class AdminOrderController extends SwaggerAssistance {
 	)
 	@Parameters({
 			@Parameter(name = "condition.username", description = "구매자 이름", example = "testUser"),
-			@Parameter(name = "condition.status", description = "주문 상태", example = "PENDING", schema = @Schema(implementation = OrderStatus.class)),
+			@Parameter(name = "condition.status", description = "주문 상태", example = "ORDER_CREATED", schema = @Schema(implementation = OrderStatus.class)),
 			@Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
 			@Parameter(name = "size", description = "페이지 당 항목 수", example = "10"),
 			@Parameter(name = "sort", description = "정렬 기준 (예: id,desc)", example = "id,desc")
