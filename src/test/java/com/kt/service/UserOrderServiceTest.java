@@ -49,8 +49,8 @@ class UserOrderServiceTest {
         Receiver receiver = createReceiver("홍길동", "서울시 어딘가 1-1", "010-0000-0000");
         Order order = createOrder(receiver, user, OrderStatus.PENDING);
 
-        Product product1 = createProduct("상품1", 1_000L, 10L);
-        Product product2 = createProduct("상품2", 2_000L, 5L);
+        Product product1 = createProduct("상품1", 1_000L, 10L, "상품 상세설명");
+        Product product2 = createProduct("상품2", 2_000L, 5L, "상품 상세설명");
         createOrderProduct(order, product1, 2L);
         createOrderProduct(order, product2, 1L);
         long expectedTotalPrice = 1_000L * 2 + 2_000L * 1;
@@ -92,13 +92,13 @@ class UserOrderServiceTest {
         Order order2 = createOrder(receiver2, user, OrderStatus.COMPLETED);
 
         // order1: 상품 2개
-        Product o1Product1 = createProduct("주문1-상품1", 1_000L, 10L);
-        Product o1Product2 = createProduct("주문1-상품2", 2_000L, 5L);
+        Product o1Product1 = createProduct("주문1-상품1", 1_000L, 10L, "상품 상세설명");
+        Product o1Product2 = createProduct("주문1-상품2", 2_000L, 5L, "상품 상세설명");
         createOrderProduct(order1, o1Product1, 2L);
         createOrderProduct(order1, o1Product2, 1L);
 
         // order2: 상품 1개
-        Product o2Product1 = createProduct("주문2-상품1", 3_000L, 3L);
+        Product o2Product1 = createProduct("주문2-상품1", 3_000L, 3L, "상품 상세설명");
         createOrderProduct(order2, o2Product1, 1L);
 
         Page<Order> page = new PageImpl<>(List.of(order1, order2), pageable, 2);
@@ -218,8 +218,8 @@ class UserOrderServiceTest {
         return new Receiver(name, address, mobile);
     }
 
-    private Product createProduct(String name, Long price, Long stock) {
-        return new Product(name, price, stock);
+    private Product createProduct(String name, Long price, Long stock, String description) {
+        return new Product(name, price, stock, description);
     }
 
     private Order createOrder(Receiver receiver, User user, OrderStatus status) {
