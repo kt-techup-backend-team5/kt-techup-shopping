@@ -1,0 +1,247 @@
+package com.kt.service;
+
+import com.kt.common.exception.CustomException;
+import com.kt.common.exception.ErrorCode;
+import com.kt.domain.order.Order;
+import com.kt.domain.order.OrderStatus;
+import com.kt.domain.order.Receiver;
+import com.kt.domain.orderproduct.OrderProduct;
+import com.kt.domain.product.Product;
+import com.kt.domain.user.Gender;
+import com.kt.domain.user.User;
+import com.kt.dto.order.OrderRequest;
+import com.kt.dto.order.OrderResponse;
+import com.kt.repository.order.OrderRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class UserOrderServiceTest {
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @InjectMocks
+    private UserOrderService userOrderService;
+
+    @Test
+    @DisplayName("주문 상세 조회가 정상적으로 매핑된다")
+    void 주문_상세조회_정상_매핑() {
+        // given
+        Long userId = 1L;
+        Long orderId = 10L;
+
+        User user = createUser();
+        Receiver receiver = createReceiver("홍길동", "서울시 어딘가 1-1", "010-0000-0000");
+        Order order = createOrder(receiver, user, OrderStatus.PENDING);
+
+        Product product1 = createProduct("상품1", 1_000L, 10L);
+        Product product2 = createProduct("상품2", 2_000L, 5L);
+
+        OrderProduct op1 = createOrderProduct(order, product1, 2L);
+        OrderProduct op2 = createOrderProduct(order, product2, 1L);
+        addOrderProductsToOrder(order, List.of(op1, op2));
+
+        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER))
+            .willReturn(order);
+
+        // when
+        OrderResponse.Detail detail = userOrderService.getByIdForUser(userId, orderId);
+
+        // then
+        assertThat(detail.receiverName()).isEqualTo(receiver.getName());
+        assertThat(detail.receiverAddress()).isEqualTo(receiver.getAddress());
+        assertThat(detail.receiverMobile()).isEqualTo(receiver.getMobile());
+
+        assertThat(detail.items()).hasSize(2);
+
+        long expectedTotal = order.getTotalPrice();
+        assertThat(detail.totalPrice()).isEqualTo(expectedTotal);
+
+        assertThat(detail.status()).isEqualTo(order.getStatus());
+        assertThat(detail.createdAt()).isEqualTo(order.getCreatedAt());
+
+        then(orderRepository).should()
+            .findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER);
+    }
+
+    @Test
+    @DisplayName("주문 목록 조회 시 Summary DTO로 정상 매핑된다")
+    void 주문목록_조회_정상_매핑() {
+        // given
+        Long userId = 1L;
+        var pageable = PageRequest.of(0, 10);
+
+        User user = createUser();
+        Receiver receiver1 = createReceiver("홍길동", "서울시 1", "010-0000-0000");
+        Receiver receiver2 = createReceiver("박동길", "서울시 2", "010-1111-2222");
+
+        Order order1 = createOrder(receiver1, user, OrderStatus.PENDING);
+        Order order2 = createOrder(receiver2, user, OrderStatus.COMPLETED);
+
+        // order1에 상품 2개
+        Product o1Product1 = createProduct("주문1-상품1", 1_000L, 10L);
+        Product o1Product2 = createProduct("주문1-상품2", 2_000L, 5L);
+        OrderProduct o1Op1 = createOrderProduct(order1, o1Product1, 2L);
+        OrderProduct o1Op2 = createOrderProduct(order1, o1Product2, 1L);
+        addOrderProductsToOrder(order1, List.of(o1Op1, o1Op2));
+
+        // order2에 상품 1개
+        Product o2Product1 = createProduct("주문2-상품1", 3_000L, 3L);
+        OrderProduct o2Op1 = createOrderProduct(order2, o2Product1, 1L);
+        addOrderProductsToOrder(order2, List.of(o2Op1));
+
+        Page<Order> page = new PageImpl<>(List.of(order1, order2), pageable, 2);
+
+        given(orderRepository.findAllByUserId(userId, pageable))
+            .willReturn(page);
+
+        // when
+        Page<OrderResponse.Summary> result = userOrderService.listMyOrders(userId, pageable);
+
+        // then
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getContent()).hasSize(2);
+
+        OrderResponse.Summary firstSummary = result.getContent().get(0);
+
+        long expectedTotal = order1.getTotalPrice();
+        String expectedFirstProductName = order1.getOrderProducts().stream()
+            .map(op -> op.getProduct().getName())
+            .findFirst()
+            .orElse(null);
+
+        assertThat(firstSummary.totalPrice()).isEqualTo(expectedTotal);
+        assertThat(firstSummary.firstProductName()).isEqualTo(expectedFirstProductName);
+        assertThat(firstSummary.productCount()).isEqualTo(order1.getOrderProducts().size());
+        assertThat(firstSummary.status()).isEqualTo(order1.getStatus());
+        assertThat(firstSummary.createdAt()).isEqualTo(order1.getCreatedAt());
+
+        then(orderRepository).should().findAllByUserId(userId, pageable);
+    }
+
+    @Test
+    @DisplayName("주문이 수정 가능한 상태일 때 수령인 정보가 변경된다")
+    void 주문수정_가능상태_수령인_변경() {
+        // given
+        Long userId = 1L;
+        Long orderId = 10L;
+
+        User user = createUser();
+        Receiver receiver = createReceiver("홍길동", "서울시 1", "010-0000-0000");
+        Order order = createOrder(receiver, user, OrderStatus.PENDING); // canUpdate() = true
+
+        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER))
+            .willReturn(order);
+
+        OrderRequest.Update request = new OrderRequest.Update(
+            "새 수령인",
+            "서울시 새 주소 123",
+            "010-9999-8888"
+        );
+
+        // when
+        userOrderService.updateOrder(userId, orderId, request);
+
+        // then
+        then(orderRepository).should()
+            .findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER);
+
+        assertThat(order.getReceiver().getName()).isEqualTo(request.receiverName());
+        assertThat(order.getReceiver().getAddress()).isEqualTo(request.receiverAddress());
+        assertThat(order.getReceiver().getMobile()).isEqualTo(request.receiverMobile());
+    }
+
+    @Test
+    @DisplayName("주문이 수정 불가능한 상태일 경우 예외가 발생하고 수령인 정보는 변경되지 않는다")
+    void 주문수정_불가상태_예외발생_및_수령인_유지() {
+        // given
+        Long userId = 1L;
+        Long orderId = 10L;
+
+        User user = createUser();
+        Receiver receiver = createReceiver("홍길동", "서울시 1", "010-0000-0000");
+        Order order = createOrder(receiver, user, OrderStatus.CANCELLED); // canUpdate() = false
+
+        String originalName = order.getReceiver().getName();
+        String originalAddress = order.getReceiver().getAddress();
+        String originalMobile = order.getReceiver().getMobile();
+
+        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER))
+            .willReturn(order);
+
+        OrderRequest.Update request = new OrderRequest.Update(
+            "새 수령인",
+            "서울시 새 주소 123",
+            "010-9999-8888"
+        );
+
+        // when & then
+        assertThatThrownBy(() -> userOrderService.updateOrder(userId, orderId, request))
+            .isInstanceOf(CustomException.class)
+            .extracting("errorCode")
+            .isEqualTo(ErrorCode.CANNOT_UPDATE_ORDER);
+
+        // 수령인 정보가 변경되지 않았는지 검증
+        assertThat(order.getReceiver().getName()).isEqualTo(originalName);
+        assertThat(order.getReceiver().getAddress()).isEqualTo(originalAddress);
+        assertThat(order.getReceiver().getMobile()).isEqualTo(originalMobile);
+
+        then(orderRepository).should()
+            .findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER);
+    }
+
+    // 픽스처 메서드
+    private User createUser() {
+        return User.normalUser(
+            "test_user",
+            "password123",
+            "테스트 사용자",
+            "test@test.com",
+            "010-1234-5678",
+            Gender.MALE,
+            LocalDate.of(2025, 1, 1),
+            LocalDateTime.now(),
+            LocalDateTime.now()
+        );
+    }
+
+    private Receiver createReceiver(String name, String address, String mobile) {
+        return new Receiver(name, address, mobile);
+    }
+
+    private Product createProduct(String name, Long price, Long stock) {
+        return new Product(name, price, stock);
+    }
+
+    private Order createOrder(Receiver receiver, User user, OrderStatus status) {
+        Order order = Order.create(receiver, user);
+        order.changeStatus(status);
+        return order;
+    }
+
+    private OrderProduct createOrderProduct(Order order, Product product, Long quantity) {
+        return new OrderProduct(order, product, quantity);
+    }
+
+    private void addOrderProductsToOrder(Order order, List<OrderProduct> orderProducts) {
+        orderProducts.forEach(op -> {
+            order.mapToOrderProduct(op);
+            op.getProduct().mapToOrderProduct(op);
+        });
+    }
+}
