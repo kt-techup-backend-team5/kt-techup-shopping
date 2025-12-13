@@ -2,11 +2,12 @@ package com.kt.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -14,7 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -23,7 +24,7 @@ import com.kt.domain.product.ProductStatus;
 import com.kt.dto.product.ProductRequest;
 import com.kt.repository.product.ProductRepository;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
 	@Mock
 	private ProductRepository productRepository;
@@ -31,18 +32,14 @@ public class ProductServiceTest {
 	@InjectMocks
 	private ProductService productService;
 
-	@BeforeEach
-	void setUp() {
-		productRepository.deleteAll();
-	}
-
 	@Test
 	void 상품_생성() {
 		// given
 		String name = "test";
 		Long price = 10L;
 		Long stock = 5L;
-		ProductRequest.Create request = new ProductRequest.Create(name, price, stock);
+		String description = "상품 설명";
+		ProductRequest.Create request = new ProductRequest.Create(name, price, stock, description);
 
 		ArgumentCaptor<Product> argumentCaptor = ArgumentCaptor.forClass(Product.class);
 
@@ -50,7 +47,7 @@ public class ProductServiceTest {
 		productService.create(request);
 
 		// then
-		Mockito.verify(productRepository, Mockito.times(1)).save(argumentCaptor.capture());
+		verify(productRepository, Mockito.times(1)).save(argumentCaptor.capture());
 		Product product = argumentCaptor.getValue();
 		assertThat(product.getName()).isEqualTo(name);
 		assertThat(product.getPrice()).isEqualTo(price);
@@ -61,7 +58,7 @@ public class ProductServiceTest {
 	@ParameterizedTest
 	@NullAndEmptySource
 	@ValueSource(strings = {" ", "  "})
-	void 키워드가_null이거나_공백이면_빈문자열로_변환해서_전달(String keyword) {
+	void 상품_검색_키워드가_null이거나_공백이면_빈문자열로_변환해서_전달(String keyword) {
 		// Given
 		List<ProductStatus> publicStatuses = List.of(ProductStatus.ACTIVATED, ProductStatus.SOLD_OUT);
 		Pageable pageable = PageRequest.of(0, 10);
@@ -70,10 +67,124 @@ public class ProductServiceTest {
 		productService.searchPublicStatus(keyword, null, pageable);
 
 		// Then
-		Mockito.verify(productRepository).findAllByKeywordAndStatuses(
+		verify(productRepository, times(1)).findAllByKeywordAndStatuses(
 				eq(""),
 				eq(publicStatuses),
 				eq(pageable)
 		);
+	}
+
+	@Test
+	void 상품_상세_조회() {
+		// given
+		Long productId = 1L;
+		String name = "product";
+		Product product = Product.builder().name(name).build();
+		given(productRepository.findByIdOrThrow(productId)).willReturn(product);
+
+		// when
+		Product foundProduct = productService.detail(productId);
+
+		// then
+		verify(productRepository, times(1)).findByIdOrThrow(productId);
+		assertThat(foundProduct).isNotNull();
+		assertThat(foundProduct.getName()).isEqualTo(name);
+	}
+
+	@Test
+	void 상품_수정() {
+		//given
+		Long productId = 1L;
+		Product product = Product.builder()
+				.name("before")
+				.price(10000L)
+				.stock(10L)
+				.description("old-description")
+				.build();
+		given(productRepository.findByIdOrThrow(productId)).willReturn(product);
+
+		String newName = "after";
+		Long newPrice = 20000L;
+		Long newStock = 20L;
+		String newDescription = "new-description";
+		ProductRequest.Update request = new ProductRequest.Update(newName, newPrice, newStock, newDescription);
+
+		// when
+		productService.update(productId, request);
+
+		// then
+		verify(productRepository, times(1)).findByIdOrThrow(productId);
+		assertThat(product.getName()).isEqualTo(newName);
+		assertThat(product.getPrice()).isEqualTo(newPrice);
+		assertThat(product.getStock()).isEqualTo(newStock);
+		assertThat(product.getDescription()).isEqualTo(newDescription);
+	}
+
+	@Test
+	void 상품_품절() {
+		// given
+		Long productId = 1L;
+		Product product = Product.builder()
+				.status(ProductStatus.ACTIVATED)
+				.build();
+		given(productRepository.findByIdOrThrow(productId)).willReturn(product);
+
+		// when
+		productService.soldOut(productId);
+
+		// then
+		verify(productRepository, times(1)).findByIdOrThrow(productId);
+		assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
+	}
+
+	@Test
+	void 상품_활성() {
+		// given
+		Long productId = 1L;
+		Product product = Product.builder()
+				.status(ProductStatus.IN_ACTIVATED)
+				.build();
+		given(productRepository.findByIdOrThrow(productId)).willReturn(product);
+
+		// when
+		productService.activate(productId);
+
+		// then
+		verify(productRepository, times(1)).findByIdOrThrow(productId);
+		assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVATED);
+	}
+
+	@Test
+	void 상품_비활성() {
+		// given
+		Long productId = 1L;
+		Product product = Product.builder()
+				.status(ProductStatus.ACTIVATED)
+				.build();
+		given(productRepository.findByIdOrThrow(productId)).willReturn(product);
+
+		// when
+		productService.inActivate(productId);
+
+		// then
+		verify(productRepository, times(1)).findByIdOrThrow(productId);
+		assertThat(product.getStatus()).isEqualTo(ProductStatus.IN_ACTIVATED);
+	}
+
+	@Test
+	void 상품_삭제() {
+		// given
+		Long productId = 1L;
+		Product product = Product.builder()
+				.status(ProductStatus.ACTIVATED)
+				.build();
+		given(productRepository.findByIdOrThrow(productId)).willReturn(product);
+
+		// when
+		productService.delete(productId);
+
+		// then
+		verify(productRepository, times(1)).findByIdOrThrow(productId);
+		assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED);
 	}
 }
