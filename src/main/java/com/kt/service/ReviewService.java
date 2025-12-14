@@ -37,8 +37,8 @@ public class ReviewService {
 		Preconditions.validate(orderProduct.getOrder().getUser().getId().equals(userId),
 				ErrorCode.NO_AUTHORITY_TO_CREATE_REVIEW);
 
-		// 2. 주문이 CONFIRMED 상태인지 확인
-		Preconditions.validate(orderProduct.getOrder().getStatus() == OrderStatus.CONFIRMED,
+		// 2. 주문이 ORDER_CONFIRMED 상태인지 확인
+		Preconditions.validate(orderProduct.getOrder().getStatus() == OrderStatus.ORDER_CONFIRMED,
 				ErrorCode.CANNOT_REVIEW_NOT_CONFIRMED_ORDER);
 
 		// 3. 이미 리뷰를 작성했는지 확인

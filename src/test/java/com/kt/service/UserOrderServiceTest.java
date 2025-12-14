@@ -47,7 +47,7 @@ class UserOrderServiceTest {
 
         User user = createUser();
         Receiver receiver = createReceiver("홍길동", "서울시 어딘가 1-1", "010-0000-0000");
-        Order order = createOrder(receiver, user, OrderStatus.PENDING);
+        Order order = createOrder(receiver, user, OrderStatus.ORDER_CREATED);
 
         Product product1 = createProduct("상품1", 1_000L, 10L, "상품 상세설명");
         Product product2 = createProduct("상품2", 2_000L, 5L, "상품 상세설명");
@@ -88,8 +88,8 @@ class UserOrderServiceTest {
         Receiver receiver1 = createReceiver("홍길동", "서울시 1", "010-0000-0000");
         Receiver receiver2 = createReceiver("박동길", "서울시 2", "010-1111-2222");
 
-        Order order1 = createOrder(receiver1, user, OrderStatus.PENDING);
-        Order order2 = createOrder(receiver2, user, OrderStatus.COMPLETED);
+        Order order1 = createOrder(receiver1, user, OrderStatus.ORDER_CREATED);
+        Order order2 = createOrder(receiver2, user, OrderStatus.ORDER_ACCEPTED);
 
         // order1: 상품 2개
         Product o1Product1 = createProduct("주문1-상품1", 1_000L, 10L, "상품 상세설명");
@@ -137,7 +137,7 @@ class UserOrderServiceTest {
 
         User user = createUser();
         Receiver receiver = createReceiver("홍길동", "서울시 1", "010-0000-0000");
-        Order order = createOrder(receiver, user, OrderStatus.PENDING); // canUpdate() = true
+        Order order = createOrder(receiver, user, OrderStatus.ORDER_CREATED); // canUpdate() = true
 
         given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER))
             .willReturn(order);
@@ -169,7 +169,7 @@ class UserOrderServiceTest {
 
         User user = createUser();
         Receiver receiver = createReceiver("홍길동", "서울시 1", "010-0000-0000");
-        Order order = createOrder(receiver, user, OrderStatus.CANCELLED); // canUpdate() = false
+        Order order = createOrder(receiver, user, OrderStatus.ORDER_CANCELLED); // canUpdate() = false
 
         String originalName = order.getReceiver().getName();
         String originalAddress = order.getReceiver().getAddress();
