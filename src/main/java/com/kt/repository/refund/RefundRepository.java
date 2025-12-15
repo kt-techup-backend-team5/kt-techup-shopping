@@ -18,7 +18,7 @@ public interface RefundRepository extends JpaRepository<Refund, Long> {
     }
 
     default Refund findRefundRequestByOrderOrThrow(Order order) {
-        return findFirstByOrderAndStatusOrderByCreatedAtDesc(order, RefundStatus.REQUESTED)
+        return findFirstByOrderAndStatusOrderByCreatedAtDesc(order, RefundStatus.REFUND_REQUESTED)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_REFUND));
     }
 }

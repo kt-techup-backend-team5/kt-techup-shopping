@@ -12,13 +12,7 @@ public enum OrderStatus {
 	ORDER_SHIPPING("배송중"),
 	ORDER_DELIVERED("배송완료"),
 	ORDER_CONFIRMED("구매확정"),
-	ORDER_CANCELLED("주문취소"),
-
-	// 환불/반품 관련 상태 (추후 RefundStatus로 이동 예정)
-	ORDER_REFUND_REQUESTED("환불요청"),
-	ORDER_REFUND_COMPLETED("환불완료"),
-	ORDER_RETURN_REQUESTED("반품요청"),
-	ORDER_RETURN_COMPLETED("반품완료");
+	ORDER_CANCELLED("주문취소");
 
 	private final String description;
 
