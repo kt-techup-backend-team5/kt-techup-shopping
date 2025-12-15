@@ -106,6 +106,9 @@ public class OrderService {
 		);
 		Preconditions.validate(order.isRefundable(), ErrorCode.INVALID_ORDER_STATUS);
 
+		// 중복 환불 방지: 이미 완료된 환불이 있는지 확인
+		Preconditions.validate(!refundRepository.hasCompletedRefund(order), ErrorCode.ALREADY_REFUNDED);
+
 		Refund refund = new Refund(order, request.getRefundType(), request.getReason());
 		refundRepository.save(refund);
 

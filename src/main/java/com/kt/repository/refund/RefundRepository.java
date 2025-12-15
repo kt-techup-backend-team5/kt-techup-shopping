@@ -21,4 +21,12 @@ public interface RefundRepository extends JpaRepository<Refund, Long> {
         return findFirstByOrderAndStatusOrderByCreatedAtDesc(order, RefundStatus.REFUND_REQUESTED)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_REFUND));
     }
+
+    /**
+     * 주문에 대해 완료된 환불/반품이 있는지 확인
+     */
+    default boolean hasCompletedRefund(Order order) {
+        return findFirstByOrderAndStatusOrderByCreatedAtDesc(order, RefundStatus.REFUND_COMPLETED)
+                .isPresent();
+    }
 }
