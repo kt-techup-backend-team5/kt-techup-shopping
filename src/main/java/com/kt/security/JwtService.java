@@ -21,7 +21,7 @@ public class JwtService {
     public String issue(Long id, Role role, Date expiration) {
         return Jwts.builder()
                 .subject("kt-cloud-shopping")
-                .claim("role", role.name())   // ⭐ 권한 주입
+                .claim("role", role.name())
                 .issuedAt(new Date())
                 .id(id.toString())
                 .expiration(expiration)

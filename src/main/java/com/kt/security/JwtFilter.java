@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -65,16 +64,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-
-        // ⭐⭐⭐ 여기!!!
-//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-//        if (auth != null) {
-//            log.info("auth class = {}", auth.getClass().getSimpleName());
-//            log.info("authenticated = {}", auth.isAuthenticated());
-//            log.info("authorities = {}", auth.getAuthorities());
-//        } else {
-//            log.info("auth is null");
-//        }
 
         filterChain.doFilter(request, response);
     }
