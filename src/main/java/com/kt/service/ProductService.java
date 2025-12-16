@@ -77,7 +77,8 @@ public class ProductService {
 		product.update(
 				request.getName(),
 				request.getPrice(),
-				request.getQuantity()
+				request.getQuantity(),
+				request.getDescription()
 		);
 	}
 

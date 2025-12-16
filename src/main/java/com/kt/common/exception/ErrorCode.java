@@ -47,7 +47,8 @@ public enum ErrorCode {
 	// Refund
 	NOT_FOUND_REFUND(HttpStatus.NOT_FOUND, "환불/반품 요청을 찾을 수 없습니다."),
 	NO_AUTHORITY_TO_REFUND(HttpStatus.FORBIDDEN, "주문을 환불/반품할 권한이 없습니다."),
-	INVALID_REFUND_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 환불/반품 상태입니다.");
+	INVALID_REFUND_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 환불/반품 상태입니다."),
+	ALREADY_REFUNDED(HttpStatus.BAD_REQUEST, "이미 환불/반품이 완료된 주문입니다.");
 
 	private final HttpStatus status;
 	private final String message;

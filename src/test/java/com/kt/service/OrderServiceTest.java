@@ -40,16 +40,6 @@ class OrderServiceTest {
 	@Autowired
 	private OrderProductRepository orderProductRepository;
 
-	// 동시성제어할때는 Lock을 걸어서 처리해야함 -> 3가지
-	// 1. 비관적 락(Pessimistic Lock) -> DB에서 지원해주는 Lock -> SELECT ... FOR UPDATE -> 한명이들어오면 끝날때까지 기다리셈
-	// 화장실 -> 한명씩 들어감 -> 앞사람이 오래걸림 -> 기다려야
-	// 단점: 시간이 오래걸리고 데드락 발생할 수 있음
-	// 2. 낙관적 락(Optimistic Lock) -> 버전관리 -> 셀렉트할때 그때의 버전을 가져와서 작업을 끝내고 트랜잭션 커밋되면 현재의 버전을 가져옴 update 쿼리에 버전을 +1 해서 반영
-	// 화장실 -> 한명씩 들어가면 일단 들어와 -> 대신 나갈때 최신버전 확인
-	// 처음 입장할때 버전을 조회 - 작업끝나고 - 나갈 때 다시 버전을 조회해서 같으면 재고 차감
-	// 3. 분산 락 -> 레디스
-	// 화장실 -> 한명씩 들어감 -> 앞사람이 오래걸림 -> 그냥 끌고나와서(타임아웃존재) 내가 들어감
-
 	@BeforeEach
 	void setUp() {
 		orderRepository.deleteAll();
@@ -80,7 +70,8 @@ class OrderServiceTest {
 			new Product(
 				"테스트 상품명",
 				100_000L,
-				10L
+				10L,
+                "상품 상세설명"
 			)
 		);
 
@@ -127,13 +118,13 @@ class OrderServiceTest {
 			new Product(
 				"테스트 상품명",
 				100_000L,
-				10L
+				10L,
+                "상품 상세설명"
 			)
 		);
 
 		productRepository.flush();
 
-		// 동시에 주문해야하니까 쓰레드를 100개
 		var executorService = Executors.newFixedThreadPool(100);
 		var countDownLatch = new CountDownLatch(repeatCount);
 		AtomicInteger successCount = new AtomicInteger(0);
@@ -166,9 +157,6 @@ class OrderServiceTest {
 		executorService.shutdown();
 
 		var foundedProduct = productRepository.findByIdOrThrow(product.getId());
-
-		// 1번쓰레드에서 작업하다가 언락
-		// 2번쓰레드에서 작업하다가 언락
 
 		assertThat(successCount.get()).isEqualTo(10);
 		assertThat(failureCount.get()).isEqualTo(490);
