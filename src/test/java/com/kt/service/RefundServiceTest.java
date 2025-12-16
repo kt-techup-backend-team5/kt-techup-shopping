@@ -2,9 +2,12 @@ package com.kt.service;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
+import com.kt.support.fixture.OrderFixture;
+import com.kt.support.fixture.OrderProductFixture;
+import com.kt.support.fixture.ProductFixture;
+import com.kt.support.fixture.ReceiverFixture;
+import com.kt.support.fixture.UserFixture;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,13 +18,10 @@ import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.domain.order.Order;
 import com.kt.domain.order.OrderStatus;
-import com.kt.domain.order.Receiver;
 import com.kt.domain.orderproduct.OrderProduct;
 import com.kt.domain.product.Product;
 import com.kt.domain.refund.RefundStatus;
 import com.kt.domain.refund.RefundType;
-import com.kt.domain.user.Gender;
-import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 import com.kt.dto.refund.RefundRejectRequest;
 import com.kt.dto.refund.RefundRequest;
@@ -59,54 +59,29 @@ class RefundServiceTest {
 
 	@BeforeEach
 	void setUp() {
+		// Fixture를 사용하여 테스트 데이터 생성
+		testUser = userRepository.save(UserFixture.defaultCustomer());
+		testProduct = productRepository.save(ProductFixture.defaultProduct());
+		testOrder = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), testUser));
+
+		// 주문 상품 생성 및 연관관계 설정
+		OrderProduct orderProduct = orderProductRepository.save(
+			OrderProductFixture.orderProduct(testOrder, testProduct, 2L)
+		);
+		testOrder.mapToOrderProduct(orderProduct);
+
+		// 재고 감소 및 영속화
+		testProduct.decreaseStock(2L);
+		productRepository.save(testProduct);
+	}
+
+	@AfterEach
+	void tearDown() {
 		refundRepository.deleteAll();
 		orderProductRepository.deleteAll();
 		orderRepository.deleteAll();
 		productRepository.deleteAll();
 		userRepository.deleteAll();
-
-		// 테스트용 사용자 생성
-		testUser = userRepository.save(
-			new User(
-				"testuser",
-				"password",
-				"Test User",
-				"test@email.com",
-				"010-0000-0000",
-				Gender.MALE,
-				LocalDate.now(),
-				LocalDateTime.now(),
-				LocalDateTime.now(),
-				Role.CUSTOMER
-			)
-		);
-
-		// 테스트용 상품 생성
-		testProduct = productRepository.save(
-			new Product(
-				"테스트 상품",
-				100_000L,
-				10L,
-				"상품 상세설명"
-			)
-		);
-
-		// 테스트용 주문 생성
-		testOrder = orderRepository.save(
-			Order.create(
-				new Receiver("수신자", "주소", "010-1111-2222"),
-				testUser
-			)
-		);
-
-		// 주문 상품 생성
-		OrderProduct orderProduct = orderProductRepository.save(
-			new OrderProduct(testOrder, testProduct, 2L)
-		);
-
-		testOrder.mapToOrderProduct(orderProduct);
-		testProduct.mapToOrderProduct(orderProduct);
-		testProduct.decreaseStock(2L);
 	}
 
 	@Test
@@ -263,20 +238,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_SHIPPING);
 		orderRepository.saveAndFlush(testOrder);
-		var otherUser = userRepository.save(
-			new User(
-				"otheruser",
-				"password",
-				"Other User",
-				"other@email.com",
-				"010-9999-9999",
-				Gender.FEMALE,
-				LocalDate.now(),
-				LocalDateTime.now(),
-				LocalDateTime.now(),
-				Role.CUSTOMER
-			)
-		);
+		var otherUser = userRepository.save(UserFixture.defaultCustomer());
 		var currentUser = new DefaultCurrentUser(otherUser.getId(), otherUser.getLoginId());
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 
