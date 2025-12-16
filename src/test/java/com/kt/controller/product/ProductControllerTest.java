@@ -23,11 +23,14 @@ import org.springframework.test.web.servlet.ResultActions;
 import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
+import com.kt.domain.review.Review;
+import com.kt.dto.review.ReviewResponse;
 import com.kt.security.JwtService;
 import com.kt.security.WithMockCustomUser;
 import com.kt.service.ProductService;
 import com.kt.service.RedisService;
 import com.kt.service.ReviewService;
+import com.kt.support.fixture.UserFixture;
 
 @WebMvcTest(controllers = ProductController.class)
 @WithMockCustomUser(id = 1L)
@@ -105,10 +108,35 @@ class ProductControllerTest {
 		verify(redisService, times(1)).getViewCount(productId);
 	}
 
-	/*
 	@Test
 	@DisplayName("GET /products/{product_id}/reviews")
-	작성예정
-	*/
+	void 상품에_대한_리뷰_목록_조회_API() throws Exception {
+		// given
+		Long productId = 1L;
+		String reviewContent1 = "first";
+		String reviewContent2 = "second";
+		Review review1 = new Review(reviewContent1, 2, UserFixture.defaultCustomer(), null, null);
+		Review review2 = new Review(reviewContent2, 3, UserFixture.defaultCustomer(), null, null);
+		List<ReviewResponse> content = List.of(new ReviewResponse(review1), new ReviewResponse(review2));
+		Page<ReviewResponse> mockReviewPage = new PageImpl<>(content, PageRequest.of(0, 10), 100);
+
+		given(reviewService.getReviewsByProductId(eq(productId), any(Pageable.class))).willReturn(mockReviewPage);
+
+		// when
+		ResultActions resultActions = mockMvc.perform(get("/products/{productId}/reviews", productId)
+				.param("page", "0")
+				.param("size", "10")
+				.param("sort", "createdAt,desc")
+				.contentType(MediaType.APPLICATION_JSON));
+
+		// then
+		resultActions.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.content[0].content").value(reviewContent1))
+				.andExpect(jsonPath("$.data.content.length()").value(content.size()));
+		verify(reviewService, times(1)).getReviewsByProductId(eq(productId), any(Pageable.class));
+
+	}
 
 }
+
+	
