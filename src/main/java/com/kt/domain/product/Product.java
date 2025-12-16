@@ -34,8 +34,10 @@ public class Product extends BaseEntity {
 	@Lob
 	private String description;
 	@Enumerated(EnumType.STRING)
+	@Builder.Default
 	private ProductStatus status = ProductStatus.ACTIVATED;
 	@OneToMany(mappedBy = "product")
+	@Builder.Default
 	private List<OrderProduct> orderProducts = new ArrayList<>();
 
 	public Product(String name, Long price, Long stock, String description) {
