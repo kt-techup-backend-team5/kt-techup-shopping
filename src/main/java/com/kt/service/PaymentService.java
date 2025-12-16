@@ -26,7 +26,7 @@ public class PaymentService {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
 
 		// 주문 상태 확인하기(이미 결제 되었는지)
-		Preconditions.validate(order.getStatus() == OrderStatus.PENDING, ErrorCode.ALREADY_PAID_ORDER);
+		Preconditions.validate(order.getStatus() == OrderStatus.ORDER_CREATED, ErrorCode.ALREADY_PAID_ORDER);
 
 		// TODO: 배송비랑 포인트, 쿠폰 구현 하고 여기 부분 수정해야함
 		// 결제 금액 계산 (임시로 배송비 3000원 고정)
@@ -46,7 +46,7 @@ public class PaymentService {
 		);
 		paymentRepository.save(newPayment);
 
-		// Order의 상태를 결제완료(COMPLETED)로 변경
+		// Order의 상태를 결제완료(ORDER_ACCEPTED)로 변경
 		order.setPaid();
 	}
 }

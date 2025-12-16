@@ -53,3 +53,6 @@ out/
 src/main/resources/application-loacal.yml
 resources/application-loacal.yml
 application-local.yml
+
+# AWS Elastic Beanstalk local / platform configs (optional)
+.ebextensions/

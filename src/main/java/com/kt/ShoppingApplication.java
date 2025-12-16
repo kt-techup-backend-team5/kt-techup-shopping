@@ -6,7 +6,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.kt.common.support.Message;
@@ -18,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 @ConfigurationPropertiesScan
 @RequiredArgsConstructor
 @EnableScheduling
-@EnableJpaAuditing
 public class ShoppingApplication {
 	private final ApplicationEventPublisher applicationEventPublisher;
 
