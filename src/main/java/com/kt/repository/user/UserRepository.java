@@ -51,7 +51,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 		return findById(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 	}
 
-	@Query(value = "SELECT * FROM user WHERE id = :id", nativeQuery = true)
+	@Query(value = "SELECT * FROM users WHERE id = :id", nativeQuery = true)
 	Optional<User> findByIdIncludeDeleted(@Param("id") Long id);
 
 	default User findByIdIncludeDeletedOrThrow(Long id) {

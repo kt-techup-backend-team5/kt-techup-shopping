@@ -1,63 +1,96 @@
 package com.kt.security;
 
+import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.util.Strings;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
+import com.kt.domain.user.Role;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import lombok.RequiredArgsConstructor;
 
-// @WebFilter(urlPatterns = "/*")
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
-	private static final String TOKEN_PREFIX = "Bearer ";
 
-	private final JwtService jwtService;
+    private final JwtService jwtService;
 
-	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-		FilterChain filterChain) throws ServletException, IOException {
-		var header = request.getHeader(HttpHeaders.AUTHORIZATION);
-		// Bearer {token}
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-		if (Strings.isBlank(header)) {
-			filterChain.doFilter(request, response);
-			return;
-		}
+        String token = resolveToken(request);
 
-		System.out.println(header);
-		var token = header.substring(TOKEN_PREFIX.length());
+        if (token != null && jwtService.validate(token)) {
 
-		if (!jwtService.validate(token)) {
-			filterChain.doFilter(request, response);
-			return;
-		}
+            Long userId = jwtService.parseId(token);
+            String loginId = jwtService.parseLoginId(token);
+            Role role = jwtService.parseRole(token);
 
-		var id = jwtService.parseId(token);
+            var principal = new DefaultCurrentUser(
+                    userId,
+                    loginId,
+                    role
+            );
 
-		var techUpToken = new TechUpAuthenticationToken(
-			new DefaultCurrentUser(id, "파싱한아이디"),
-			List.of()
-		);
+            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-		SecurityContextHolder.getContext().setAuthentication(techUpToken);
+            // 기본 권한
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
 
-		filterChain.doFilter(request, response);
-	}
+            // SUPER_ADMIN이면 하위 권한 포함
+            if (role == Role.SUPER_ADMIN) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+            }
 
-	// jwt토큰이 header authorization에 Bearer {token} 형식으로 옴
-	// 1. request에서 authorization 헤더 가져오기
-	// 2. Bearer 붙어있으면 떼고 토큰만 가져오기
-	// 3. token이 유효한지를 검사
-	// 4. token이 만료되었는지도 검사
-	// 5. 유효하면 id값 꺼내서 SecurityContextHolder에 인가된 객체로 저장
+            var authentication = new TechUpAuthenticationToken(
+                    principal,
+                    authorities
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+
+        // ⭐⭐⭐ 여기!!!
+//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//        if (auth != null) {
+//            log.info("auth class = {}", auth.getClass().getSimpleName());
+//            log.info("authenticated = {}", auth.isAuthenticated());
+//            log.info("authorities = {}", auth.getAuthorities());
+//        } else {
+//            log.info("auth is null");
+//        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+
+        if (header == null) {
+            return null;
+        }
+
+        if (header.toLowerCase().startsWith("bearer ")) {
+            return header.substring(7);
+        }
+
+        return null;
+    }
+
 }

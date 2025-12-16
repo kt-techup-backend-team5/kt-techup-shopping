@@ -10,9 +10,6 @@ import lombok.RequiredArgsConstructor;
 public enum ErrorCode {
 	EXPIRED_JWT_TOKEN(HttpStatus.BAD_REQUEST, "만료된 JWT 토큰입니다."),
 	INVALID_JWT_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 JWT 토큰입니다."),
-	NOT_FOUND_PRODUCT(HttpStatus.BAD_REQUEST, "상품을 찾을 수 없습니다."),
-	NOT_FOUND_ORDER(HttpStatus.BAD_REQUEST, "주문을 찾을 수 없습니다."),
-	NOT_FOUND_ORDER_PRODUCT(HttpStatus.BAD_REQUEST, "주문 상품을 찾을 수 없습니다."),
 	NOT_FOUND_USER(HttpStatus.BAD_REQUEST, "존재하지 않는 회원입니다."),
 	ALREADY_EXISTS_USER_ID(HttpStatus.BAD_REQUEST, "이미 존재하는 아이디입니다"),
 	ALREADY_EXISTS_EMAIL(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다"),
@@ -22,7 +19,12 @@ public enum ErrorCode {
 	NOT_MATCHED_CHECK_PASSWORD(HttpStatus.BAD_REQUEST, "입력한 비밀번호가 서로 다릅니다. 다시 확인해주세요."),
 	ALREADY_HAS_ROLE(HttpStatus.BAD_REQUEST, "이미 관리자 권한을 가지고 있는 회원입니다."),
 	USER_NOT_ADMIN(HttpStatus.FORBIDDEN, "관리자 권한이 없는 회원입니다."),
+    CANNOT_DELETE_SUPER_ADMIN(HttpStatus.BAD_REQUEST, "최고관리자 계정은 삭제할 수 없습니다."),
 	CANNOT_DELETE_SELF(HttpStatus.BAD_REQUEST, "자기 자신을 삭제할 수 없습니다."),
+
+    NOT_FOUND_PRODUCT(HttpStatus.BAD_REQUEST, "상품을 찾을 수 없습니다."),
+    NOT_FOUND_ORDER(HttpStatus.BAD_REQUEST, "주문을 찾을 수 없습니다."),
+    NOT_FOUND_ORDER_PRODUCT(HttpStatus.BAD_REQUEST, "주문 상품을 찾을 수 없습니다."),
 	CANNOT_UPDATE_ORDER(HttpStatus.BAD_REQUEST, "주문을 수정할 수 없는 상태입니다."),
 	CANNOT_CANCEL_ORDER(HttpStatus.BAD_REQUEST, "주문을 취소할 수 없는 상태입니다."),
 	NO_AUTHORITY_TO_CANCEL_ORDER(HttpStatus.FORBIDDEN, "주문을 취소할 권한이 없습니다."),

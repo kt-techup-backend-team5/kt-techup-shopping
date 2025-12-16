@@ -203,9 +203,12 @@ public class UserService {
 	}
 
     @Transactional
-    public User getAdminOrThrow(Long id) {
+    public User getAdminTargetOrThrow(Long id) {
         User user = detail(id);
-        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        Preconditions.validate(
+                user.getRole() == Role.ADMIN || user.getRole() == Role.SUPER_ADMIN,
+                ErrorCode.USER_NOT_ADMIN
+        );
         return user;
     }
 
@@ -213,6 +216,8 @@ public class UserService {
     public void deleteAdmin(Long currentUserId, Long targetUserId) {
         Preconditions.validate(!currentUserId.equals(targetUserId), ErrorCode.CANNOT_DELETE_SELF);
         var user = detail(targetUserId);
+        Preconditions.validate(user.getRole() != Role.SUPER_ADMIN, ErrorCode.CANNOT_DELETE_SUPER_ADMIN
+        );
         Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
         deactivateUser(targetUserId);
     }

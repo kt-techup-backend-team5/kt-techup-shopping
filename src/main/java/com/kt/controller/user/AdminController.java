@@ -11,18 +11,22 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/admin/admins")
+@PreAuthorize("hasRole('ADMIN')")
+@SecurityRequirement(name = "Bearer Authentication")
 public class AdminController extends SwaggerAssistance {
     private final UserService userService;
 
@@ -62,7 +66,7 @@ public class AdminController extends SwaggerAssistance {
             @Parameter(description = "조회할 관리자 ID", required = true)
             @PathVariable Long id
     ) {
-        return ApiResult.ok(UserResponse.Detail.of(userService.getAdminOrThrow(id)));
+        return ApiResult.ok(UserResponse.Detail.of(userService.getAdminTargetOrThrow(id)));
     }
 
     @Operation(
@@ -80,7 +84,7 @@ public class AdminController extends SwaggerAssistance {
             @PathVariable Long id,
             @RequestBody @Valid UserChangeRequest request
     ) {
-        userService.getAdminOrThrow(id);
+        userService.getAdminTargetOrThrow(id);
         return ApiResult.ok(userService.update(id, request.name(), request.email(), request.mobile()));
     }
 

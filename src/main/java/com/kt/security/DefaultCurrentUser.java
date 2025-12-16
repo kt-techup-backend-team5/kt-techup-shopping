@@ -3,6 +3,7 @@ package com.kt.security;
 import java.util.Collection;
 import java.util.List;
 
+import com.kt.domain.user.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -17,6 +18,7 @@ public class DefaultCurrentUser implements UserDetails, CurrentUser {
 
 	private Long id;
 	private String loginId;
+    private Role role;
 
 	@Override
 	public Long getId() {
@@ -30,7 +32,9 @@ public class DefaultCurrentUser implements UserDetails, CurrentUser {
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return List.of();
+        {
+            return List.of(() -> role.getAuthority());
+        }
 	}
 
 	@Override
