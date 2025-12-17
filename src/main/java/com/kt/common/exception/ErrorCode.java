@@ -18,7 +18,7 @@ public enum ErrorCode {
     FAIL_ACQUIRED_LOCK(HttpStatus.BAD_REQUEST, "락 획득에 실패했습니다."),
 
     // User
-    NOT_FOUND_USER(HttpStatus.BAD_REQUEST, "존재하지 않는 회원입니다."),
+    NOT_FOUND_USER(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
     ALREADY_EXISTS_USER_ID(HttpStatus.BAD_REQUEST, "이미 존재하는 아이디입니다"),
     ALREADY_EXISTS_EMAIL(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다"),
     FAIL_LOGIN(HttpStatus.BAD_REQUEST, "아이디 혹은 비밀번호가 일치하지 않습니다."),
@@ -30,12 +30,12 @@ public enum ErrorCode {
     CANNOT_DELETE_SELF(HttpStatus.BAD_REQUEST, "자기 자신을 삭제할 수 없습니다."),
 
     // Product
-	NOT_FOUND_PRODUCT(HttpStatus.BAD_REQUEST, "상품을 찾을 수 없습니다."),
+	NOT_FOUND_PRODUCT(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
     NOT_ENOUGH_STOCK(HttpStatus.BAD_REQUEST, "재고가 부족합니다."),
 
     // Order
-	NOT_FOUND_ORDER(HttpStatus.BAD_REQUEST, "주문을 찾을 수 없습니다."),
-	NOT_FOUND_ORDER_PRODUCT(HttpStatus.BAD_REQUEST, "주문 상품을 찾을 수 없습니다."),
+	NOT_FOUND_ORDER(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
+	NOT_FOUND_ORDER_PRODUCT(HttpStatus.NOT_FOUND, "주문 상품을 찾을 수 없습니다."),
     INVALID_ORDER_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 주문 상태입니다."),
 	CANNOT_UPDATE_ORDER(HttpStatus.BAD_REQUEST, "주문을 수정할 수 없는 상태입니다."),
 	CANNOT_CANCEL_ORDER(HttpStatus.BAD_REQUEST, "주문을 취소할 수 없는 상태입니다."),
@@ -46,8 +46,8 @@ public enum ErrorCode {
     // Address
     NOT_FOUND_ADDRESS(HttpStatus.NOT_FOUND, "배송지를 찾을 수 없습니다."),
     NO_AUTHORITY_TO_ADDRESS(HttpStatus.FORBIDDEN, "배송지에 대한 권한이 없습니다."),
-    CANNOT_UNSET_DEFAULT_ADDRESS(HttpStatus.CONFLICT, "기본 배송지는 해제할 수 없습니다. 다른 배송지를 기본으로 설정하세요."),
-    CANNOT_DELETE_LAST_DEFAULT_ADDRESS(HttpStatus.CONFLICT, "유일한 기본 배송지는 삭제할 수 없습니다. 배송지를 수정하거나 새 배송지를 추가하세요."),
+    CANNOT_UNSET_DEFAULT_ADDRESS(HttpStatus.BAD_REQUEST, "기본 배송지는 해제할 수 없습니다. 다른 배송지를 기본으로 설정하세요."),
+    CANNOT_DELETE_LAST_DEFAULT_ADDRESS(HttpStatus.BAD_REQUEST, "유일한 기본 배송지는 삭제할 수 없습니다. 배송지를 수정하거나 새 배송지를 추가하세요."),
     ADDRESS_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "배송지 등록 가능 개수를 초과했습니다."),
 
     // Reviews
