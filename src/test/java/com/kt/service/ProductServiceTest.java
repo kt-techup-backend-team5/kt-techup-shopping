@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -186,5 +187,19 @@ public class ProductServiceTest {
 		// then
 		verify(productRepository, times(1)).findByIdOrThrow(productId);
 		assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED);
+	}
+
+	@Test
+	void 임계치_이하_재고_조회() {
+		// Given
+		Long threshold = 10L;
+		Pageable pageable = PageRequest.of(0, 10);
+		given(productRepository.findAllByLowStock(eq(threshold), any(), any())).willReturn(Page.empty());
+
+		// When
+		productService.searchLowStock(threshold, pageable);
+
+		// Then
+		verify(productRepository, times(1)).findAllByLowStock(eq(threshold), any(), any());
 	}
 }
