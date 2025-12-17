@@ -223,4 +223,24 @@ class AdminProductControllerTest {
 		resultActions.andExpect(status().isOk());
 		verify(productService, times(productIds.size())).soldOut(anyLong());
 	}
+
+	@Test
+	@DisplayName("GET /admin/products/low-stock")
+	void 관리자_임계치_이하_재고_조회_API() throws Exception {
+		// given
+		Long threshold = 10L;
+		Page<Product> mockPage = new PageImpl<>(List.of());
+		given(productService.searchLowStock(eq(threshold), any(Pageable.class))).willReturn(mockPage);
+
+		// when
+		ResultActions resultActions = mockMvc.perform(get("/admin/products/low-stock")
+				.param("threshold", String.valueOf(threshold))
+				.param("page", "1")
+				.param("size", "10")
+				.contentType(MediaType.APPLICATION_JSON));
+
+		// then
+		resultActions.andExpect(status().isOk());
+		verify(productService, times(1)).searchLowStock(eq(threshold), any(Pageable.class));
+	}
 }
