@@ -52,8 +52,7 @@ public class Product extends BaseEntity {
 		this.stock = stock;
 		this.viewCount = 0L;
 		this.description = description;
-		this.createdAt = LocalDateTime.now();
-		this.updatedAt = LocalDateTime.now();
+		this.status = ProductStatus.ACTIVATED;
 	}
 
 	public void update(String name, Long price, Long stock, String description) {
