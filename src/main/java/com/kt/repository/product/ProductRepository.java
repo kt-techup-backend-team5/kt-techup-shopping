@@ -33,4 +33,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 			@Param("keyword") String keyword,
 			@Param("statuses") List<ProductStatus> statuses,
 			Pageable pageable);
+
+	@Query("SELECT p FROM Product p "
+			+ "WHERE p.stock <= :threshold "
+			+ "AND p.status IN :statuses")
+	Page<Product> findAllByLowStock(
+			@Param("threshold") Long threshold,
+			@Param("statuses") List<ProductStatus> statuses,
+			Pageable pageable);
 }
