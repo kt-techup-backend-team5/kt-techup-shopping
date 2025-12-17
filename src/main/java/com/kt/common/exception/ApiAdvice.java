@@ -23,17 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 public class ApiAdvice {
 	private final ApplicationEventPublisher applicationEventPublisher;
 
-	// 어떤예외를 처리할 것인지 정의
-	// MethodArgumentNotValidException 이 익셉션을 처리하도록
-	// @ExceptionHandler(MethodArgumentNotValidException.class)
-	// 500에러를 하나로 처리할때
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse.ErrorData> internalServerError(Exception e) {
-		//<-에러가뜬건지 알아볼때
 		applicationEventPublisher.publishEvent(new Message(e.getMessage()));
 
 		log.error(e.getMessage(), e);
-		// 서버에러입니다
 		return ErrorResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "서버에러입니다. 백엔드팀에 문의하세요.");
 	}
 
@@ -50,5 +44,4 @@ public class ApiAdvice {
 
 		return ErrorResponse.error(HttpStatus.BAD_REQUEST, message);
 	}
-
 }
