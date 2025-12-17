@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -21,9 +22,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kt.config.SecurityConfiguration;
 import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
+import com.kt.dto.product.ProductRequest;
 import com.kt.security.JwtService;
 import com.kt.security.WithMockCustomUser;
 import com.kt.service.ProductService;
@@ -31,10 +34,11 @@ import com.kt.service.RedisService;
 
 @WebMvcTest(controllers = AdminProductController.class)
 @WithMockCustomUser(id = 1L)
+@Import(SecurityConfiguration.class)
 class AdminProductControllerTest {
+	private static final Long DEFAULT_PRODUCT_ID = 1L;
 	@Autowired
 	private MockMvc mockMvc;
-
 	@MockitoBean
 	private ProductService productService;
 	@MockitoBean
@@ -78,7 +82,6 @@ class AdminProductControllerTest {
 	@DisplayName("GET /admin/products/{product_id}")
 	void 관리자_상품_상세_조회_API() throws Exception {
 		// given
-		Long productId = 1L;
 		Product mockProduct = Product.builder()
 				.name("product")
 				.price(10000L)
@@ -89,21 +92,21 @@ class AdminProductControllerTest {
 				.build();
 		Long redisViewCount = 10L;
 
-		given(productService.detail(productId)).willReturn(mockProduct);
-		given(redisService.getViewCount(productId)).willReturn(redisViewCount);
+		given(productService.detail(DEFAULT_PRODUCT_ID)).willReturn(mockProduct);
+		given(redisService.getViewCount(DEFAULT_PRODUCT_ID)).willReturn(redisViewCount);
 
 		// when
-		ResultActions resultActions = mockMvc.perform(get("/admin/products/{id}", productId));
+		ResultActions resultActions = mockMvc.perform(get("/admin/products/{id}", DEFAULT_PRODUCT_ID));
 
 		// then
 		resultActions.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data.name").value(mockProduct.getName()))
 				.andExpect(jsonPath("$.data.viewCount").value(mockProduct.getViewCount() + redisViewCount));
-		verify(productService, times(1)).detail(productId);
-		verify(redisService, times(1)).getViewCount(productId);
+		verify(productService, times(1)).detail(DEFAULT_PRODUCT_ID);
+		verify(redisService, times(1)).getViewCount(DEFAULT_PRODUCT_ID);
 	}
 
-/*	@Test
+	@Test
 	@DisplayName("POST /admin/products")
 	void 관리자_상품_추가_API() throws Exception {
 		// given
@@ -125,8 +128,99 @@ class AdminProductControllerTest {
 		verify(productService, times(1)).create(any(ProductRequest.Create.class));
 	}
 
-	권한 문제로 인한 추후 작업 예정
+	@Test
+	@DisplayName("PUT /admin/products/{product_id}")
+	void 관리자_상품_수정_API() throws Exception {
+		// given
+		ProductRequest.Update request = new ProductRequest.Update(
+				"after",
+				1000000L,
+				50000L,
+				"수정 테스트"
+		);
+		doNothing().when(productService).update(eq(DEFAULT_PRODUCT_ID), any(ProductRequest.Update.class));
 
-	*/
+		// when
+		ResultActions resultActions = mockMvc.perform(put("/admin/products/{id}", DEFAULT_PRODUCT_ID)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)));
 
+		// then
+		resultActions.andExpect(status().isOk());
+		verify(productService, times(1)).update(eq(DEFAULT_PRODUCT_ID), any(ProductRequest.Update.class));
+	}
+
+	@Test
+	@DisplayName("DELETE /admin/products/{product_id}")
+	void 관리자_상품_삭제_API() throws Exception {
+		// given
+		doNothing().when(productService).delete(eq(DEFAULT_PRODUCT_ID));
+
+		// when
+		ResultActions resultActions = mockMvc.perform(delete("/admin/products/{id}", DEFAULT_PRODUCT_ID));
+
+		// then
+		resultActions.andExpect(status().isOk());
+		verify(productService, times(1)).delete(eq(DEFAULT_PRODUCT_ID));
+	}
+
+	@Test
+	@DisplayName("POST /admin/products/{product_id}/in-activate")
+	void 관리자_상품_비활성화_API() throws Exception {
+		// given
+		doNothing().when(productService).inActivate(eq(DEFAULT_PRODUCT_ID));
+
+		// when
+		ResultActions resultActions = mockMvc.perform(post("/admin/products/{id}/in-activate", DEFAULT_PRODUCT_ID));
+
+		// then
+		resultActions.andExpect(status().isOk());
+		verify(productService, times(1)).inActivate(eq(DEFAULT_PRODUCT_ID));
+	}
+
+	@Test
+	@DisplayName("POST /admin/products/{product_id}/activate")
+	void 관리자_상품_활성화_API() throws Exception {
+		// given
+		doNothing().when(productService).activate(eq(DEFAULT_PRODUCT_ID));
+
+		// when
+		ResultActions resultActions = mockMvc.perform(post("/admin/products/{id}/activate", DEFAULT_PRODUCT_ID));
+
+		// then
+		resultActions.andExpect(status().isOk());
+		verify(productService, times(1)).activate(eq(DEFAULT_PRODUCT_ID));
+	}
+
+	@Test
+	@DisplayName("POST /admin/products/{product_id}/toggle-sold-out")
+	void 관리자_상품_품절_토글_API() throws Exception {
+		// given
+		doNothing().when(productService).soldOut(eq(DEFAULT_PRODUCT_ID));
+
+		// when
+		ResultActions resultActions = mockMvc.perform(post("/admin/products/{id}/toggle-sold-out", DEFAULT_PRODUCT_ID));
+
+		// then
+		resultActions.andExpect(status().isOk());
+		verify(productService, times(1)).soldOut(eq(DEFAULT_PRODUCT_ID));
+	}
+
+	@Test
+	@DisplayName("POST /admin/products/sold-out")
+	void 관리자_다중_상품_품절_API() throws Exception {
+		// given
+		List<Long> productIds = List.of(1L, 2L, 3L);
+		ProductRequest.Ids request = new ProductRequest.Ids(productIds);
+		doNothing().when(productService).soldOut(eq(DEFAULT_PRODUCT_ID));
+
+		// when
+		ResultActions resultActions = mockMvc.perform(post("/admin/products/sold-out")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)));
+
+		// then
+		resultActions.andExpect(status().isOk());
+		verify(productService, times(productIds.size())).soldOut(anyLong());
+	}
 }
