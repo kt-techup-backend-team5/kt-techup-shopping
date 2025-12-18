@@ -6,9 +6,11 @@ import com.kt.common.support.BaseEntity;
 
 import jakarta.persistence.Entity;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
+@NoArgsConstructor
 public class VisitStat extends BaseEntity {
 	private String ip;
 	private String userAgent;
