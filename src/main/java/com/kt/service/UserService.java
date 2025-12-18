@@ -14,7 +14,9 @@ import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 import com.kt.domain.user.Role;
+import com.kt.domain.user.CreatedAtSortType;
 
 @Service
 @RequiredArgsConstructor
@@ -135,11 +138,35 @@ public class UserService {
 		if (keyword == null || keyword.isBlank()) {
 			return userRepository.findAll(pageable);
 		}
-		return userRepository.findAllByNameContaining(keyword, pageable);
+		return userRepository.findByNameContaining(keyword, pageable);
 	}
 
-	public Page<User> searchAdmins(Pageable pageable) {
-		return userRepository.findAllByRole(Role.ADMIN, pageable);
+	public Page<User> searchAdmins(Pageable pageable, String keyword, CreatedAtSortType sortType) {
+		return searchByRoles(pageable, keyword, List.of(Role.SUPER_ADMIN, Role.ADMIN), sortType);
+	}
+
+	private Page<User> searchByRoles(
+			Pageable pageable,
+			String keyword,
+			List<Role> roles,
+			CreatedAtSortType sortType
+	) {
+		Pageable sortedPageable = createSortedPageable(pageable, sortType);
+
+		if (keyword == null || keyword.isBlank()) {
+			return userRepository.findByRoleIn(roles, sortedPageable);
+		}
+		return userRepository.findByRoleInAndNameContaining(roles, keyword, sortedPageable);
+	}
+
+	private Pageable createSortedPageable(Pageable pageable, CreatedAtSortType sortType) {
+		return (sortType != null)
+				? PageRequest.of(
+				pageable.getPageNumber(),
+				pageable.getPageSize(),
+				Sort.by(sortType.getDirection(), sortType.getFieldName())
+		)
+				: pageable;
 	}
 
 	public User detail(Long id) {

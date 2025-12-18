@@ -1,6 +1,7 @@
 package com.kt.repository.user;
 
 import java.util.Optional;
+import java.util.Collection;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,9 +42,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 		""")
 	Boolean existsByLoginId(String loginId);
 
-	Page<User> findAllByRole(Role role, Pageable pageable);
+    Page<User> findAllByRole(Role role, Pageable pageable);
 
-	Page<User> findAllByNameContaining(String name, Pageable pageable);
+	Page<User> findByRoleIn(Collection<Role> roles, Pageable pageable);
+
+	Page<User> findByNameContaining(String name, Pageable pageable);
+
+	Page<User> findByRoleInAndNameContaining(Collection<Role> roles, String name, Pageable pageable);
 
 	@Query(value = """
 			SELECT DISTINCT u FROM User u

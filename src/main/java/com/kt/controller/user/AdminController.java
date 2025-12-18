@@ -3,6 +3,7 @@ package com.kt.controller.user;
 import com.kt.common.request.Paging;
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
+import com.kt.domain.user.CreatedAtSortType;
 import com.kt.dto.user.UserResponse;
 import com.kt.dto.user.UserChangeRequest;
 import com.kt.security.CurrentUser;
@@ -30,17 +31,23 @@ public class AdminController extends SwaggerAssistance {
 
     @Operation(
             summary = "관리자 목록 조회",
-            description = "관리자 목록을 페이징하여 조회합니다."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공")
-    })
+            description = "관리자 목록을 이름으로 검색하고 생성일 기준으로 정렬하여 페이징 조회합니다.",
+            parameters = {
+                    @Parameter(name = "keyword", description = "검색 키워드(이름)"),
+                    @Parameter(name = "sortType", description = "정렬 기준(생성일)"),
+                    @Parameter(name = "page", description = "페이지 번호(1부터 시작)", example = "1"),
+                    @Parameter(name = "size", description = "페이지 크기", example = "10")
+
+            })
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public ApiResult<Page<UserResponse.Search>> searchAdmins(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, name = "sortType") CreatedAtSortType sortType,
             @Parameter(hidden = true) Paging paging
     ) {
-        var search = userService.searchAdmins(paging.toPageable())
+        CreatedAtSortType appliedSortType = (sortType != null) ? sortType : CreatedAtSortType.LATEST;
+
+        var search = userService.searchAdmins(paging.toPageable(), keyword, appliedSortType)
                 .map(user -> new UserResponse.Search(
                         user.getId(),
                         user.getName(),
