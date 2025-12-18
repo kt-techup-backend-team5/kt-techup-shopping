@@ -46,6 +46,15 @@ public class Review extends BaseEntity {
 	private boolean deleted = false;
 	private LocalDateTime deletedAt;
 
+	@Column(nullable = false)
+	private boolean isBlinded = false;
+	private String blindReason;
+	private LocalDateTime blindedAt;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "blinded_by_user_id")
+	private User blindedBy;
+
 	public Review(String content, int rating, User user, Product product, OrderProduct orderProduct) {
 		this.content = content;
 		this.rating = rating;
@@ -58,5 +67,12 @@ public class Review extends BaseEntity {
 		this.content = content;
 		this.rating = rating;
 		this.updatedAt = LocalDateTime.now();
+	}
+
+	public void blind(String reason, User admin) {
+		this.isBlinded = true;
+		this.blindReason = reason;
+		this.blindedAt = LocalDateTime.now();
+		this.blindedBy = admin;
 	}
 }
