@@ -50,6 +50,42 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	Page<User> findByRoleInAndNameContaining(Collection<Role> roles, String name, Pageable pageable);
 
+	@Query(
+			value = """
+					SELECT * FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					ORDER BY u.created_at DESC
+					""",
+			countQuery = """
+					SELECT count(*) FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					""",
+			nativeQuery = true
+	)
+	Page<User> findDeletedUsersDesc(@Param("roles") Collection<Role> roles, @Param("name") String name, Pageable pageable);
+
+	@Query(
+			value = """
+					SELECT * FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					ORDER BY u.created_at ASC
+					""",
+			countQuery = """
+					SELECT count(*) FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					""",
+			nativeQuery = true
+	)
+	Page<User> findDeletedUsersAsc(@Param("roles") Collection<Role> roles, @Param("name") String name, Pageable pageable);
+
 	@Query(value = """
 			SELECT DISTINCT u FROM User u
 			LEFT JOIN FETCH u.orders o

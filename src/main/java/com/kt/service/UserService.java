@@ -142,21 +142,35 @@ public class UserService {
 	}
 
 	public Page<User> searchAdmins(Pageable pageable, String keyword, CreatedAtSortType sortType) {
-		return searchByRoles(pageable, keyword, List.of(Role.SUPER_ADMIN, Role.ADMIN), sortType);
+		return searchByRoles(pageable, keyword, List.of(Role.SUPER_ADMIN, Role.ADMIN), sortType, false);
+	}
+
+	public Page<User> searchCustomers(Pageable pageable, String keyword, CreatedAtSortType sortType, boolean deletedOnly) {
+		return searchByRoles(pageable, keyword, List.of(Role.CUSTOMER), sortType, deletedOnly);
 	}
 
 	private Page<User> searchByRoles(
 			Pageable pageable,
 			String keyword,
 			List<Role> roles,
-			CreatedAtSortType sortType
+			CreatedAtSortType sortType,
+			boolean deletedOnly
 	) {
 		Pageable sortedPageable = createSortedPageable(pageable, sortType);
+		String nameKeyword = (keyword != null && !keyword.isBlank()) ? keyword : null;
 
-		if (keyword == null || keyword.isBlank()) {
+		if (deletedOnly) {
+			// deleted=true 데이터는 @SQLRestriction 때문에 native query로 별도 조회
+			Pageable unsortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+			return (sortType == CreatedAtSortType.OLDEST)
+					? userRepository.findDeletedUsersAsc(roles, nameKeyword, unsortedPageable)
+					: userRepository.findDeletedUsersDesc(roles, nameKeyword, unsortedPageable);
+		}
+
+		if (nameKeyword == null) {
 			return userRepository.findByRoleIn(roles, sortedPageable);
 		}
-		return userRepository.findByRoleInAndNameContaining(roles, keyword, sortedPageable);
+		return userRepository.findByRoleInAndNameContaining(roles, nameKeyword, sortedPageable);
 	}
 
 	private Pageable createSortedPageable(Pageable pageable, CreatedAtSortType sortType) {
