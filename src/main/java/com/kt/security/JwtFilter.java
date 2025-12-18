@@ -1,63 +1,95 @@
 package com.kt.security;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.util.Strings;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
+import com.kt.domain.user.Role;
+import com.kt.repository.user.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 
-// @WebFilter(urlPatterns = "/*")
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
-	private static final String TOKEN_PREFIX = "Bearer ";
 
-	private final JwtService jwtService;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-		FilterChain filterChain) throws ServletException, IOException {
-		var header = request.getHeader(HttpHeaders.AUTHORIZATION);
-		// Bearer {token}
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-		if (Strings.isBlank(header)) {
-			filterChain.doFilter(request, response);
-			return;
-		}
+        String token = resolveToken(request);
 
-		System.out.println(header);
-		var token = header.substring(TOKEN_PREFIX.length());
+        if (token != null) {
+            jwtService.validate(token);
 
-		if (!jwtService.validate(token)) {
-			filterChain.doFilter(request, response);
-			return;
-		}
+            Long userId = jwtService.parseId(token);
+            var authInfo = userRepository.findAuthInfoById(userId).orElse(null);
+            if (authInfo == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-		var id = jwtService.parseId(token);
+            String loginId = authInfo.getLoginId();
+            Role role = authInfo.getRole();
 
-		var techUpToken = new TechUpAuthenticationToken(
-			new DefaultCurrentUser(id, "파싱한아이디"),
-			List.of()
-		);
+            var principal = new DefaultCurrentUser(
+                    userId,
+                    loginId,
+                    role
+            );
 
-		SecurityContextHolder.getContext().setAuthentication(techUpToken);
+            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-		filterChain.doFilter(request, response);
-	}
+            authorities.add(new SimpleGrantedAuthority(role.getAuthority()));
+            if (role == Role.ADMIN) {
+                authorities.add(new SimpleGrantedAuthority(Role.CUSTOMER.getAuthority()));
+            } else if (role == Role.SUPER_ADMIN) {
+                authorities.add(new SimpleGrantedAuthority(Role.ADMIN.getAuthority()));
+                authorities.add(new SimpleGrantedAuthority(Role.CUSTOMER.getAuthority()));
+            }
 
-	// jwt토큰이 header authorization에 Bearer {token} 형식으로 옴
-	// 1. request에서 authorization 헤더 가져오기
-	// 2. Bearer 붙어있으면 떼고 토큰만 가져오기
-	// 3. token이 유효한지를 검사
-	// 4. token이 만료되었는지도 검사
-	// 5. 유효하면 id값 꺼내서 SecurityContextHolder에 인가된 객체로 저장
+            var authentication = new TechUpAuthenticationToken(
+                    principal,
+                    authorities
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        /**
+         * Authorization 헤더에서 Bearer 토큰을 추출한다.
+         * 토큰이 없거나 형식이 올바르지 않으면 null 반환.
+         */
+        if (header == null) {
+            return null;
+        }
+
+        if (header.toLowerCase().startsWith("bearer ")) {
+            return header.substring(7);
+        }
+
+        return null;
+    }
+
 }

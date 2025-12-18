@@ -57,6 +57,8 @@ public class AuthService {
 
 		redisService.deleteRefreshToken(oldRefreshToken);
 
+        var user = userRepository.findByIdOrThrow(userId);
+
 		var accessToken = jwtService.issue(userId, jwtService.getAccessExpiration());
 		var refreshToken = jwtService.issue(userId, jwtService.getRefreshExpiration());
 

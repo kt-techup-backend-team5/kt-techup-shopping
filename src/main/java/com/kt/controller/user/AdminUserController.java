@@ -60,7 +60,6 @@ public class AdminUserController extends SwaggerAssistance {
 
             @Parameter(hidden = true) Paging paging
     ) {
-        System.out.println(currentUser.getId());
         var search = userService.search(paging.toPageable(), keyword)
                 .map(user -> new UserResponse.Search(
                         user.getId(),
