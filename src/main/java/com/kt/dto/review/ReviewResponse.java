@@ -13,6 +13,7 @@ public class ReviewResponse {
 	private final String content;
 	private final int rating;
 	private final String authorName;
+	private final boolean isBlinded;
 	private final LocalDateTime createdAt;
 
 	public ReviewResponse(Review review) {
@@ -20,6 +21,7 @@ public class ReviewResponse {
 		this.content = review.getContent();
 		this.rating = review.getRating();
 		this.authorName = review.getUser().getName();
+		this.isBlinded = review.isBlinded();
 		this.createdAt = review.getCreatedAt();
 	}
 }
