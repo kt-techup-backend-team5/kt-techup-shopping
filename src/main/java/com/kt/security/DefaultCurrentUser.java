@@ -20,6 +20,10 @@ public class DefaultCurrentUser implements UserDetails, CurrentUser {
 	private String loginId;
     private Role role;
 
+    public DefaultCurrentUser(Long id, String loginId) {
+        this(id, loginId, Role.CUSTOMER);
+    }
+
 	@Override
 	public Long getId() {
 		return id;

@@ -17,6 +17,12 @@ import jakarta.validation.constraints.NotNull;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    interface AuthInfo {
+        Role getRole();
+
+        String getLoginId();
+    }
+
 	Boolean existsByEmail(String email);
 
     Optional<User> findByIdAndDeletedAtIsNull(Long id);
@@ -53,6 +59,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	@Query(value = "SELECT * FROM users WHERE id = :id", nativeQuery = true)
 	Optional<User> findByIdIncludeDeleted(@Param("id") Long id);
+
+    @Query("SELECT u.role AS role, u.loginId AS loginId FROM User u WHERE u.id = :id")
+    Optional<AuthInfo> findAuthInfoById(@Param("id") Long id);
 
 	default User findByIdIncludeDeletedOrThrow(Long id) {
 		return findByIdIncludeDeleted(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));

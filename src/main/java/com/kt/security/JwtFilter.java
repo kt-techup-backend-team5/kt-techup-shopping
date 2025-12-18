@@ -1,18 +1,18 @@
 package com.kt.security;
 
-import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.kt.domain.user.Role;
+import com.kt.repository.user.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -24,6 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(
@@ -34,11 +35,18 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
 
-        if (token != null && jwtService.validate(token)) {
+        if (token != null) {
+            jwtService.validate(token);
 
             Long userId = jwtService.parseId(token);
-            String loginId = jwtService.parseLoginId(token);
-            Role role = jwtService.parseRole(token);
+            var authInfo = userRepository.findAuthInfoById(userId).orElse(null);
+            if (authInfo == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String loginId = authInfo.getLoginId();
+            Role role = authInfo.getRole();
 
             var principal = new DefaultCurrentUser(
                     userId,
@@ -48,13 +56,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
-            // 기본 권한
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
-
-            // SUPER_ADMIN이면 하위 권한 포함
-            if (role == Role.SUPER_ADMIN) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-                authorities.add(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+            authorities.add(new SimpleGrantedAuthority(role.getAuthority()));
+            if (role == Role.ADMIN) {
+                authorities.add(new SimpleGrantedAuthority(Role.CUSTOMER.getAuthority()));
+            } else if (role == Role.SUPER_ADMIN) {
+                authorities.add(new SimpleGrantedAuthority(Role.ADMIN.getAuthority()));
+                authorities.add(new SimpleGrantedAuthority(Role.CUSTOMER.getAuthority()));
             }
 
             var authentication = new TechUpAuthenticationToken(
@@ -70,7 +77,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private String resolveToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
-
+        /**
+         * Authorization 헤더에서 Bearer 토큰을 추출한다.
+         * 토큰이 없거나 형식이 올바르지 않으면 null 반환.
+         */
         if (header == null) {
             return null;
         }

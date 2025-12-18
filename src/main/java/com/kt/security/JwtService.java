@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
-import com.kt.domain.user.Role;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -18,10 +17,9 @@ public class JwtService {
 
     private final JwtProperties jwtProperties;
 
-    public String issue(Long id, Role role, Date expiration) {
+    public String issue(Long id, Date expiration) {
         return Jwts.builder()
                 .subject("kt-cloud-shopping")
-                .claim("role", role.name())
                 .issuedAt(new Date())
                 .id(id.toString())
                 .expiration(expiration)
@@ -29,13 +27,12 @@ public class JwtService {
                 .compact();
     }
 
-    public boolean validate(String token) {
+    public void validate(String token) {
         try {
             Jwts.parser()
                     .verifyWith(jwtProperties.getSecret())
                     .build()
                     .parseSignedClaims(token);
-            return true;
         } catch (ExpiredJwtException e) {
             throw new CustomException(ErrorCode.EXPIRED_JWT_TOKEN);
         } catch (Exception e) {
@@ -52,25 +49,6 @@ public class JwtService {
                         .getPayload()
                         .getId()
         );
-    }
-
-    public Role parseRole(String token) {
-        return Role.valueOf(
-                Jwts.parser()
-                        .verifyWith(jwtProperties.getSecret())
-                        .build()
-                        .parseSignedClaims(token)
-                        .getPayload()
-                        .get("role", String.class)
-        );
-    }
-    public String parseLoginId(String token) {
-        return Jwts.parser()
-                .verifyWith(jwtProperties.getSecret())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .get("loginId", String.class);
     }
 
     public Date getAccessExpiration() {
