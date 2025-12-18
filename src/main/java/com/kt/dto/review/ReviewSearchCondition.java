@@ -13,4 +13,7 @@ public class ReviewSearchCondition {
     private String productName;
     private String userName;
     private Integer rating;
+    private Boolean isBlinded;
+    private Integer minRating;
+    private Integer maxRating;
 }
