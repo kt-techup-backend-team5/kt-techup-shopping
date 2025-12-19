@@ -9,7 +9,7 @@ public class WithMockCustomUserSecurityContextFactory implements WithSecurityCon
     public SecurityContext createSecurityContext(WithMockCustomUser customUser) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
 
-        DefaultCurrentUser principal = new DefaultCurrentUser(customUser.id(), customUser.loginId());
+        DefaultCurrentUser principal = new DefaultCurrentUser(customUser.id(), customUser.loginId(), customUser.role());
         TechUpAuthenticationToken authentication = new TechUpAuthenticationToken(principal, principal.getAuthorities());
         context.setAuthentication(authentication);
 
