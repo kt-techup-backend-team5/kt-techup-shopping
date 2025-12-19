@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -27,6 +28,7 @@ import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
 import com.kt.dto.product.ProductRequest;
+import com.kt.repository.user.UserRepository;
 import com.kt.security.JwtService;
 import com.kt.security.WithMockCustomUser;
 import com.kt.service.ProductService;
@@ -45,6 +47,8 @@ class AdminProductControllerTest {
 	private RedisService redisService;
 	@MockitoBean
 	private JwtService jwtService;
+	@MockitoBean
+	private UserRepository userRepository;
 	@Autowired
 	private ObjectMapper objectMapper;
 

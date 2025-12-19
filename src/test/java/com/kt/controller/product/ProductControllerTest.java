@@ -25,6 +25,7 @@ import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
 import com.kt.domain.review.Review;
 import com.kt.dto.review.ReviewResponse;
+import com.kt.repository.user.UserRepository;
 import com.kt.security.JwtService;
 import com.kt.security.WithMockCustomUser;
 import com.kt.service.ProductService;
@@ -48,6 +49,8 @@ class ProductControllerTest {
 	private ReviewService reviewService;
 	@MockitoBean
 	private JwtService jwtService;
+	@MockitoBean
+	private UserRepository userRepository;
 
 	@Test
 	@DisplayName("GET /products")
