@@ -1,6 +1,7 @@
 package com.kt.repository.user;
 
 import java.util.Optional;
+import java.util.Collection;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,9 +42,49 @@ public interface UserRepository extends JpaRepository<User, Long> {
 		""")
 	Boolean existsByLoginId(String loginId);
 
-	Page<User> findAllByRole(Role role, Pageable pageable);
+    Page<User> findAllByRole(Role role, Pageable pageable);
 
-	Page<User> findAllByNameContaining(String name, Pageable pageable);
+	Page<User> findByRoleIn(Collection<Role> roles, Pageable pageable);
+
+	Page<User> findByNameContaining(String name, Pageable pageable);
+
+	Page<User> findByRoleInAndNameContaining(Collection<Role> roles, String name, Pageable pageable);
+
+	@Query(
+			value = """
+					SELECT * FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					ORDER BY u.created_at DESC
+					""",
+			countQuery = """
+					SELECT count(*) FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					""",
+			nativeQuery = true
+	)
+	Page<User> findDeletedUsersDesc(@Param("roles") Collection<Role> roles, @Param("name") String name, Pageable pageable);
+
+	@Query(
+			value = """
+					SELECT * FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					ORDER BY u.created_at ASC
+					""",
+			countQuery = """
+					SELECT count(*) FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					""",
+			nativeQuery = true
+	)
+	Page<User> findDeletedUsersAsc(@Param("roles") Collection<Role> roles, @Param("name") String name, Pageable pageable);
 
 	@Query(value = """
 			SELECT DISTINCT u FROM User u
