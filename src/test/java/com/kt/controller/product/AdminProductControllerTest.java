@@ -27,6 +27,7 @@ import com.kt.config.SecurityConfiguration;
 import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
+import com.kt.domain.user.Role;
 import com.kt.dto.product.ProductRequest;
 import com.kt.repository.user.UserRepository;
 import com.kt.security.JwtService;
@@ -35,7 +36,7 @@ import com.kt.service.ProductService;
 import com.kt.service.RedisService;
 
 @WebMvcTest(controllers = AdminProductController.class)
-@WithMockCustomUser(id = 1L)
+@WithMockCustomUser(id = 1L, role = Role.ADMIN)
 @Import(SecurityConfiguration.class)
 class AdminProductControllerTest {
 	private static final Long DEFAULT_PRODUCT_ID = 1L;
