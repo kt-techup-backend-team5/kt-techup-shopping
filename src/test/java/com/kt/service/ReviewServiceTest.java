@@ -56,6 +56,7 @@ class ReviewServiceTest {
 
 	private User testUser;
 	private User testOtherUser;
+	private User testAdmin;
 	private Product testProduct;
 	private Order testOrder;
 	private OrderProduct testOrderProduct;
@@ -66,6 +67,7 @@ class ReviewServiceTest {
 		// Fixture를 사용하여 테스트 데이터 생성
 		testUser = userRepository.save(UserFixture.defaultCustomer());
 		testOtherUser = userRepository.save(UserFixture.customer("test_user_2"));
+		testAdmin = userRepository.save(UserFixture.defaultAdmin());
 
 		testProduct = productRepository.save(ProductFixture.defaultProduct());
 		testOrder = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), testUser));
@@ -245,7 +247,7 @@ class ReviewServiceTest {
 				new ReviewCreateRequest(orderProduct2.getId(), 4, "리뷰 from Other User"));
 
 		// when
-		var condition = new ReviewSearchCondition(null, null, 5);
+		var condition = new ReviewSearchCondition(null, null, 5, null, null, null);
 
 		var pageable = PageRequest.of(0, 10);
 		var result = reviewService.getAdminReviews(condition, pageable);
@@ -255,5 +257,116 @@ class ReviewServiceTest {
 		assertThat(result.getContent()).hasSize(1);
 		assertThat(result.getContent().getFirst().getContent()).isEqualTo("리뷰 from Test User");
 		assertThat(result.getContent().getFirst().getAuthorName()).isEqualTo("테스트 구매자1");
+	}
+
+	@Test
+	@DisplayName("리뷰_블라인드_처리_성공")
+	void 리뷰_블라인드_처리_성공() {
+		// given
+		ReviewCreateRequest createRequest = new ReviewCreateRequest(testOrderProduct.getId(), 2, "부적절한 리뷰");
+		reviewService.createReview(testUser.getId(), createRequest);
+		var review = reviewRepository.findAll().getFirst();
+
+		// when
+		reviewService.blindReview(review.getId(), testAdmin.getId(), "욕설 포함");
+
+		// then
+		var blindedReview = reviewRepository.findByIdOrThrow(review.getId());
+		assertThat(blindedReview.isBlinded()).isTrue();
+		assertThat(blindedReview.getBlindReason()).isEqualTo("욕설 포함");
+		assertThat(blindedReview.getBlindedAt()).isNotNull();
+		assertThat(blindedReview.getBlindedBy().getId()).isEqualTo(testAdmin.getId());
+	}
+
+	@Test
+	@DisplayName("리뷰_블라인드_처리_실패_이미_블라인드됨")
+	void 리뷰_블라인드_처리_실패_이미_블라인드됨() {
+		// given
+		ReviewCreateRequest createRequest = new ReviewCreateRequest(testOrderProduct.getId(), 2, "부적절한 리뷰");
+		reviewService.createReview(testUser.getId(), createRequest);
+		var review = reviewRepository.findAll().getFirst();
+		reviewService.blindReview(review.getId(), testAdmin.getId(), "욕설 포함");
+
+		// when & then
+		assertThatThrownBy(() -> reviewService.blindReview(review.getId(), testAdmin.getId(), "중복 블라인드 시도"))
+				.isInstanceOf(CustomException.class)
+				.hasMessage("이미 블라인드 처리된 리뷰입니다.");
+	}
+
+	@Test
+	@DisplayName("리뷰_블라인드_처리_실패_사유_누락")
+	void 리뷰_블라인드_처리_실패_사유_누락() {
+		// given
+		ReviewCreateRequest createRequest = new ReviewCreateRequest(testOrderProduct.getId(), 2, "부적절한 리뷰");
+		reviewService.createReview(testUser.getId(), createRequest);
+		var review = reviewRepository.findAll().getFirst();
+
+		// when & then
+		assertThatThrownBy(() -> reviewService.blindReview(review.getId(), testAdmin.getId(), ""))
+				.isInstanceOf(CustomException.class)
+				.hasMessage("블라인드 사유는 필수입니다.");
+	}
+
+	@Test
+	@DisplayName("관리자_리뷰_검색_블라인드_필터")
+	void 관리자_리뷰_검색_블라인드_필터() {
+		// given
+		Order order1 = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), testUser));
+		order1.changeStatus(OrderStatus.ORDER_CONFIRMED);
+		order1 = orderRepository.save(order1);
+		OrderProduct orderProduct1 = orderProductRepository.save(OrderProductFixture.orderProduct(order1, testProduct, 1L));
+		reviewService.createReview(testUser.getId(), new ReviewCreateRequest(orderProduct1.getId(), 5, "정상 리뷰"));
+
+		Order order2 = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), testUser));
+		order2.changeStatus(OrderStatus.ORDER_CONFIRMED);
+		order2 = orderRepository.save(order2);
+		OrderProduct orderProduct2 = orderProductRepository.save(OrderProductFixture.orderProduct(order2, testProduct, 1L));
+		reviewService.createReview(testUser.getId(), new ReviewCreateRequest(orderProduct2.getId(), 2, "블라인드될 리뷰"));
+
+		var reviews = reviewRepository.findAll();
+		reviewService.blindReview(reviews.get(1).getId(), testAdmin.getId(), "부적절한 내용");
+
+		// when - 블라인드된 리뷰만 조회
+		var condition = new ReviewSearchCondition(null, null, null, true, null, null);
+		var pageable = PageRequest.of(0, 10);
+		var result = reviewService.getAdminReviews(condition, pageable);
+
+		// then
+		assertThat(result.getTotalElements()).isEqualTo(1);
+		assertThat(result.getContent()).hasSize(1);
+		assertThat(result.getContent().getFirst().isBlinded()).isTrue();
+	}
+
+	@Test
+	@DisplayName("관리자_리뷰_검색_평점_범위_필터")
+	void 관리자_리뷰_검색_평점_범위_필터() {
+		// given
+		Order order1 = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), testUser));
+		order1.changeStatus(OrderStatus.ORDER_CONFIRMED);
+		order1 = orderRepository.save(order1);
+		OrderProduct orderProduct1 = orderProductRepository.save(OrderProductFixture.orderProduct(order1, testProduct, 1L));
+		reviewService.createReview(testUser.getId(), new ReviewCreateRequest(orderProduct1.getId(), 5, "5점 리뷰"));
+
+		Order order2 = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), testUser));
+		order2.changeStatus(OrderStatus.ORDER_CONFIRMED);
+		order2 = orderRepository.save(order2);
+		OrderProduct orderProduct2 = orderProductRepository.save(OrderProductFixture.orderProduct(order2, testProduct, 1L));
+		reviewService.createReview(testUser.getId(), new ReviewCreateRequest(orderProduct2.getId(), 2, "2점 리뷰"));
+
+		Order order3 = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), testUser));
+		order3.changeStatus(OrderStatus.ORDER_CONFIRMED);
+		order3 = orderRepository.save(order3);
+		OrderProduct orderProduct3 = orderProductRepository.save(OrderProductFixture.orderProduct(order3, testProduct, 1L));
+		reviewService.createReview(testUser.getId(), new ReviewCreateRequest(orderProduct3.getId(), 1, "1점 리뷰"));
+
+		// when - 평점 1~2점 리뷰만 조회 (낮은 평점)
+		var condition = new ReviewSearchCondition(null, null, null, null, 1, 2);
+		var pageable = PageRequest.of(0, 10);
+		var result = reviewService.getAdminReviews(condition, pageable);
+
+		// then
+		assertThat(result.getTotalElements()).isEqualTo(2);
+		assertThat(result.getContent()).hasSize(2);
+		assertThat(result.getContent()).allMatch(review -> review.getRating() >= 1 && review.getRating() <= 2);
 	}
 }
