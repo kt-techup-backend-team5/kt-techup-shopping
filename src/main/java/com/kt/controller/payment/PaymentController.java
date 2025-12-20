@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kt.common.response.ApiResult;
+import com.kt.domain.payment.PaymentType;
 import com.kt.dto.payment.PaymentRequest;
+import com.kt.repository.payment.PaymentTypeRepository;
 import com.kt.service.PaymentService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 @SecurityRequirement(name = "Bearer Authentication")
 public class PaymentController {
 	private final PaymentService paymentService;
+	private final PaymentTypeRepository paymentTypeRepository;
 
 	@Operation(
 		summary = "주문 결제",
@@ -43,10 +46,12 @@ public class PaymentController {
 	public ApiResult<Void> pay(
 		@Parameter(description = "결제할 주문 ID", example = "1")
 		@PathVariable Long orderId,
-		@RequestBody(description = "결제 요청 정보 (결제 수단 타입 등)")
+		@RequestBody(description = "결제 요청 정보 (결제 타입: CASH, CARD, PAY)")
 		PaymentRequest request
 	) {
-		paymentService.pay(orderId, request.getPaymentType());
+		// 결제 타입 조회
+		PaymentType paymentType = paymentTypeRepository.findByTypeCodeOrThrow(request.getPaymentType());
+		paymentService.pay(orderId, paymentType);
 		return ApiResult.ok();
 	}
 }
