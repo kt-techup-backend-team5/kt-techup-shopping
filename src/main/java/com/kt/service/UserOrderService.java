@@ -23,7 +23,7 @@ public class UserOrderService {
 	// 주문 상세 조회
 	@Transactional(readOnly = true)
 	public OrderResponse.Detail getByIdForUser(Long userId, Long orderId) {
-		var order = orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER);
+		var order = orderRepository.findByIdAndUserIdOrThrow(orderId, userId);
 		return mapToDetail(order);
 	}
 
@@ -36,7 +36,7 @@ public class UserOrderService {
 
     @Transactional
     public void updateOrder(Long userId, Long orderId, OrderRequest.Update request) {
-        var order = orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER);
+        var order = orderRepository.findByIdAndUserIdOrThrow(orderId, userId);
 
         Preconditions.validate(order.canUpdate(), ErrorCode.CANNOT_UPDATE_ORDER);
         order.changeReceiver(

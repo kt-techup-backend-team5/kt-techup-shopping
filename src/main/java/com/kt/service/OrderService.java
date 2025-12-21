@@ -89,7 +89,7 @@ public class OrderService {
 	}
 
 	public void requestCancelByUser(Long orderId, CurrentUser currentUser, String reason) {
-		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Order order = orderRepository.findByOrderIdOrThrow(orderId);
 		// '주문'에 기록된 사용자 ID와 '현재 요청한' 사용자 ID를 바로 비교
 		Preconditions.validate(
 				order.getUser()
@@ -99,7 +99,7 @@ public class OrderService {
 	}
 
 	public void requestRefundByUser(Long orderId, CurrentUser currentUser, RefundRequest request) {
-		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Order order = orderRepository.findByOrderIdOrThrow(orderId);
 		Preconditions.validate(
 				order.getUser().getId().equals(currentUser.getId()),
 				ErrorCode.NO_AUTHORITY_TO_REFUND
@@ -120,7 +120,7 @@ public class OrderService {
 	// 현재는 즉시 취소 처리로 변경되어 이 메서드는 사용되지 않음
 	@Deprecated
 	public void decideCancel(Long orderId, OrderCancelDecisionRequest request) {
-		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Order order = orderRepository.findByOrderIdOrThrow(orderId);
 		// 즉시 취소로 변경되어 승인 프로세스 제거됨
 		throw new UnsupportedOperationException("취소는 즉시 처리됩니다. requestCancelByUser를 사용하세요.");
 	}
@@ -139,7 +139,7 @@ public class OrderService {
 
 
 	public void approveRefund(Long orderId) {
-		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Order order = orderRepository.findByOrderIdOrThrow(orderId);
 		Refund refund = refundRepository.findRefundRequestByOrderOrThrow(order);
 
 		// Refund 도메인에서 독립적으로 상태 관리
@@ -197,7 +197,7 @@ public class OrderService {
 
 	@Transactional(readOnly = true)
 	public OrderResponse.AdminDetail getAdminOrderDetail(Long orderId) {
-		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Order order = orderRepository.findByOrderIdOrThrow(orderId);
 
 		List<OrderResponse.Item> items = order.getOrderProducts().stream()
 				.map(op -> new OrderResponse.Item(
@@ -224,7 +224,7 @@ public class OrderService {
 	}
 
 	public void changeOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
-		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Order order = orderRepository.findByOrderIdOrThrow(orderId);
 		order.changeStatus(request.status());
 	}
 }

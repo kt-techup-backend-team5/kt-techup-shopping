@@ -310,7 +310,7 @@ class RefundServiceTest {
 		orderService.requestRefundByUser(testOrder.getId(), currentUser, refundRequest);
 
 		// then
-		var order = orderRepository.findByOrderIdOrThrow(testOrder.getId(), ErrorCode.NOT_FOUND_ORDER);
+		var order = orderRepository.findByOrderIdOrThrow(testOrder.getId());
 		assertThat(order.getStatus()).isEqualTo(originalStatus);
 	}
 
@@ -332,7 +332,7 @@ class RefundServiceTest {
 		orderService.rejectRefund(refund.getId(), rejectRequest);
 
 		// then
-		var order = orderRepository.findByOrderIdOrThrow(testOrder.getId(), ErrorCode.NOT_FOUND_ORDER);
+		var order = orderRepository.findByOrderIdOrThrow(testOrder.getId());
 		assertThat(order.getStatus()).isEqualTo(originalStatus);
 	}
 }
