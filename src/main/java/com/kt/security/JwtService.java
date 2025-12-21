@@ -14,57 +14,48 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class JwtService {
-	private final JwtProperties jwtProperties;
 
-	public String issue(Long id, Date expiration) {
-		// id 값은 jwt의 식별자 같은 개념 -> User의 id값
-		// claims -> jwt안에 들어갈 정보를 Map형태로 넣는데 id, 1
+    private final JwtProperties jwtProperties;
 
-		// 2가지의 토큰으로 웹에서는 제어
-		// access token -> 짧은 유효기간 : 5분 -> 리프레시토큰으로 새로운 액세스토큰 발급
-		// refresh token -> 긴 유효기간 : 12시간 ->만료되면 로그인 다시 해야댐
+    public String issue(Long id, Date expiration) {
+        return Jwts.builder()
+                .subject("kt-cloud-shopping")
+                .issuedAt(new Date())
+                .id(id.toString())
+                .expiration(expiration)
+                .signWith(jwtProperties.getSecret())
+                .compact();
+    }
 
-		return Jwts.builder()
-				.subject("kt-cloud-shopping")
-				.issuer("roy")
-				.issuedAt(new Date())
-				.id(id.toString())
-				.expiration(expiration)
-				.signWith(jwtProperties.getSecret())
-				.compact();
-	}
+    public void validate(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(jwtProperties.getSecret())
+                    .build()
+                    .parseSignedClaims(token);
+        } catch (ExpiredJwtException e) {
+            throw new CustomException(ErrorCode.EXPIRED_JWT_TOKEN);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INVALID_JWT_TOKEN);
+        }
+    }
 
-	public Date getAccessExpiration() {
-		return jwtProperties.getAccessTokenExpiration();
-	}
+    public Long parseId(String token) {
+        return Long.valueOf(
+                Jwts.parser()
+                        .verifyWith(jwtProperties.getSecret())
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload()
+                        .getId()
+        );
+    }
 
-	public Date getRefreshExpiration() {
-		return jwtProperties.getRefreshTokenExpiration();
-	}
+    public Date getAccessExpiration() {
+        return jwtProperties.getAccessTokenExpiration();
+    }
 
-	public boolean validate(String token) {
-		try {
-			Jwts.parser()
-					.verifyWith(jwtProperties.getSecret())
-					.build()
-					.parseSignedClaims(token);
-
-			return true;
-		} catch (ExpiredJwtException e) {
-			throw new CustomException(ErrorCode.EXPIRED_JWT_TOKEN);
-		} catch (Exception e) {
-			throw new CustomException(ErrorCode.INVALID_JWT_TOKEN);
-		}
-	}
-
-	public Long parseId(String token) {
-		var id = Jwts.parser()
-				.verifyWith(jwtProperties.getSecret())
-				.build()
-				.parseSignedClaims(token)
-				.getPayload()
-				.getId();
-
-		return Long.valueOf(id);
-	}
+    public Date getRefreshExpiration() {
+        return jwtProperties.getRefreshTokenExpiration();
+    }
 }

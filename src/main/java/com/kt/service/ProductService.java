@@ -117,4 +117,8 @@ public class ProductService {
 
 		product.increaseStock(quantity);
 	}
+
+	public Page<Product> searchLowStock(Long threshold, Pageable pageable) {
+		return productRepository.findAllByLowStock(threshold, NON_DELETED_STATUS, pageable);
+	}
 }

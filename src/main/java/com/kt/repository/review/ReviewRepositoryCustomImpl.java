@@ -30,7 +30,10 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
                 .where(
                         productNameContains(condition.getProductName()),
                         userNameContains(condition.getUserName()),
-                        ratingEq(condition.getRating())
+                        ratingEq(condition.getRating()),
+                        isBlindedEq(condition.getIsBlinded()),
+                        ratingGoe(condition.getMinRating()),
+                        ratingLoe(condition.getMaxRating())
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -42,7 +45,10 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
                 .where(
                         productNameContains(condition.getProductName()),
                         userNameContains(condition.getUserName()),
-                        ratingEq(condition.getRating())
+                        ratingEq(condition.getRating()),
+                        isBlindedEq(condition.getIsBlinded()),
+                        ratingGoe(condition.getMinRating()),
+                        ratingLoe(condition.getMaxRating())
                 )
                 .fetchOne();
 
@@ -59,5 +65,17 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 
     private BooleanExpression ratingEq(Integer rating) {
         return rating != null ? QReview.review.rating.eq(rating) : null;
+    }
+
+    private BooleanExpression isBlindedEq(Boolean isBlinded) {
+        return isBlinded != null ? QReview.review.isBlinded.eq(isBlinded) : null;
+    }
+
+    private BooleanExpression ratingGoe(Integer minRating) {
+        return minRating != null ? QReview.review.rating.goe(minRating) : null;
+    }
+
+    private BooleanExpression ratingLoe(Integer maxRating) {
+        return maxRating != null ? QReview.review.rating.loe(maxRating) : null;
     }
 }

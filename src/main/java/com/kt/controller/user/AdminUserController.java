@@ -4,6 +4,7 @@ package com.kt.controller.user;
 import com.kt.common.request.Paging;
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
+import com.kt.domain.user.CreatedAtSortType;
 import com.kt.dto.user.AdminChangePasswordRequest;
 import com.kt.dto.user.UserResponse;
 import com.kt.dto.user.UserChangeRequest;
@@ -19,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -44,24 +46,29 @@ public class AdminUserController extends SwaggerAssistance {
 
     @Operation(
             summary = "관리자 사용자 목록 조회",
-            description = "관리자가 사용자 목록을 이름으로 검색하고 페이징하여 조회합니다."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공")
-    })
+            description = "관리자가 사용자 목록을 이름으로 검색하고 생성일 및 탈퇴 여부를 페이징하여 조회합니다.",
+            parameters = {
+                    @Parameter(name = "keyword", description = "검색 키워드(이름)"),
+                    @Parameter(name = "sortType", description = "정렬 기준(생성일)"),
+                    @Parameter(name = "deletedOnly", description = "탈퇴 회원만 조회 여부"),
+                    @Parameter(name = "page", description = "페이지 번호(1부터 시작)", example = "1"),
+                    @Parameter(name = "size", description = "페이지 크기", example = "10")
+
+            })
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Page<UserResponse.Search>> search(
             @Parameter(hidden = true)
             @AuthenticationPrincipal CurrentUser currentUser,
-
-            @Parameter(description = "검색 키워드(이름)")
             @RequestParam(required = false) String keyword,
-
+            @RequestParam(required = false, name = "sortType") CreatedAtSortType sortType,
+            @RequestParam(required = false, defaultValue = "false", name = "deletedOnly") boolean deletedOnly,
             @Parameter(hidden = true) Paging paging
     ) {
-        System.out.println(currentUser.getId());
-        var search = userService.search(paging.toPageable(), keyword)
+        CreatedAtSortType appliedSortType = (sortType != null) ? sortType : CreatedAtSortType.LATEST;
+
+
+        var search = userService.searchCustomers(paging.toPageable(), keyword, appliedSortType, deletedOnly)
                 .map(user -> new UserResponse.Search(
                         user.getId(),
                         user.getName(),

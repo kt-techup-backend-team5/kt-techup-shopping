@@ -27,6 +27,7 @@ public enum ErrorCode {
     NOT_MATCHED_CHECK_PASSWORD(HttpStatus.BAD_REQUEST, "입력한 비밀번호가 서로 다릅니다. 다시 확인해주세요."),
     ALREADY_HAS_ROLE(HttpStatus.BAD_REQUEST, "이미 관리자 권한을 가지고 있는 회원입니다."),
     USER_NOT_ADMIN(HttpStatus.FORBIDDEN, "관리자 권한이 없는 회원입니다."),
+    CANNOT_DELETE_SUPER_ADMIN(HttpStatus.BAD_REQUEST, "최고관리자 계정은 삭제할 수 없습니다."),
     CANNOT_DELETE_SELF(HttpStatus.BAD_REQUEST, "자기 자신을 삭제할 수 없습니다."),
 
     // Product
@@ -57,6 +58,8 @@ public enum ErrorCode {
 	NO_AUTHORITY_TO_DELETE_REVIEW(HttpStatus.FORBIDDEN, "리뷰를 삭제할 권한이 없습니다."),
 	CANNOT_REVIEW_NOT_CONFIRMED_ORDER(HttpStatus.BAD_REQUEST, "구매 확정되지 않은 주문에 대해서는 리뷰를 작성할 수 없습니다."),
 	REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 해당 상품에 대한 리뷰를 작성했습니다."),
+	ALREADY_BLINDED_REVIEW(HttpStatus.BAD_REQUEST, "이미 블라인드 처리된 리뷰입니다."),
+	BLIND_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "블라인드 사유는 필수입니다."),
 
 	// Refund
 	NOT_FOUND_REFUND(HttpStatus.NOT_FOUND, "환불/반품 요청을 찾을 수 없습니다."),

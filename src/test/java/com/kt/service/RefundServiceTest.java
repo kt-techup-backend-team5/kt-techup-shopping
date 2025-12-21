@@ -22,6 +22,7 @@ import com.kt.domain.orderproduct.OrderProduct;
 import com.kt.domain.product.Product;
 import com.kt.domain.refund.RefundStatus;
 import com.kt.domain.refund.RefundType;
+import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 import com.kt.dto.refund.RefundRejectRequest;
 import com.kt.dto.refund.RefundRequest;
@@ -90,7 +91,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_SHIPPING);
 		orderRepository.saveAndFlush(testOrder); // DB에 변경사항 반영
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 
 		// when
@@ -110,7 +111,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_DELIVERED);
 		orderRepository.saveAndFlush(testOrder);
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.RETURN, "상품 불량");
 
 		// when
@@ -130,7 +131,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_SHIPPING);
 		orderRepository.saveAndFlush(testOrder);
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 		orderService.requestRefundByUser(testOrder.getId(), currentUser, refundRequest);
 
@@ -154,7 +155,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_DELIVERED);
 		orderRepository.saveAndFlush(testOrder);
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.RETURN, "상품 불량");
 		orderService.requestRefundByUser(testOrder.getId(), currentUser, refundRequest);
 
@@ -177,7 +178,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_SHIPPING);
 		orderRepository.saveAndFlush(testOrder);
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 		orderService.requestRefundByUser(testOrder.getId(), currentUser, refundRequest);
 
@@ -200,7 +201,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_SHIPPING);
 		orderRepository.saveAndFlush(testOrder);
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 
 		// 첫 번째 환불 요청 및 승인
@@ -221,7 +222,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_CREATED);
 		orderRepository.saveAndFlush(testOrder);
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 
 		// when & then
@@ -239,7 +240,7 @@ class RefundServiceTest {
 		testOrder.changeStatus(OrderStatus.ORDER_SHIPPING);
 		orderRepository.saveAndFlush(testOrder);
 		var otherUser = userRepository.save(UserFixture.defaultCustomer());
-		var currentUser = new DefaultCurrentUser(otherUser.getId(), otherUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(otherUser.getId(), otherUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 
 		// when & then
@@ -256,7 +257,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_SHIPPING);
 		orderRepository.saveAndFlush(testOrder);
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 		orderService.requestRefundByUser(testOrder.getId(), currentUser, refundRequest);
 
@@ -278,7 +279,7 @@ class RefundServiceTest {
 		// given
 		testOrder.changeStatus(OrderStatus.ORDER_SHIPPING);
 		orderRepository.saveAndFlush(testOrder);
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 		orderService.requestRefundByUser(testOrder.getId(), currentUser, refundRequest);
 
@@ -302,7 +303,7 @@ class RefundServiceTest {
 		testOrder.changeStatus(OrderStatus.ORDER_SHIPPING);
 		orderRepository.saveAndFlush(testOrder);
 		var originalStatus = testOrder.getStatus();
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.REFUND, "단순 변심");
 
 		// when
@@ -320,7 +321,7 @@ class RefundServiceTest {
 		testOrder.changeStatus(OrderStatus.ORDER_DELIVERED);
 		orderRepository.saveAndFlush(testOrder);
 		var originalStatus = testOrder.getStatus();
-		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId());
+		var currentUser = new DefaultCurrentUser(testUser.getId(), testUser.getLoginId(), Role.CUSTOMER);
 		var refundRequest = new RefundRequest(RefundType.RETURN, "상품 불량");
 		orderService.requestRefundByUser(testOrder.getId(), currentUser, refundRequest);
 

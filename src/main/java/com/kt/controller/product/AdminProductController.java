@@ -118,9 +118,26 @@ public class AdminProductController extends SwaggerAssistance {
 	@PostMapping("/sold-out")
 	public ApiResult<Void> soldOutMultiple(@RequestBody @Valid ProductRequest.Ids request) {
 		List<Long> ids = request.getProductIds();
-		
+
 		ids.forEach(productService::soldOut);
 
 		return ApiResult.ok();
+	}
+
+	@Operation(summary = "임계치 이하 재고 상품 조회", description = "재고가 임계치 기준 값보다 이하인 상품 목록을 조회합니다.",
+			parameters = {
+					@Parameter(name = "threshold", description = "임계치 기준 (해당 값 이하 재고 상품 조회)"),
+					@Parameter(name = "page", description = "페이지 번호", example = "1"),
+					@Parameter(name = "size", description = "페이지 크기", example = "10")
+			})
+	@GetMapping("/low-stock")
+	public ApiResult<Page<ProductResponse.AdminSummary>> lowStock(
+			@RequestParam(defaultValue = "10") Long threshold,
+			@Parameter(hidden = true) Paging paging
+	) {
+		var products = productService.searchLowStock(threshold, paging.toPageable())
+				.map(ProductResponse.AdminSummary::of);
+
+		return ApiResult.ok(products);
 	}
 }

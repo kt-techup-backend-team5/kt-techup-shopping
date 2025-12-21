@@ -6,6 +6,8 @@ import com.kt.domain.order.OrderStatus;
 import com.kt.domain.orderproduct.OrderProduct;
 import com.kt.domain.product.Product;
 import com.kt.domain.review.Review;
+import com.kt.domain.user.User;
+import com.kt.dto.review.AdminReviewResponse;
 import com.kt.dto.review.ReviewCreateRequest;
 import com.kt.dto.review.ReviewResponse;
 import com.kt.dto.review.ReviewSearchCondition;
@@ -13,6 +15,7 @@ import com.kt.dto.review.ReviewUpdateRequest;
 import com.kt.repository.orderproduct.OrderProductRepository;
 import com.kt.repository.product.ProductRepository;
 import com.kt.repository.review.ReviewRepository;
+import com.kt.repository.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +32,7 @@ public class ReviewService {
 	private final ReviewRepository reviewRepository;
 	private final OrderProductRepository orderProductRepository;
 	private final ProductRepository productRepository;
+	private final UserRepository userRepository;
 
 	public void createReview(Long userId, ReviewCreateRequest request) {
 		OrderProduct orderProduct = orderProductRepository.findByIdOrThrow(request.getOrderProductId());
@@ -75,14 +79,24 @@ public class ReviewService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<ReviewResponse> getAdminReviews(ReviewSearchCondition condition, Pageable pageable) {
+	public Page<AdminReviewResponse> getAdminReviews(ReviewSearchCondition condition, Pageable pageable) {
 		Page<Review> reviews = reviewRepository.searchReviews(condition, pageable);
-		return reviews.map(ReviewResponse::new);
+		return reviews.map(AdminReviewResponse::new);
 	}
 
 	public void deleteReviewByAdmin(Long reviewId) {
 		Review review = reviewRepository.findByIdOrThrow(reviewId);
 		reviewRepository.delete(review);
+	}
+
+	public void blindReview(Long reviewId, Long adminId, String reason) {
+		Review review = reviewRepository.findByIdOrThrow(reviewId);
+		User admin = userRepository.findByIdOrThrow(adminId);
+
+		Preconditions.validate(!review.isBlinded(), ErrorCode.ALREADY_BLINDED_REVIEW);
+		Preconditions.validate(reason != null && !reason.isBlank(), ErrorCode.BLIND_REASON_REQUIRED);
+
+		review.blind(reason, admin);
 	}
 
 	private Review findReviewByIdAndValidateOwner(Long reviewId, Long userId, ErrorCode errorCode) {

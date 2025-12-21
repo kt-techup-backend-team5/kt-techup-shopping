@@ -1,6 +1,7 @@
 package com.kt.repository.user;
 
 import java.util.Optional;
+import java.util.Collection;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,12 @@ import com.kt.domain.user.User;
 import jakarta.validation.constraints.NotNull;
 
 public interface UserRepository extends JpaRepository<User, Long> {
+
+    interface AuthInfo {
+        Role getRole();
+
+        String getLoginId();
+    }
 
 	Boolean existsByEmail(String email);
 
@@ -35,9 +42,49 @@ public interface UserRepository extends JpaRepository<User, Long> {
 		""")
 	Boolean existsByLoginId(String loginId);
 
-	Page<User> findAllByRole(Role role, Pageable pageable);
+    Page<User> findAllByRole(Role role, Pageable pageable);
 
-	Page<User> findAllByNameContaining(String name, Pageable pageable);
+	Page<User> findByRoleIn(Collection<Role> roles, Pageable pageable);
+
+	Page<User> findByNameContaining(String name, Pageable pageable);
+
+	Page<User> findByRoleInAndNameContaining(Collection<Role> roles, String name, Pageable pageable);
+
+	@Query(
+			value = """
+					SELECT * FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					ORDER BY u.created_at DESC
+					""",
+			countQuery = """
+					SELECT count(*) FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					""",
+			nativeQuery = true
+	)
+	Page<User> findDeletedUsersDesc(@Param("roles") Collection<Role> roles, @Param("name") String name, Pageable pageable);
+
+	@Query(
+			value = """
+					SELECT * FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					ORDER BY u.created_at ASC
+					""",
+			countQuery = """
+					SELECT count(*) FROM users u
+					WHERE u.role IN (:roles)
+					  AND u.deleted = true
+					  AND (:name IS NULL OR u.name LIKE %:name%)
+					""",
+			nativeQuery = true
+	)
+	Page<User> findDeletedUsersAsc(@Param("roles") Collection<Role> roles, @Param("name") String name, Pageable pageable);
 
 	@Query(value = """
 			SELECT DISTINCT u FROM User u
@@ -51,8 +98,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 		return findById(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 	}
 
-	@Query(value = "SELECT * FROM user WHERE id = :id", nativeQuery = true)
+	@Query(value = "SELECT * FROM users WHERE id = :id", nativeQuery = true)
 	Optional<User> findByIdIncludeDeleted(@Param("id") Long id);
+
+    @Query("SELECT u.role AS role, u.loginId AS loginId FROM User u WHERE u.id = :id")
+    Optional<AuthInfo> findAuthInfoById(@Param("id") Long id);
 
 	default User findByIdIncludeDeletedOrThrow(Long id) {
 		return findByIdIncludeDeleted(id).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));

@@ -2,6 +2,7 @@ package com.kt.repository.product;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,14 +26,18 @@ import com.kt.domain.product.ProductStatus;
 @Transactional
 class ProductRepositoryTest {
 
+	private static final Pageable pageable = PageRequest.of(0, 10);
+	private static final List<ProductStatus> PUBLIC_VIEWABLE_STATUS = List.of(ProductStatus.ACTIVATED,
+			ProductStatus.SOLD_OUT);
+	private final static List<ProductStatus> NON_DELETED_STATUS = Arrays.stream(ProductStatus.values())
+			.filter(status -> !status.equals(ProductStatus.DELETED))
+			.toList();
+
 	@Autowired
 	private ProductRepository productRepository;
-
 	private Product productA;
 	private Product productB;
 	private Product productC;
-
-	private Pageable pageable = PageRequest.of(0, 10);
 
 	@BeforeEach
 	void setUp() {
@@ -51,10 +56,10 @@ class ProductRepositoryTest {
 	void 키워드_상품_검색_및_상태_필터링() {
 		// given
 		String keyword = "모니터";
-		List<ProductStatus> publicStatuses = List.of(ProductStatus.ACTIVATED, ProductStatus.SOLD_OUT);
 
 		// when
-		Page<Product> products = productRepository.findAllByKeywordAndStatuses(keyword, publicStatuses, pageable);
+		Page<Product> products = productRepository.findAllByKeywordAndStatuses(keyword, PUBLIC_VIEWABLE_STATUS,
+				pageable);
 
 		// then
 		assertThat(products.getTotalElements()).isEqualTo(1);
@@ -65,14 +70,28 @@ class ProductRepositoryTest {
 	void 키워드가_빈_문자열이면_해당_상태_전체_조회() {
 		// given
 		String keyword = "";
-		List<ProductStatus> publicStatuses = List.of(ProductStatus.ACTIVATED, ProductStatus.SOLD_OUT);
 
 		// when
-		Page<Product> products = productRepository.findAllByKeywordAndStatuses(keyword, publicStatuses, pageable);
+		Page<Product> products = productRepository.findAllByKeywordAndStatuses(keyword, PUBLIC_VIEWABLE_STATUS,
+				pageable);
 
 		// then
 		assertThat(products.getTotalElements()).isEqualTo(2);
 		assertThat(products.getContent()).containsExactlyInAnyOrder(productA, productC);
 		assertThat(products.getContent()).doesNotContain(productB);
+	}
+
+	@Test
+	void 임계치_이하_재고_조회() {
+		// given
+		Long threshold = 20L;
+
+		// when
+		Page<Product> products = productRepository.findAllByLowStock(threshold, NON_DELETED_STATUS, pageable);
+
+		// then
+		assertThat(products.getTotalElements()).isEqualTo(2);
+		assertThat(products.getContent()).containsExactlyInAnyOrder(productA, productB);
+		assertThat(products.getContent()).doesNotContain(productC);
 	}
 }

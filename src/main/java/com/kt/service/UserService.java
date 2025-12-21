@@ -14,7 +14,9 @@ import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 import com.kt.domain.user.Role;
+import com.kt.domain.user.CreatedAtSortType;
 
 @Service
 @RequiredArgsConstructor
@@ -135,11 +138,49 @@ public class UserService {
 		if (keyword == null || keyword.isBlank()) {
 			return userRepository.findAll(pageable);
 		}
-		return userRepository.findAllByNameContaining(keyword, pageable);
+		return userRepository.findByNameContaining(keyword, pageable);
 	}
 
-	public Page<User> searchAdmins(Pageable pageable) {
-		return userRepository.findAllByRole(Role.ADMIN, pageable);
+	public Page<User> searchAdmins(Pageable pageable, String keyword, CreatedAtSortType sortType) {
+		return searchByRoles(pageable, keyword, List.of(Role.SUPER_ADMIN, Role.ADMIN), sortType, false);
+	}
+
+	public Page<User> searchCustomers(Pageable pageable, String keyword, CreatedAtSortType sortType, boolean deletedOnly) {
+		return searchByRoles(pageable, keyword, List.of(Role.CUSTOMER), sortType, deletedOnly);
+	}
+
+	private Page<User> searchByRoles(
+			Pageable pageable,
+			String keyword,
+			List<Role> roles,
+			CreatedAtSortType sortType,
+			boolean deletedOnly
+	) {
+		Pageable sortedPageable = createSortedPageable(pageable, sortType);
+		String nameKeyword = (keyword != null && !keyword.isBlank()) ? keyword : null;
+
+		if (deletedOnly) {
+			// deleted=true 데이터는 @SQLRestriction 때문에 native query로 별도 조회
+			Pageable unsortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+			return (sortType == CreatedAtSortType.OLDEST)
+					? userRepository.findDeletedUsersAsc(roles, nameKeyword, unsortedPageable)
+					: userRepository.findDeletedUsersDesc(roles, nameKeyword, unsortedPageable);
+		}
+
+		if (nameKeyword == null) {
+			return userRepository.findByRoleIn(roles, sortedPageable);
+		}
+		return userRepository.findByRoleInAndNameContaining(roles, nameKeyword, sortedPageable);
+	}
+
+	private Pageable createSortedPageable(Pageable pageable, CreatedAtSortType sortType) {
+		return (sortType != null)
+				? PageRequest.of(
+				pageable.getPageNumber(),
+				pageable.getPageSize(),
+				Sort.by(sortType.getDirection(), sortType.getFieldName())
+		)
+				: pageable;
 	}
 
 	public User detail(Long id) {
@@ -203,9 +244,12 @@ public class UserService {
 	}
 
     @Transactional
-    public User getAdminOrThrow(Long id) {
+    public User getAdminTargetOrThrow(Long id) {
         User user = detail(id);
-        Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
+        Preconditions.validate(
+                user.getRole() == Role.ADMIN || user.getRole() == Role.SUPER_ADMIN,
+                ErrorCode.USER_NOT_ADMIN
+        );
         return user;
     }
 
@@ -213,6 +257,8 @@ public class UserService {
     public void deleteAdmin(Long currentUserId, Long targetUserId) {
         Preconditions.validate(!currentUserId.equals(targetUserId), ErrorCode.CANNOT_DELETE_SELF);
         var user = detail(targetUserId);
+        Preconditions.validate(user.getRole() != Role.SUPER_ADMIN, ErrorCode.CANNOT_DELETE_SUPER_ADMIN
+        );
         Preconditions.validate(user.getRole() == Role.ADMIN, ErrorCode.USER_NOT_ADMIN);
         deactivateUser(targetUserId);
     }
