@@ -25,7 +25,7 @@ public class PaymentService {
 
 	public void pay(Long orderId, PaymentType paymentType) {
 		// 주문 정보 가져오기
-		Order order = orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		Order order = orderRepository.findByOrderIdOrThrow(orderId);
 
 		// 주문 상태 확인하기(이미 결제 되었는지)
 		Preconditions.validate(order.getStatus() == OrderStatus.ORDER_CREATED, ErrorCode.ALREADY_PAID_ORDER);
