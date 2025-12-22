@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -12,8 +11,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 import com.kt.common.response.ApiResult;
 import com.kt.domain.payment.PaymentType;
@@ -46,11 +48,9 @@ public class PaymentController {
 	public ApiResult<Void> pay(
 		@Parameter(description = "결제할 주문 ID", example = "1")
 		@PathVariable Long orderId,
-		@RequestBody(description = "결제 요청 정보 (결제 타입: CASH, CARD, PAY)")
-		PaymentRequest request
+		@RequestBody PaymentRequest request
 	) {
-		// 결제 타입 조회
-		PaymentType paymentType = paymentTypeRepository.findByTypeCodeOrThrow(request.getPaymentType());
+		PaymentType paymentType = paymentTypeRepository.findByTypeCodeOrThrow(request.paymentType());
 		paymentService.pay(orderId, paymentType);
 		return ApiResult.ok();
 	}
