@@ -11,6 +11,7 @@ import com.kt.domain.payment.Payment;
 import com.kt.domain.payment.PaymentType;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.payment.PaymentRepository;
+import com.kt.repository.payment.PaymentTypeRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class PaymentService {
 	private final OrderRepository orderRepository;
 	private final PaymentRepository paymentRepository;
+	private final PaymentTypeRepository paymentTypeRepository;
 
 	public void pay(Long orderId, PaymentType paymentType) {
 		// 주문 정보 가져오기
@@ -27,6 +29,9 @@ public class PaymentService {
 
 		// 주문 상태 확인하기(이미 결제 되었는지)
 		Preconditions.validate(order.getStatus() == OrderStatus.ORDER_CREATED, ErrorCode.ALREADY_PAID_ORDER);
+
+		// 활성화된 결제 타입인지 확인
+		Preconditions.validate(paymentType.canUse(), ErrorCode.NOT_FOUND_PAYMENT_TYPE);
 
 		// TODO: 배송비랑 포인트, 쿠폰 구현 하고 여기 부분 수정해야함
 		// 결제 금액 계산 (임시로 배송비 3000원 고정)
