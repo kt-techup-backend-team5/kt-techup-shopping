@@ -55,7 +55,7 @@ class UserOrderServiceTest {
         createOrderProduct(order, product2, 1L);
         long expectedTotalPrice = 1_000L * 2 + 2_000L * 1;
 
-        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER))
+        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId))
             .willReturn(order);
 
         // when
@@ -74,7 +74,7 @@ class UserOrderServiceTest {
         assertThat(detail.createdAt()).isEqualTo(order.getCreatedAt());
 
         then(orderRepository).should()
-            .findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER);
+            .findByIdAndUserIdOrThrow(orderId, userId);
     }
 
     @Test
@@ -139,7 +139,7 @@ class UserOrderServiceTest {
         Receiver receiver = createReceiver("홍길동", "서울시 1", "010-0000-0000");
         Order order = createOrder(receiver, user, OrderStatus.ORDER_CREATED); // canUpdate() = true
 
-        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER))
+        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId))
             .willReturn(order);
 
         OrderRequest.Update request = new OrderRequest.Update(
@@ -153,7 +153,7 @@ class UserOrderServiceTest {
 
         // then
         then(orderRepository).should()
-            .findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER);
+            .findByIdAndUserIdOrThrow(orderId, userId);
 
         assertThat(order.getReceiver().getName()).isEqualTo(request.receiverName());
         assertThat(order.getReceiver().getAddress()).isEqualTo(request.receiverAddress());
@@ -175,7 +175,7 @@ class UserOrderServiceTest {
         String originalAddress = order.getReceiver().getAddress();
         String originalMobile = order.getReceiver().getMobile();
 
-        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER))
+        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId))
             .willReturn(order);
 
         OrderRequest.Update request = new OrderRequest.Update(
@@ -196,7 +196,7 @@ class UserOrderServiceTest {
         assertThat(order.getReceiver().getMobile()).isEqualTo(originalMobile);
 
         then(orderRepository).should()
-            .findByIdAndUserIdOrThrow(orderId, userId, ErrorCode.NOT_FOUND_ORDER);
+            .findByIdAndUserIdOrThrow(orderId, userId);
     }
 
     // 픽스처 메서드

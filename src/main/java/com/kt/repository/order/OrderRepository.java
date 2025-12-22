@@ -34,13 +34,13 @@ public interface OrderRepository extends JpaRepository<Order, Long>, OrderReposi
 	@EntityGraph(attributePaths = {"orderProducts", "orderProducts.product", "user"})
 	Optional<Order> findByIdAndUserId(Long id, Long userId);
 
-    default Order findByIdAndUserIdOrThrow(Long id, Long userId, ErrorCode errorCode) {
+    default Order findByIdAndUserIdOrThrow(Long id, Long userId) {
         return findByIdAndUserId(id, userId)
-            .orElseThrow(() -> new CustomException(errorCode));
+            .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_ORDER));
     }
 
-	default Order findByOrderIdOrThrow(Long id, ErrorCode errorCode) {
-		return findById(id)
-			.orElseThrow(() -> new CustomException(errorCode));
-	}
+    default Order findByOrderIdOrThrow(Long id) {
+        return findById(id)
+            .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_ORDER));
+    }
 }
