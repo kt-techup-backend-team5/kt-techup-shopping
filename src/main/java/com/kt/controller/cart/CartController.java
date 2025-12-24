@@ -80,7 +80,7 @@ public class CartController extends SwaggerAssistance {
         @AuthenticationPrincipal DefaultCurrentUser currentUser,
         @Parameter(description = "상품 ID", required = true, example = "1")
         @PathVariable Long productId,
-        @RequestBody @Valid CartRequest.Update request
+        @RequestBody @Valid CartRequest.UpdateQty request
     ) {
         var cartItem = cartService.changeQuantity(currentUser.getId(), productId, request.quantity());
         return ApiResult.ok(CartResponse.Item.from(cartItem));
