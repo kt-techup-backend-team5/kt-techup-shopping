@@ -7,12 +7,16 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(
     name = "cart_item",
     uniqueConstraints = {
@@ -42,9 +46,11 @@ public class CartItem {
     @Column(name = "quantity", nullable = false)
     private Long quantity;
 
+    @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -55,39 +61,17 @@ public class CartItem {
         cartItem.user = user;
         cartItem.product = product;
         cartItem.quantity = quantity;
-
-        var now = LocalDateTime.now();
-        cartItem.createdAt = now;
-        cartItem.updatedAt = now;
-
         return cartItem;
     }
 
     public void changeQuantity(Long quantity) {
         validateQuantity(quantity);
         this.quantity = quantity;
-        touch();
     }
 
     private static void validateQuantity(Long quantity) {
         if (quantity < 1) {
             throw new InvalidCartQuantityException(quantity);
         }
-    }
-
-    private void touch() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PrePersist
-    void prePersist() {
-        var now = LocalDateTime.now();
-        if (this.createdAt == null) this.createdAt = now;
-        if (this.updatedAt == null) this.updatedAt = now;
-    }
-
-    @PreUpdate
-    void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 }

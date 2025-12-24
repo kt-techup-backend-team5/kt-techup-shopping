@@ -4,6 +4,7 @@ import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
 import com.kt.domain.cart.CartItem;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +18,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
      * 사용자 장바구니 목록 조회
      * - 최근 담은 순(updatedAt desc)
      */
+    @EntityGraph(attributePaths = {"product"})
     List<CartItem> findAllByUserIdOrderByUpdatedAtDesc(Long userId);
 
     /**
