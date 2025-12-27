@@ -1,5 +1,6 @@
 package com.kt.service;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,6 +10,7 @@ import com.kt.domain.order.Order;
 import com.kt.domain.order.OrderStatus;
 import com.kt.domain.payment.Payment;
 import com.kt.domain.payment.PaymentType;
+import com.kt.domain.payment.event.PaymentEvent;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.payment.PaymentRepository;
 import com.kt.repository.payment.PaymentTypeRepository;
@@ -22,6 +24,7 @@ public class PaymentService {
 	private final OrderRepository orderRepository;
 	private final PaymentRepository paymentRepository;
 	private final PaymentTypeRepository paymentTypeRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
 	public void pay(Long orderId, PaymentType paymentType) {
 		// 주문 정보 가져오기
@@ -51,7 +54,22 @@ public class PaymentService {
 		);
 		paymentRepository.save(newPayment);
 
-		// Order의 상태를 결제완료(ORDER_ACCEPTED)로 변경
-		order.setPaid();
+		// TODO: 실제 결제 API 호출 (PG사 연동)
+		// 현재는 항상 성공하는 것으로 가정
+		try {
+			// 결제 성공 처리
+			newPayment.markAsSuccess();
+
+			// 결제 성공 이벤트 발행 -> OrderEventListener가 수신하여 Order 상태 변경
+			eventPublisher.publishEvent(new PaymentEvent.Success(newPayment.getId(), orderId));
+		} catch (Exception e) {
+			// 결제 실패 처리
+			newPayment.markAsFailed();
+
+			// 결제 실패 이벤트 발행 -> OrderEventListener가 수신하여 Order 취소 처리
+			eventPublisher.publishEvent(new PaymentEvent.Failed(newPayment.getId(), orderId, e.getMessage()));
+
+			throw new RuntimeException("결제 처리 중 오류가 발생했습니다.", e);
+		}
 	}
 }
