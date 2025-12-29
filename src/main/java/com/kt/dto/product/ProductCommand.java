@@ -21,4 +21,12 @@ public interface ProductCommand {
 					detailUrl);
 		}
 	}
+
+	record Update(
+			Long id,
+			@Valid ProductRequest.Update data,
+			MultipartFile thumbnail,
+			MultipartFile detail
+	) {
+	}
 }

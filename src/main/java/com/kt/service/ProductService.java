@@ -16,7 +16,6 @@ import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
 import com.kt.dto.product.ProductCommand;
-import com.kt.dto.product.ProductRequest;
 import com.kt.repository.product.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -77,16 +76,16 @@ public class ProductService {
 		return productRepository.findByIdOrThrow(id);
 	}
 
-	public void update(Long id, ProductRequest.Update request) {
-		var product = productRepository.findByIdOrThrow(id);
+	public void update(ProductCommand.Update command) {
+		var product = productRepository.findByIdOrThrow(command.id());
 
 		product.update(
-				request.getName(),
-				request.getPrice(),
-				request.getQuantity(),
-				request.getDescription(),
-				null,
-				null
+				command.data().getName(),
+				command.data().getPrice(),
+				command.data().getQuantity(),
+				command.data().getDescription(),
+				updateImage(command.thumbnail(), product.getThumbnailImgUrl()),
+				updateImage(command.detail(), product.getDetailImgUrl())
 		);
 	}
 
@@ -132,5 +131,17 @@ public class ProductService {
 
 	private String uploadIfPresent(MultipartFile file) {
 		return (file != null && !file.isEmpty()) ? awsS3Service.upload(file) : null;
+	}
+
+	private String updateImage(MultipartFile newFile, String currentUrl) {
+		if (newFile == null || newFile.isEmpty()) {
+			return currentUrl;
+		}
+
+		if (StringUtils.hasText(currentUrl)) {
+			awsS3Service.delete(currentUrl);
+		}
+
+		return awsS3Service.upload(newFile);
 	}
 }

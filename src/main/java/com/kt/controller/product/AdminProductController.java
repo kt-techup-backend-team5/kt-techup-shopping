@@ -86,9 +86,15 @@ public class AdminProductController extends SwaggerAssistance {
 	}
 
 	@Operation(summary = "상품 수정")
-	@PutMapping("/{id}")
-	public ApiResult<Void> update(@PathVariable Long id, @RequestBody @Valid ProductRequest.Update request) {
-		productService.update(id, request);
+	@PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ApiResult<Void> update(
+			@PathVariable Long id,
+			@RequestPart("data") @Valid ProductRequest.Update request,
+			@RequestPart(value = "thumbnail image", required = false) MultipartFile thumbnailImg,
+			@RequestPart(value = "detail image", required = false) MultipartFile detailImg) {
+
+		ProductCommand.Update command = new ProductCommand.Update(id, request, thumbnailImg, detailImg);
+		productService.update(command);
 
 		return ApiResult.ok();
 	}
