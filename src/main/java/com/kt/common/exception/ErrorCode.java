@@ -33,6 +33,11 @@ public enum ErrorCode {
     // Product
 	NOT_FOUND_PRODUCT(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
     NOT_ENOUGH_STOCK(HttpStatus.BAD_REQUEST, "재고가 부족합니다."),
+    NOT_ON_SALE_PRODUCT(HttpStatus.BAD_REQUEST, "판매중인 상품이 아닙니다."),
+
+    // Cart
+    NOT_FOUND_CART_ITEM(HttpStatus.NOT_FOUND, "장바구니 항목을 찾을 수 없습니다."),
+    INVALID_CART_QUANTITY(HttpStatus.BAD_REQUEST, "장바구니 수량은 1 이상이어야 합니다."),
 
     // Order
 	NOT_FOUND_ORDER(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
@@ -65,7 +70,14 @@ public enum ErrorCode {
 	NOT_FOUND_REFUND(HttpStatus.NOT_FOUND, "환불/반품 요청을 찾을 수 없습니다."),
 	NO_AUTHORITY_TO_REFUND(HttpStatus.FORBIDDEN, "주문을 환불/반품할 권한이 없습니다."),
 	INVALID_REFUND_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 환불/반품 상태입니다."),
-	ALREADY_REFUNDED(HttpStatus.BAD_REQUEST, "이미 환불/반품이 완료된 주문입니다.");
+	ALREADY_REFUNDED(HttpStatus.BAD_REQUEST, "이미 환불/반품이 완료된 주문입니다."),
+
+	// Payment
+	NOT_FOUND_PAYMENT(HttpStatus.NOT_FOUND, "결제 정보를 찾을 수 없습니다."),
+	INVALID_PAYMENT_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 결제 상태입니다."),
+	NO_AUTHORITY_TO_PAYMENT(HttpStatus.FORBIDDEN, "결제 정보에 대한 권한이 없습니다."),
+	NOT_FOUND_PAYMENT_TYPE(HttpStatus.NOT_FOUND, "결제 타입을 찾을 수 없습니다."),
+	PAYMENT_TYPE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 결제 타입입니다.");
 
 	private final HttpStatus status;
 	private final String message;
