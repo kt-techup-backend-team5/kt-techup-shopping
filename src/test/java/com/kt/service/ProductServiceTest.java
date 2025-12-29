@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductStatus;
+import com.kt.dto.product.ProductCommand;
 import com.kt.dto.product.ProductRequest;
 import com.kt.repository.product.ProductRepository;
 
@@ -41,11 +42,12 @@ public class ProductServiceTest {
 		Long stock = 5L;
 		String description = "상품 설명";
 		ProductRequest.Create request = new ProductRequest.Create(name, price, stock, description);
+		ProductCommand.Create command = new ProductCommand.Create(request, null, null);
 
 		ArgumentCaptor<Product> argumentCaptor = ArgumentCaptor.forClass(Product.class);
 
 		// when
-		productService.create(request);
+		productService.create(command);
 
 		// then
 		verify(productRepository, Mockito.times(1)).save(argumentCaptor.capture());
@@ -110,8 +112,9 @@ public class ProductServiceTest {
 		String newDescription = "new-description";
 		ProductRequest.Update request = new ProductRequest.Update(newName, newPrice, newStock, newDescription);
 
+		ProductCommand.Update command = new ProductCommand.Update(productId, request, null, null);
 		// when
-		productService.update(productId, request);
+		productService.update(command);
 
 		// then
 		verify(productRepository, times(1)).findByIdOrThrow(productId);

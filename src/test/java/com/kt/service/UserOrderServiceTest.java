@@ -218,9 +218,9 @@ class UserOrderServiceTest {
         return new Receiver(name, address, mobile);
     }
 
-    private Product createProduct(String name, Long price, Long stock, String description) {
-        return new Product(name, price, stock, description);
-    }
+	private Product createProduct(String name, Long price, Long stock, String description) {
+		return new Product(name, price, stock, description, null, null);
+	}
 
     private Order createOrder(Receiver receiver, User user, OrderStatus status) {
         Order order = Order.create(receiver, user);

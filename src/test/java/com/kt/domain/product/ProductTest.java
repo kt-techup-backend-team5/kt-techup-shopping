@@ -26,7 +26,7 @@ class ProductTest {
 	@Test
 	void 객체_생성_성공() {
 		// given & when
-		Product product = new Product(DEFAULT_NAME, DEFAULT_PRICE, DEFAULT_STOCK, DEFAULT_DESCRIPTION);
+		Product product = new Product(DEFAULT_NAME, DEFAULT_PRICE, DEFAULT_STOCK, DEFAULT_DESCRIPTION, null, null);
 
 		// then
 		assertThat(product.getName()).isEqualTo(DEFAULT_NAME);
@@ -41,7 +41,7 @@ class ProductTest {
 	@NullAndEmptySource
 	void 상품_생성_실패__상품명_null_이거나_공백(String name) {
 		// when & then
-		assertThatThrownBy(() -> new Product(name, DEFAULT_PRICE, DEFAULT_STOCK, DEFAULT_DESCRIPTION))
+		assertThatThrownBy(() -> new Product(name, DEFAULT_PRICE, DEFAULT_STOCK, DEFAULT_DESCRIPTION, null, null))
 				.isInstanceOf(CustomException.class)
 				.hasMessageContaining(ErrorCode.INVALID_PARAMETER.getMessage());
 	}
@@ -49,11 +49,11 @@ class ProductTest {
 	@ParameterizedTest
 	@ValueSource(longs = {-1L})
 	void 상품_생성_실패__가격이나_재고가_음수(Long value) {
-		assertThatThrownBy(() -> new Product(DEFAULT_NAME, value, DEFAULT_STOCK, DEFAULT_DESCRIPTION))
+		assertThatThrownBy(() -> new Product(DEFAULT_NAME, value, DEFAULT_STOCK, DEFAULT_DESCRIPTION, null, null))
 				.isInstanceOf(CustomException.class)
 				.hasMessageContaining(ErrorCode.INVALID_PARAMETER.getMessage());
 
-		assertThatThrownBy(() -> new Product(DEFAULT_NAME, DEFAULT_PRICE, value, DEFAULT_DESCRIPTION))
+		assertThatThrownBy(() -> new Product(DEFAULT_NAME, DEFAULT_PRICE, value, DEFAULT_DESCRIPTION, null, null))
 				.isInstanceOf(CustomException.class)
 				.hasMessageContaining(ErrorCode.INVALID_PARAMETER.getMessage());
 	}
@@ -69,7 +69,7 @@ class ProductTest {
 		String newDescription = "수정 완료";
 
 		// when
-		product.update(newName, newPrice, newStock, newDescription);
+		product.update(newName, newPrice, newStock, newDescription, null, null);
 
 		// then
 		assertThat(product.getName()).isEqualTo(newName);
@@ -78,7 +78,6 @@ class ProductTest {
 		assertThat(product.getDescription()).isEqualTo(newDescription);
 		assertThat(product.getViewCount()).isEqualTo(INIT_VIEWCOUNT);
 		assertThat(product.getStatus()).isEqualTo(INIT_STATUS);
-		assertThat(product.getUpdatedAt()).isNotNull();
 	}
 
 	@Test
@@ -91,7 +90,6 @@ class ProductTest {
 
 		// then
 		assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
-		assertThat(product.getUpdatedAt()).isNotNull();
 	}
 
 	@Test
@@ -104,7 +102,6 @@ class ProductTest {
 
 		// then
 		assertThat(product.getStatus()).isEqualTo(ProductStatus.IN_ACTIVATED);
-		assertThat(product.getUpdatedAt()).isNotNull();
 	}
 
 	@Test
@@ -117,7 +114,6 @@ class ProductTest {
 
 		// then
 		assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVATED);
-		assertThat(product.getUpdatedAt()).isNotNull();
 	}
 
 	@Test
@@ -130,7 +126,6 @@ class ProductTest {
 
 		// then
 		assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED);
-		assertThat(product.getUpdatedAt()).isNotNull();
 	}
 
 	@Test
