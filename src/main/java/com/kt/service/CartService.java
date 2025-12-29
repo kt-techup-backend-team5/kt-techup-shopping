@@ -195,14 +195,9 @@ public class CartService {
     // ===============
     // DTO Definitions
     // ===============
-    public record GuestCartItem(Long productId, Long quantity) {
-    }
-
-    public record MergeResult(List<CartItem> cartItems, List<ExcludedItem> excludedItems) {
-    }
-
-    public record ExcludedItem(Long productId, ExcludeReason reason) {
-    }
+    public record GuestCartItem(Long productId, Long quantity) {}
+    public record MergeResult(List<CartItem> cartItems, List<ExcludedItem> excludedItems) {}
+    public record ExcludedItem(Long productId, ExcludeReason reason) {}
 
     public enum ExcludeReason {
         NOT_FOUND, NOT_ON_SALE, OUT_OF_STOCK, INVALID_QUANTITY, INVALID_PRODUCT_ID
