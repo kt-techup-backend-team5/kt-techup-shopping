@@ -20,3 +20,5 @@ services:
     container_name: techup-localstack
     ports:
       - "4566:4566"
+    volumes:
+      - "./init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh"
