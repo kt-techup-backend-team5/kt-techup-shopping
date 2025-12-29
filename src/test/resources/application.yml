@@ -21,3 +21,7 @@ spring:
   h2:
     console:
       enabled: true
+jwt:
+  secret: ${kt.jwt.secret:kt-cloud-tech-up-shopping-202511171107}
+  access-token-expiration: ${kt.jwt.access-token-expiration:300000}
+  refresh-token-expiration: ${kt.jwt.refresh-token-expiration:43200000}

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,6 +46,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("로그인_성공")
+    @Tag("integration")
     void 로그인_성공() {
         // given
         var user = userRepository.save(user("login_user", "login@test.com", "Password1234!", Role.CUSTOMER));
@@ -83,6 +85,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("리프레시토큰_삭제")
+    @Tag("integration")
     void 리프레시토큰_삭제() {
         // given
         var user = userRepository.save(user("login_user3", "login3@test.com", "Password1234!", Role.CUSTOMER));
@@ -98,6 +101,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("리프레시토큰_삭제_존재하지않는토큰")
+    @Tag("integration")
     void 리프레시토큰_삭제_존재하지않는토큰() {
         // given
         String missingToken = "missing-token";
@@ -111,6 +115,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("토큰_재발급_성공")
+    @Tag("integration")
     void 토큰_재발급_성공() {
         // given
         var user = userRepository.save(user("login_user4", "login4@test.com", "Password1234!", Role.CUSTOMER));
@@ -154,6 +159,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("토큰_재발급_실패_리프레시토큰_불일치")
+    @Tag("integration")
     void 토큰_재발급_실패_리프레시토큰_불일치() {
         // given
         var user1 = userRepository.save(user("login_user5", "login5@test.com", "Password1234!", Role.CUSTOMER));
@@ -171,6 +177,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("토큰_재발급_실패_리프레시토큰_미등록")
+    @Tag("integration")
     void 토큰_재발급_실패_리프레시토큰_미등록() {
         // given
         var user = userRepository.save(user("login_user7", "login7@test.com", "Password1234!", Role.CUSTOMER));
