@@ -31,7 +31,7 @@ public class OrderEventListener {
 	public void onPaymentSuccess(PaymentEvent.Success event) {
 		log.info("결제 성공 이벤트 수신 - paymentId: {}, orderId: {}", event.paymentId(), event.orderId());
 
-		Order order = orderRepository.findByOrderIdOrThrow(event.orderId(), ErrorCode.NOT_FOUND_ORDER);
+		Order order = orderRepository.findByOrderIdOrThrow(event.orderId());
 		order.acceptPayment(event.paymentId());
 
 		log.info("주문 결제 완료 처리 완료 - orderId: {}, status: {}", event.orderId(), order.getStatus());
@@ -46,7 +46,7 @@ public class OrderEventListener {
 		log.info("결제 실패 이벤트 수신 - paymentId: {}, orderId: {}, reason: {}",
 			event.paymentId(), event.orderId(), event.reason());
 
-		Order order = orderRepository.findByOrderIdOrThrow(event.orderId(), ErrorCode.NOT_FOUND_ORDER);
+		Order order = orderRepository.findByOrderIdOrThrow(event.orderId());
 		order.cancelByPaymentFailure();
 
 		log.info("결제 실패로 주문 취소 처리 완료 - orderId: {}, status: {}", event.orderId(), order.getStatus());
