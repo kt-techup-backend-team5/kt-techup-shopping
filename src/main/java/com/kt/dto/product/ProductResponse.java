@@ -10,6 +10,7 @@ public interface ProductResponse {
 			Long id,
 			String name,
 			Long price,
+			String thumbnailUrl,
 			Boolean isSoldOut
 	) {
 		public static Summary of(Product product) {
@@ -17,6 +18,7 @@ public interface ProductResponse {
 					product.getId(),
 					product.getName(),
 					product.getPrice(),
+					product.getThumbnailImgUrl(),
 					product.getStatus().equals(ProductStatus.SOLD_OUT)
 			);
 		}

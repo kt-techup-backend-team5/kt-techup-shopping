@@ -10,10 +10,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
+import com.kt.dto.product.ProductCreateCommand;
 import com.kt.dto.product.ProductRequest;
 import com.kt.repository.product.ProductRepository;
 
@@ -31,9 +33,13 @@ public class ProductService {
 			.toList();
 
 	private final ProductRepository productRepository;
+	private final AwsS3Service awsS3Service;
 
-	public void create(ProductRequest.Create request) {
-		productRepository.save(request.toEntity());
+	public void create(ProductCreateCommand command) {
+		String thumbnailImgUrl = uploadIfPresent(command.thumbnail());
+		String detailImgUrl = uploadIfPresent(command.detail());
+
+		productRepository.save(command.toEntity(thumbnailImgUrl, detailImgUrl));
 	}
 
 	public Page<Product> searchPublicStatus(String keyword, ProductSortType sortType, Pageable pageable) {
@@ -78,7 +84,9 @@ public class ProductService {
 				request.getName(),
 				request.getPrice(),
 				request.getQuantity(),
-				request.getDescription()
+				request.getDescription(),
+				null,
+				null
 		);
 	}
 
@@ -120,5 +128,9 @@ public class ProductService {
 
 	public Page<Product> searchLowStock(Long threshold, Pageable pageable) {
 		return productRepository.findAllByLowStock(threshold, NON_DELETED_STATUS, pageable);
+	}
+
+	private String uploadIfPresent(MultipartFile file) {
+		return (file != null && !file.isEmpty()) ? awsS3Service.upload(file) : null;
 	}
 }

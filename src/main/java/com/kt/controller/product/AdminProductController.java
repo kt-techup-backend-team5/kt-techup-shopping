@@ -3,6 +3,7 @@ package com.kt.controller.product;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,12 +12,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kt.common.request.Paging;
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
 import com.kt.domain.product.ProductSortType;
+import com.kt.dto.product.ProductCreateCommand;
 import com.kt.dto.product.ProductRequest;
 import com.kt.dto.product.ProductResponse;
 import com.kt.service.ProductService;
@@ -24,6 +28,7 @@ import com.kt.service.RedisService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -67,9 +72,15 @@ public class AdminProductController extends SwaggerAssistance {
 	}
 
 	@Operation(summary = "상품 추가")
-	@PostMapping
-	public ApiResult<Void> create(@RequestBody @Valid ProductRequest.Create request) {
-		productService.create(request);
+	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ApiResult<Void> create(
+			@Parameter(description = "상품 정보 (JSON)", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+			@RequestPart("data") @Valid ProductRequest.Create request,
+			@RequestPart(value = "thumbnail image", required = false) MultipartFile thumbnailImg,
+			@RequestPart(value = "detail image", required = false) MultipartFile detailImg) {
+
+		ProductCreateCommand command = new ProductCreateCommand(request, thumbnailImg, detailImg);
+		productService.create(command);
 
 		return ApiResult.ok();
 	}

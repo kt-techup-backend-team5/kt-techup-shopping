@@ -38,11 +38,11 @@ public class Product extends BaseEntity {
 	@OneToMany(mappedBy = "product")
 	@Builder.Default
 	private List<OrderProduct> orderProducts = new ArrayList<>();
-	private String thumbnail_url;
-	private String detail_img_url;
+	private String thumbnailImgUrl;
+	private String detailImgUrl;
 
-	public Product(String name, Long price, Long stock, String description, String thumbnail_url,
-			String detail_img_url) {
+	public Product(String name, Long price, Long stock, String description, String thumbnailImgUrl,
+			String detailImgUrl) {
 		Preconditions.validate(Strings.isNotBlank(name), ErrorCode.INVALID_PARAMETER);
 		Preconditions.validate(price != null, ErrorCode.INVALID_PARAMETER);
 		Preconditions.validate(price >= 0, ErrorCode.INVALID_PARAMETER);
@@ -55,18 +55,18 @@ public class Product extends BaseEntity {
 		this.viewCount = 0L;
 		this.description = description;
 		this.status = ProductStatus.ACTIVATED;
-		this.thumbnail_url = thumbnail_url;
-		this.detail_img_url = detail_img_url;
+		this.thumbnailImgUrl = thumbnailImgUrl;
+		this.detailImgUrl = detailImgUrl;
 	}
 
-	public void update(String name, Long price, Long stock, String description, String thumbnail_url,
-			String detail_img_url) {
+	public void update(String name, Long price, Long stock, String description, String thumbnailImgUrl,
+			String detailImgUrl) {
 		this.name = name;
 		this.price = price;
 		this.stock = stock;
 		this.description = description;
-		this.thumbnail_url = thumbnail_url;
-		this.detail_img_url = detail_img_url;
+		this.thumbnailImgUrl = thumbnailImgUrl;
+		this.detailImgUrl = detailImgUrl;
 	}
 
 	public void soldOut() {
