@@ -9,12 +9,13 @@ import java.util.List;
 public interface CartResponse {
     // 개별 아이템 정보
     record Item(
+        Long cartItemId,
         Long productId,
         String productName,
         Long price,          // 단가
         Long quantity,       // 수량
         Long itemTotal,      // 총 가격 (단가 * 수량)
-        String imageUrl,     // 상품 이미지 URL
+        String imageUrl,
         LocalDateTime updatedAt
     ) {
         public static Item from(CartItem cartItem) {
@@ -22,15 +23,13 @@ public interface CartResponse {
             long price = product.getPrice();
 
             return new Item(
+                cartItem.getId(),
                 product.getId(),
                 product.getName(),
                 price,
                 cartItem.getQuantity(),
                 price * cartItem.getQuantity(),
-
-                // TODO: 추후 Product 엔티티에 이미지 필드가 구현되면 product.getThumbnailUrl()로 변경 필요
-                null,
-
+                null, // TODO: product.getThumbnailUrl()로 변경 필요
                 cartItem.getUpdatedAt()
             );
         }

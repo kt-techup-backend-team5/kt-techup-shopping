@@ -39,6 +39,9 @@ public enum ErrorCode {
     NOT_FOUND_CART_ITEM(HttpStatus.NOT_FOUND, "장바구니 항목을 찾을 수 없습니다."),
     INVALID_CART_QUANTITY(HttpStatus.BAD_REQUEST, "장바구니 수량은 1 이상이어야 합니다."),
 
+    // Wishlist
+    ALREADY_WISHLISTED(HttpStatus.BAD_REQUEST, "이미 찜 목록에 등록된 상품입니다."),
+
     // Order
 	NOT_FOUND_ORDER(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
 	NOT_FOUND_ORDER_PRODUCT(HttpStatus.NOT_FOUND, "주문 상품을 찾을 수 없습니다."),
@@ -65,6 +68,19 @@ public enum ErrorCode {
 	REVIEW_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 해당 상품에 대한 리뷰를 작성했습니다."),
 	ALREADY_BLINDED_REVIEW(HttpStatus.BAD_REQUEST, "이미 블라인드 처리된 리뷰입니다."),
 	BLIND_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "블라인드 사유는 필수입니다."),
+
+	// Question & Answer
+	NOT_FOUND_QUESTION(HttpStatus.NOT_FOUND, "문의를 찾을 수 없습니다."),
+	NOT_FOUND_ANSWER(HttpStatus.NOT_FOUND, "답변을 찾을 수 없습니다."),
+	NO_AUTHORITY_TO_UPDATE_QUESTION(HttpStatus.FORBIDDEN, "문의를 수정할 권한이 없습니다."),
+	NO_AUTHORITY_TO_DELETE_QUESTION(HttpStatus.FORBIDDEN, "문의를 삭제할 권한이 없습니다."),
+	CANNOT_UPDATE_ANSWERED_QUESTION(HttpStatus.BAD_REQUEST, "답변이 달린 문의는 수정할 수 없습니다."),
+	CANNOT_DELETE_ANSWERED_QUESTION(HttpStatus.BAD_REQUEST, "답변이 달린 문의는 삭제할 수 없습니다."),
+	ALREADY_ANSWERED(HttpStatus.BAD_REQUEST, "이미 답변이 달린 문의입니다."),
+	INVALID_QUESTION_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 문의 상태입니다."),
+	NO_AUTHORITY_TO_ANSWER(HttpStatus.FORBIDDEN, "답변을 작성할 권한이 없습니다."),
+	NO_AUTHORITY_TO_UPDATE_ANSWER(HttpStatus.FORBIDDEN, "답변을 수정할 권한이 없습니다."),
+	NO_AUTHORITY_TO_DELETE_ANSWER(HttpStatus.FORBIDDEN, "답변을 삭제할 권한이 없습니다."),
 
 	// Refund
 	NOT_FOUND_REFUND(HttpStatus.NOT_FOUND, "환불/반품 요청을 찾을 수 없습니다."),
