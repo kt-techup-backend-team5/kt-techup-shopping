@@ -42,6 +42,8 @@ public class AwsS3Service {
 	}
 
 	public void delete(String imageUrl) {
-		s3Operations.deleteObject(imageUrl);
+		String fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+
+		s3Operations.deleteObject(bucketName, fileName);
 	}
 }
