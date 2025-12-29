@@ -1,6 +1,5 @@
 package com.kt.domain.product;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,8 +38,11 @@ public class Product extends BaseEntity {
 	@OneToMany(mappedBy = "product")
 	@Builder.Default
 	private List<OrderProduct> orderProducts = new ArrayList<>();
+	private String thumbnail_url;
+	private String detail_img_url;
 
-	public Product(String name, Long price, Long stock, String description) {
+	public Product(String name, Long price, Long stock, String description, String thumbnail_url,
+			String detail_img_url) {
 		Preconditions.validate(Strings.isNotBlank(name), ErrorCode.INVALID_PARAMETER);
 		Preconditions.validate(price != null, ErrorCode.INVALID_PARAMETER);
 		Preconditions.validate(price >= 0, ErrorCode.INVALID_PARAMETER);
@@ -53,35 +55,35 @@ public class Product extends BaseEntity {
 		this.viewCount = 0L;
 		this.description = description;
 		this.status = ProductStatus.ACTIVATED;
+		this.thumbnail_url = thumbnail_url;
+		this.detail_img_url = detail_img_url;
 	}
 
-	public void update(String name, Long price, Long stock, String description) {
+	public void update(String name, Long price, Long stock, String description, String thumbnail_url,
+			String detail_img_url) {
 		this.name = name;
 		this.price = price;
 		this.stock = stock;
 		this.description = description;
-		this.updatedAt = LocalDateTime.now();
+		this.thumbnail_url = thumbnail_url;
+		this.detail_img_url = detail_img_url;
 	}
 
 	public void soldOut() {
 		this.status = ProductStatus.SOLD_OUT;
-		this.updatedAt = LocalDateTime.now();
 	}
 
 	public void inActivate() {
 		this.status = ProductStatus.IN_ACTIVATED;
-		this.updatedAt = LocalDateTime.now();
 	}
 
 	public void activate() {
 		this.status = ProductStatus.ACTIVATED;
-		this.updatedAt = LocalDateTime.now();
 	}
 
 	public void delete() {
 		// 논리삭제
 		this.status = ProductStatus.DELETED;
-		this.updatedAt = LocalDateTime.now();
 	}
 
 	public void decreaseStock(Long quantity) {
