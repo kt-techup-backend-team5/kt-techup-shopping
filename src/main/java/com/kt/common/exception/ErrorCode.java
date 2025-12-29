@@ -39,6 +39,9 @@ public enum ErrorCode {
     NOT_FOUND_CART_ITEM(HttpStatus.NOT_FOUND, "장바구니 항목을 찾을 수 없습니다."),
     INVALID_CART_QUANTITY(HttpStatus.BAD_REQUEST, "장바구니 수량은 1 이상이어야 합니다."),
 
+    // Wishlist
+    ALREADY_WISHLISTED(HttpStatus.BAD_REQUEST, "이미 찜 목록에 등록된 상품입니다."),
+
     // Order
 	NOT_FOUND_ORDER(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
 	NOT_FOUND_ORDER_PRODUCT(HttpStatus.NOT_FOUND, "주문 상품을 찾을 수 없습니다."),
