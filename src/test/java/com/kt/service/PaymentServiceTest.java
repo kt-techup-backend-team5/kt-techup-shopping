@@ -46,13 +46,13 @@ class PaymentServiceTest {
 
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_CREATED);
 		given(order.getTotalPrice()).willReturn(10000L);
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when
 		paymentService.pay(orderId, paymentType);
 
 		// then
-		verify(orderRepository, times(1)).findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		verify(orderRepository, times(1)).findByOrderIdOrThrow(orderId);
 
 		ArgumentCaptor<Payment> paymentCaptor = ArgumentCaptor.forClass(Payment.class);
 		verify(paymentRepository, times(1)).save(paymentCaptor.capture());
@@ -75,7 +75,7 @@ class PaymentServiceTest {
 		Long orderId = 999L;
 		PaymentType paymentType = new PaymentType("CARD", "카드", "신용카드/체크카드 결제");
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER))
+		given(orderRepository.findByOrderIdOrThrow(orderId))
 			.willThrow(new CustomException(ErrorCode.NOT_FOUND_ORDER));
 
 		// when & then
@@ -94,7 +94,7 @@ class PaymentServiceTest {
 		Order order = mock(Order.class);
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_ACCEPTED);
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when & then
 		assertThatThrownBy(() -> paymentService.pay(orderId, paymentType))
@@ -114,7 +114,7 @@ class PaymentServiceTest {
 		Order order = mock(Order.class);
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_CREATED);
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when & then
 		assertThatThrownBy(() -> paymentService.pay(orderId, paymentType))
@@ -134,7 +134,7 @@ class PaymentServiceTest {
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_CREATED);
 		given(order.getTotalPrice()).willReturn(orderTotalPrice);
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when
 		paymentService.pay(orderId, paymentType);
@@ -161,7 +161,7 @@ class PaymentServiceTest {
 		PaymentType cardType = new PaymentType("CARD", "카드", "신용카드/체크카드 결제");
 		PaymentType cashType = new PaymentType("CASH", "현금", "현금 결제");
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when - 카드 결제
 		paymentService.pay(orderId, cardType);
@@ -175,7 +175,7 @@ class PaymentServiceTest {
 		reset(order, paymentRepository);
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_CREATED);
 		given(order.getTotalPrice()).willReturn(10000L);
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when - 현금 결제
 		paymentService.pay(orderId, cashType);
