@@ -10,6 +10,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
@@ -18,6 +19,7 @@ import com.kt.domain.order.OrderStatus;
 import com.kt.domain.payment.Payment;
 import com.kt.domain.payment.PaymentStatus;
 import com.kt.domain.payment.PaymentType;
+import com.kt.domain.payment.event.PaymentEvent;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.payment.PaymentRepository;
 import com.kt.repository.payment.PaymentTypeRepository;
@@ -34,6 +36,9 @@ class PaymentServiceTest {
 	@Mock
 	private PaymentTypeRepository paymentTypeRepository;
 
+	@Mock
+	private ApplicationEventPublisher eventPublisher;
+
 	@InjectMocks
 	private PaymentService paymentService;
 
@@ -46,13 +51,13 @@ class PaymentServiceTest {
 
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_CREATED);
 		given(order.getTotalPrice()).willReturn(10000L);
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when
 		paymentService.pay(orderId, paymentType);
 
 		// then
-		verify(orderRepository, times(1)).findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER);
+		verify(orderRepository, times(1)).findByOrderIdOrThrow(orderId);
 
 		ArgumentCaptor<Payment> paymentCaptor = ArgumentCaptor.forClass(Payment.class);
 		verify(paymentRepository, times(1)).save(paymentCaptor.capture());
@@ -64,9 +69,14 @@ class PaymentServiceTest {
 		assertThat(savedPayment.getDiscountPrice()).isEqualTo(0L);
 		assertThat(savedPayment.getDeliveryFee()).isEqualTo(3000L);
 		assertThat(savedPayment.getFinalPrice()).isEqualTo(13000L); // 10000 - 0 + 3000
-		assertThat(savedPayment.getStatus()).isEqualTo(PaymentStatus.PAYMENT_PENDING);
+		assertThat(savedPayment.getStatus()).isEqualTo(PaymentStatus.PAYMENT_SUCCESS);
 
-		verify(order, times(1)).setPaid();
+		// 이벤트 발행 검증 (order.setPaid() 대신 이벤트 기반으로 변경)
+		ArgumentCaptor<PaymentEvent.Success> eventCaptor = ArgumentCaptor.forClass(PaymentEvent.Success.class);
+		verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
+
+		PaymentEvent.Success publishedEvent = eventCaptor.getValue();
+		assertThat(publishedEvent.orderId()).isEqualTo(orderId);
 	}
 
 	@Test
@@ -75,7 +85,7 @@ class PaymentServiceTest {
 		Long orderId = 999L;
 		PaymentType paymentType = new PaymentType("CARD", "카드", "신용카드/체크카드 결제");
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER))
+		given(orderRepository.findByOrderIdOrThrow(orderId))
 			.willThrow(new CustomException(ErrorCode.NOT_FOUND_ORDER));
 
 		// when & then
@@ -94,7 +104,7 @@ class PaymentServiceTest {
 		Order order = mock(Order.class);
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_ACCEPTED);
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when & then
 		assertThatThrownBy(() -> paymentService.pay(orderId, paymentType))
@@ -114,7 +124,7 @@ class PaymentServiceTest {
 		Order order = mock(Order.class);
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_CREATED);
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when & then
 		assertThatThrownBy(() -> paymentService.pay(orderId, paymentType))
@@ -134,7 +144,7 @@ class PaymentServiceTest {
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_CREATED);
 		given(order.getTotalPrice()).willReturn(orderTotalPrice);
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when
 		paymentService.pay(orderId, paymentType);
@@ -148,6 +158,10 @@ class PaymentServiceTest {
 		assertThat(savedPayment.getDiscountPrice()).isEqualTo(0L);
 		assertThat(savedPayment.getDeliveryFee()).isEqualTo(3000L);
 		assertThat(savedPayment.getFinalPrice()).isEqualTo(53000L); // 50000 - 0 + 3000
+		assertThat(savedPayment.getStatus()).isEqualTo(PaymentStatus.PAYMENT_SUCCESS);
+
+		// 이벤트 발행 검증
+		verify(eventPublisher, times(1)).publishEvent(any(PaymentEvent.Success.class));
 	}
 
 	@Test
@@ -161,7 +175,7 @@ class PaymentServiceTest {
 		PaymentType cardType = new PaymentType("CARD", "카드", "신용카드/체크카드 결제");
 		PaymentType cashType = new PaymentType("CASH", "현금", "현금 결제");
 
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when - 카드 결제
 		paymentService.pay(orderId, cardType);
@@ -170,12 +184,14 @@ class PaymentServiceTest {
 		ArgumentCaptor<Payment> captor1 = ArgumentCaptor.forClass(Payment.class);
 		verify(paymentRepository, times(1)).save(captor1.capture());
 		assertThat(captor1.getValue().getPaymentType().getTypeCode()).isEqualTo("CARD");
+		assertThat(captor1.getValue().getStatus()).isEqualTo(PaymentStatus.PAYMENT_SUCCESS);
+		verify(eventPublisher, times(1)).publishEvent(any(PaymentEvent.Success.class));
 
 		// 다음 테스트를 위해 주문 상태 초기화
-		reset(order, paymentRepository);
+		reset(order, paymentRepository, eventPublisher);
 		given(order.getStatus()).willReturn(OrderStatus.ORDER_CREATED);
 		given(order.getTotalPrice()).willReturn(10000L);
-		given(orderRepository.findByOrderIdOrThrow(orderId, ErrorCode.NOT_FOUND_ORDER)).willReturn(order);
+		given(orderRepository.findByOrderIdOrThrow(orderId)).willReturn(order);
 
 		// when - 현금 결제
 		paymentService.pay(orderId, cashType);
@@ -184,5 +200,7 @@ class PaymentServiceTest {
 		ArgumentCaptor<Payment> captor2 = ArgumentCaptor.forClass(Payment.class);
 		verify(paymentRepository, times(1)).save(captor2.capture());
 		assertThat(captor2.getValue().getPaymentType().getTypeCode()).isEqualTo("CASH");
+		assertThat(captor2.getValue().getStatus()).isEqualTo(PaymentStatus.PAYMENT_SUCCESS);
+		verify(eventPublisher, times(1)).publishEvent(any(PaymentEvent.Success.class));
 	}
 }
