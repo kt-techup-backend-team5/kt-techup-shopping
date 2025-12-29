@@ -20,7 +20,7 @@ import com.kt.common.request.Paging;
 import com.kt.common.response.ApiResult;
 import com.kt.common.support.SwaggerAssistance;
 import com.kt.domain.product.ProductSortType;
-import com.kt.dto.product.ProductCreateCommand;
+import com.kt.dto.product.ProductCommand;
 import com.kt.dto.product.ProductRequest;
 import com.kt.dto.product.ProductResponse;
 import com.kt.service.ProductService;
@@ -79,7 +79,7 @@ public class AdminProductController extends SwaggerAssistance {
 			@RequestPart(value = "thumbnail image", required = false) MultipartFile thumbnailImg,
 			@RequestPart(value = "detail image", required = false) MultipartFile detailImg) {
 
-		ProductCreateCommand command = new ProductCreateCommand(request, thumbnailImg, detailImg);
+		ProductCommand.Create command = new ProductCommand.Create(request, thumbnailImg, detailImg);
 		productService.create(command);
 
 		return ApiResult.ok();

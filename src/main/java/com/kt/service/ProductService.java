@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
-import com.kt.dto.product.ProductCreateCommand;
+import com.kt.dto.product.ProductCommand;
 import com.kt.dto.product.ProductRequest;
 import com.kt.repository.product.ProductRepository;
 
@@ -35,7 +35,7 @@ public class ProductService {
 	private final ProductRepository productRepository;
 	private final AwsS3Service awsS3Service;
 
-	public void create(ProductCreateCommand command) {
+	public void create(ProductCommand.Create command) {
 		String thumbnailImgUrl = uploadIfPresent(command.thumbnail());
 		String detailImgUrl = uploadIfPresent(command.detail());
 
