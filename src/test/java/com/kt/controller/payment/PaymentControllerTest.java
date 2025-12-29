@@ -21,7 +21,6 @@ import com.kt.domain.payment.PaymentType;
 import com.kt.dto.payment.PaymentRequest;
 import com.kt.repository.payment.PaymentTypeRepository;
 import com.kt.repository.user.UserRepository;
-import com.kt.security.JwtFilter;
 import com.kt.security.JwtService;
 import com.kt.security.WithMockCustomUser;
 import com.kt.service.PaymentService;
@@ -45,9 +44,6 @@ class PaymentControllerTest {
 
 	@MockitoBean
 	private JwtService jwtService;
-
-	@MockitoBean
-	private JwtFilter jwtFilter;
 
 	@MockitoBean
 	private UserRepository userRepository;
