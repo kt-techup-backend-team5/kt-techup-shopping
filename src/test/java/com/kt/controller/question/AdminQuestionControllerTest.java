@@ -30,6 +30,7 @@ import com.kt.domain.user.User;
 import com.kt.dto.question.AnswerRequest;
 import com.kt.dto.question.QuestionResponse;
 import com.kt.repository.user.UserRepository;
+import com.kt.security.JwtFilter;
 import com.kt.security.JwtService;
 import com.kt.security.WithMockCustomUser;
 import com.kt.service.AnswerService;
@@ -60,6 +61,9 @@ class AdminQuestionControllerTest {
 	private JwtService jwtService;
 
 	@MockitoBean
+	private JwtFilter jwtFilter;
+
+	@MockitoBean
 	private UserRepository userRepository;
 
 	private Question testQuestion;
@@ -84,7 +88,8 @@ class AdminQuestionControllerTest {
 		ResultActions resultActions = mockMvc.perform(get("/admin/questions")
 			.param("page", "0")
 			.param("size", "10")
-			.contentType(MediaType.APPLICATION_JSON));
+			.contentType(MediaType.APPLICATION_JSON))
+			.andDo(result -> System.out.println("Response: " + result.getResponse().getContentAsString()));
 
 		// then
 		resultActions.andExpect(status().isOk())

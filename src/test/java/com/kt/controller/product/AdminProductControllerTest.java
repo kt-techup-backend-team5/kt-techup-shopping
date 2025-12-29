@@ -30,6 +30,7 @@ import com.kt.domain.product.ProductStatus;
 import com.kt.domain.user.Role;
 import com.kt.dto.product.ProductRequest;
 import com.kt.repository.user.UserRepository;
+import com.kt.security.JwtFilter;
 import com.kt.security.JwtService;
 import com.kt.security.WithMockCustomUser;
 import com.kt.service.ProductService;
@@ -48,6 +49,8 @@ class AdminProductControllerTest {
 	private RedisService redisService;
 	@MockitoBean
 	private JwtService jwtService;
+	@MockitoBean
+	private JwtFilter jwtFilter;
 	@MockitoBean
 	private UserRepository userRepository;
 	@Autowired
