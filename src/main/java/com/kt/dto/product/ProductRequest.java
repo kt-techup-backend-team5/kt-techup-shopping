@@ -2,8 +2,6 @@ package com.kt.dto.product;
 
 import java.util.List;
 
-import com.kt.domain.product.Product;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -27,10 +25,6 @@ public class ProductRequest {
 		@NotNull
 		private Long quantity;
 		private String description;
-
-		public Product toEntity() {
-			return new Product(name, price, quantity, description);
-		}
 	}
 
 	@Getter

@@ -42,10 +42,10 @@ class OrderServiceTest {
 
 	@BeforeEach
 	void setUp() {
+		orderProductRepository.deleteAll();
 		orderRepository.deleteAll();
 		productRepository.deleteAll();
 		userRepository.deleteAll();
-		orderProductRepository.deleteAll();
 	}
 
 	@Test
@@ -67,12 +67,14 @@ class OrderServiceTest {
 		);
 
 		var product = productRepository.save(
-			new Product(
-				"테스트 상품명",
-				100_000L,
-				10L,
-                "상품 상세설명"
-			)
+				new Product(
+						"테스트 상품명",
+						100_000L,
+						10L,
+						"상품 상세설명",
+						null,
+						null
+				)
 		);
 
 		// when
@@ -115,12 +117,14 @@ class OrderServiceTest {
 		var users = userRepository.saveAll(userList);
 
 		var product = productRepository.save(
-			new Product(
-				"테스트 상품명",
-				100_000L,
-				10L,
-                "상품 상세설명"
-			)
+				new Product(
+						"테스트 상품명",
+						100_000L,
+						10L,
+						"상품 상세설명",
+						null,
+						null
+				)
 		);
 
 		productRepository.flush();
