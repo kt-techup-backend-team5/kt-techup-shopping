@@ -116,4 +116,48 @@ public final class UserFixture {
 				Role.ADMIN
 		);
 	}
+
+	/**
+	 * 커스텀 로그인 ID와 이메일을 가진 고객 사용자를 생성합니다.
+	 *
+	 * @param loginId 사용자 로그인 ID
+	 * @param email 사용자 이메일
+	 * @return 지정된 로그인 ID와 이메일을 가진 고객 User 객체
+	 */
+	public static User customer(String loginId, String email){
+		return new User(
+				loginId,
+				"Password1234!",
+				"테스트 구매자2",
+				email,
+				"010-9999-9999",
+				Gender.MALE,
+				LocalDate.now(),
+				LocalDateTime.now(),
+				LocalDateTime.now(),
+				Role.CUSTOMER
+		);
+	}
+
+	/**
+	 * 커스텀 로그인 ID와 이메일을 가진 관리자 사용자를 생성합니다.
+	 *
+	 * @param loginId 관리자 로그인 ID
+	 * @param email 관리자 이메일
+	 * @return 지정된 로그인 ID와 이메일을 가진 관리자 User 객체
+	 */
+	public static User admin(String loginId, String email){
+		return new User(
+				loginId,
+				"Password1234!",
+				"테스트 관리자2",
+				email,
+				"010-8888-8888",
+				Gender.MALE,
+				LocalDate.now(),
+				LocalDateTime.now(),
+				LocalDateTime.now(),
+				Role.ADMIN
+		);
+	}
 }
