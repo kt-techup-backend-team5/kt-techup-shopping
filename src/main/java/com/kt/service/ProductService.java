@@ -10,11 +10,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
-import com.kt.dto.product.ProductRequest;
+import com.kt.dto.product.ProductCommand;
 import com.kt.repository.product.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -31,9 +32,13 @@ public class ProductService {
 			.toList();
 
 	private final ProductRepository productRepository;
+	private final AwsS3Service awsS3Service;
 
-	public void create(ProductRequest.Create request) {
-		productRepository.save(request.toEntity());
+	public void create(ProductCommand.Create command) {
+		String thumbnailImgUrl = uploadIfPresent(command.thumbnail());
+		String detailImgUrl = uploadIfPresent(command.detail());
+
+		productRepository.save(command.toEntity(thumbnailImgUrl, detailImgUrl));
 	}
 
 	public Page<Product> searchPublicStatus(String keyword, ProductSortType sortType, Pageable pageable) {
@@ -71,14 +76,16 @@ public class ProductService {
 		return productRepository.findByIdOrThrow(id);
 	}
 
-	public void update(Long id, ProductRequest.Update request) {
-		var product = productRepository.findByIdOrThrow(id);
+	public void update(ProductCommand.Update command) {
+		var product = productRepository.findByIdOrThrow(command.id());
 
 		product.update(
-				request.getName(),
-				request.getPrice(),
-				request.getQuantity(),
-				request.getDescription()
+				command.data().getName(),
+				command.data().getPrice(),
+				command.data().getQuantity(),
+				command.data().getDescription(),
+				updateImage(command.thumbnail(), product.getThumbnailImgUrl()),
+				updateImage(command.detail(), product.getDetailImgUrl())
 		);
 	}
 
@@ -120,5 +127,21 @@ public class ProductService {
 
 	public Page<Product> searchLowStock(Long threshold, Pageable pageable) {
 		return productRepository.findAllByLowStock(threshold, NON_DELETED_STATUS, pageable);
+	}
+
+	private String uploadIfPresent(MultipartFile file) {
+		return (file != null && !file.isEmpty()) ? awsS3Service.upload(file) : null;
+	}
+
+	private String updateImage(MultipartFile newFile, String currentUrl) {
+		if (newFile == null || newFile.isEmpty()) {
+			return currentUrl;
+		}
+
+		if (StringUtils.hasText(currentUrl)) {
+			awsS3Service.delete(currentUrl);
+		}
+
+		return awsS3Service.upload(newFile);
 	}
 }

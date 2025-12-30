@@ -11,13 +11,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -28,9 +29,9 @@ import com.kt.domain.product.Product;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
 import com.kt.domain.user.Role;
+import com.kt.dto.product.ProductCommand;
 import com.kt.dto.product.ProductRequest;
 import com.kt.repository.user.UserRepository;
-import com.kt.security.JwtFilter;
 import com.kt.security.JwtService;
 import com.kt.security.WithMockCustomUser;
 import com.kt.service.ProductService;
@@ -49,8 +50,6 @@ class AdminProductControllerTest {
 	private RedisService redisService;
 	@MockitoBean
 	private JwtService jwtService;
-	@MockitoBean
-	private JwtFilter jwtFilter;
 	@MockitoBean
 	private UserRepository userRepository;
 	@Autowired
@@ -124,16 +123,41 @@ class AdminProductControllerTest {
 				10L,
 				"설명"
 		);
-		doNothing().when(productService).create(any(ProductRequest.Create.class));
+
+		MockMultipartFile dataPart = new MockMultipartFile(
+				"data",
+				"",
+				MediaType.APPLICATION_JSON_VALUE,
+				objectMapper.writeValueAsBytes(request)
+		);
+
+		MockMultipartFile thumbnailPart = new MockMultipartFile(
+				"thumbnail image",
+				"thumb.jpg",
+				MediaType.IMAGE_JPEG_VALUE,
+				"thumbnail-content".getBytes()
+		);
+
+		MockMultipartFile detailPart = new MockMultipartFile(
+				"detail image",
+				"detail.jpg",
+				MediaType.IMAGE_JPEG_VALUE,
+				"detail-content".getBytes()
+		);
+
+		doNothing().when(productService).create(any(ProductCommand.Create.class));
 
 		// when
-		ResultActions resultActions = mockMvc.perform(post("/admin/products")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)));
+		ResultActions resultActions = mockMvc.perform(
+				multipart(HttpMethod.POST, "/admin/products")
+						.file(dataPart)
+						.file(thumbnailPart)
+						.file(detailPart)
+						.contentType(MediaType.MULTIPART_FORM_DATA));
 
 		// then
 		resultActions.andExpect(status().isOk());
-		verify(productService, times(1)).create(any(ProductRequest.Create.class));
+		verify(productService, times(1)).create(any(ProductCommand.Create.class));
 	}
 
 	@Test
@@ -146,16 +170,41 @@ class AdminProductControllerTest {
 				50000L,
 				"수정 테스트"
 		);
-		doNothing().when(productService).update(eq(DEFAULT_PRODUCT_ID), any(ProductRequest.Update.class));
+
+		MockMultipartFile dataPart = new MockMultipartFile(
+				"data",
+				"",
+				MediaType.APPLICATION_JSON_VALUE,
+				objectMapper.writeValueAsBytes(request)
+		);
+
+		MockMultipartFile thumbnailPart = new MockMultipartFile(
+				"thumbnail image",
+				"thumb.jpg",
+				MediaType.IMAGE_JPEG_VALUE,
+				"thumbnail-content".getBytes()
+		);
+
+		MockMultipartFile detailPart = new MockMultipartFile(
+				"detail image",
+				"detail.jpg",
+				MediaType.IMAGE_JPEG_VALUE,
+				"detail-content".getBytes()
+		);
+
+		doNothing().when(productService).update(any(ProductCommand.Update.class));
 
 		// when
-		ResultActions resultActions = mockMvc.perform(put("/admin/products/{id}", DEFAULT_PRODUCT_ID)
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)));
+		ResultActions resultActions = mockMvc.perform(
+				multipart(HttpMethod.PUT, "/admin/products/{id}", DEFAULT_PRODUCT_ID)
+						.file(dataPart)
+						.file(thumbnailPart)
+						.file(detailPart)
+						.contentType(MediaType.MULTIPART_FORM_DATA));
 
 		// then
 		resultActions.andExpect(status().isOk());
-		verify(productService, times(1)).update(eq(DEFAULT_PRODUCT_ID), any(ProductRequest.Update.class));
+		verify(productService, times(1)).update(any(ProductCommand.Update.class));
 	}
 
 	@Test
