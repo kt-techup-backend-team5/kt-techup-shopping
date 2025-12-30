@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum PointHistoryType {
 	CREDITED_ORDER("구매 확정 포인트 적립"),
 	CREDITED_REVIEW("리뷰 작성 포인트 적립"),
+	CREDITED_PAYMENT_FAILURE("결제 실패 포인트 복구"),
 	CREDITED_ADMIN("관리자 수동 적립"),
 	USED("포인트 사용"),
 	RETRIEVED_REFUND("환불로 인한 회수"),
@@ -20,7 +21,8 @@ public enum PointHistoryType {
 	 * 포인트가 증가하는 타입인지 확인
 	 */
 	public boolean isIncrease() {
-		return this == CREDITED_ORDER || this == CREDITED_REVIEW || this == CREDITED_ADMIN;
+		return this == CREDITED_ORDER || this == CREDITED_REVIEW
+				|| this == CREDITED_PAYMENT_FAILURE || this == CREDITED_ADMIN;
 	}
 
 	/**

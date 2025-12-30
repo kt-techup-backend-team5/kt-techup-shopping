@@ -61,7 +61,8 @@ public class OrderController extends SwaggerAssistance {
 			request.receiverName(),
 			request.receiverAddress(),
 			request.receiverMobile(),
-			request.quantity()
+			request.quantity(),
+			request.usePoints()
 		);
 		return ApiResult.ok();
 	}

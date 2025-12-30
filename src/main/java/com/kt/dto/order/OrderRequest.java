@@ -16,7 +16,9 @@ public interface OrderRequest {
 		@NotBlank
 		String receiverAddress,
 		@NotBlank
-		String receiverMobile
+		String receiverMobile,
+		@Min(0)
+		Long usePoints
 	) {
 	}
 

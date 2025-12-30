@@ -3,6 +3,7 @@ package com.kt.service;
 import com.kt.domain.order.OrderStatus;
 import com.kt.domain.order.event.OrderEvent;
 import com.kt.domain.payment.Payment;
+import com.kt.domain.refund.event.RefundEvent;
 import com.kt.dto.order.OrderCancelDecisionRequest;
 import com.kt.repository.payment.PaymentRepository;
 
@@ -51,6 +52,7 @@ public class OrderService {
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final StockService stockService;
 	private final PaymentRepository paymentRepository;
+	private final PointService pointService;
 
 	// reference , primitive
 	// 선택하는 기준 1번째 : null 가능?
@@ -64,7 +66,8 @@ public class OrderService {
 			String receiverName,
 			String receiverAddress,
 			String receiverMobile,
-			Long quantity
+			Long quantity,
+			Long usePoints
 	) {
 		var product = productRepository.findByIdOrThrow(productId);
 
@@ -88,6 +91,12 @@ public class OrderService {
 
 		product.mapToOrderProduct(orderProduct);
 		order.mapToOrderProduct(orderProduct);
+
+		// 포인트 사용 처리
+		if (usePoints != null && usePoints > 0) {
+			pointService.usePoints(userId, order.getId(), usePoints);
+		}
+
 		applicationEventPublisher.publishEvent(
 				new Message("User: " + user.getName() + " ordered :" + quantity * product.getPrice())
 		);
@@ -162,8 +171,16 @@ public class OrderService {
 		// 환불/반품 처리 완료
 		refund.complete();
 
+		// 환불 승인 이벤트 발행 (포인트 회수 트리거)
+		applicationEventPublisher.publishEvent(
+			new RefundEvent.Approved(
+				refund.getId(),
+				orderId,
+				order.getUser().getId()
+			)
+		);
+
 		// TODO: 실제 결제 취소/환불 API 호출
-		// 향후 이벤트 기반 아키텍처로 전환 시 RefundCompletedEvent 발행 가능
 	}
 
 	public void rejectRefund(Long refundId, RefundRejectRequest request) {
