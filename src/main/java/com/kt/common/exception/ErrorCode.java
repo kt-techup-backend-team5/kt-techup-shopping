@@ -101,7 +101,8 @@ public enum ErrorCode {
 	INVALID_POINT_AMOUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 포인트 금액입니다."),
 	MINIMUM_POINT_NOT_MET(HttpStatus.BAD_REQUEST, "최소 사용 포인트는 1,000P입니다."),
 	ALREADY_REWARDED_REVIEW(HttpStatus.BAD_REQUEST, "이미 포인트가 지급된 리뷰입니다."),
-	CANNOT_DELETE_REWARDED_REVIEW(HttpStatus.BAD_REQUEST, "포인트가 지급된 리뷰는 삭제할 수 없습니다.");
+	CANNOT_DELETE_REWARDED_REVIEW(HttpStatus.BAD_REQUEST, "포인트가 지급된 리뷰는 삭제할 수 없습니다."),
+
 	// File
 	INVALID_FILE_ERROR(HttpStatus.BAD_REQUEST, "유효하지 않은 파일입니다."),
 	FAIL_UPLOAD_FILE(HttpStatus.BAD_REQUEST, "파일 업로드를 실패했습니다.");

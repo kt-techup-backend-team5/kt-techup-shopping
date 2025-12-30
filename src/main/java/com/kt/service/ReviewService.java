@@ -6,6 +6,7 @@ import com.kt.domain.order.OrderStatus;
 import com.kt.domain.orderproduct.OrderProduct;
 import com.kt.domain.product.Product;
 import com.kt.domain.review.Review;
+import com.kt.domain.review.event.ReviewEvent;
 import com.kt.domain.user.User;
 import com.kt.dto.review.AdminReviewResponse;
 import com.kt.dto.review.ReviewCreateRequest;
@@ -19,6 +20,7 @@ import com.kt.repository.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,8 @@ public class ReviewService {
 	private final OrderProductRepository orderProductRepository;
 	private final ProductRepository productRepository;
 	private final UserRepository userRepository;
+	private final ApplicationEventPublisher applicationEventPublisher;
+	private final PointService pointService;
 
 	public void createReview(Long userId, ReviewCreateRequest request) {
 		OrderProduct orderProduct = orderProductRepository.findByIdOrThrow(request.getOrderProductId());
@@ -41,7 +45,7 @@ public class ReviewService {
 		Preconditions.validate(orderProduct.getOrder().getUser().getId().equals(userId),
 				ErrorCode.NO_AUTHORITY_TO_CREATE_REVIEW);
 
-		// 2. 주문이 ORDER_CONFIRMED 상태인지 확인
+		// 2. 주문이 ORDER_CONFIRMED 상태인지 확인 (구매 확정된 주문만 리뷰 작성 가능)
 		Preconditions.validate(orderProduct.getOrder().getStatus() == OrderStatus.ORDER_CONFIRMED,
 				ErrorCode.CANNOT_REVIEW_NOT_CONFIRMED_ORDER);
 
@@ -57,7 +61,17 @@ public class ReviewService {
 				orderProduct
 		);
 
-		reviewRepository.save(review);
+		Review savedReview = reviewRepository.save(review);
+
+		// 리뷰 작성 이벤트 발행 (포인트 적립 트리거)
+		applicationEventPublisher.publishEvent(
+			new ReviewEvent.Created(
+				savedReview.getId(),
+				userId,
+				orderProduct.getId(),
+				orderProduct.getProduct().getId()
+			)
+		);
 	}
 
 	@Transactional(readOnly = true)
@@ -75,6 +89,11 @@ public class ReviewService {
 
 	public void deleteReview(Long reviewId, Long userId) {
 		Review review = findReviewByIdAndValidateOwner(reviewId, userId, ErrorCode.NO_AUTHORITY_TO_DELETE_REVIEW);
+
+		// 포인트가 지급된 리뷰는 삭제 불가
+		boolean isRewarded = pointService.isReviewRewarded(review.getOrderProduct().getId());
+		Preconditions.validate(!isRewarded, ErrorCode.CANNOT_DELETE_REWARDED_REVIEW);
+
 		reviewRepository.delete(review);
 	}
 
@@ -97,6 +116,16 @@ public class ReviewService {
 		Preconditions.validate(reason != null && !reason.isBlank(), ErrorCode.BLIND_REASON_REQUIRED);
 
 		review.blind(reason, admin);
+
+		// 리뷰 블라인드 이벤트 발행 (포인트 회수 트리거)
+		applicationEventPublisher.publishEvent(
+			new ReviewEvent.Blinded(
+				reviewId,
+				review.getUser().getId(),
+				review.getOrderProduct().getId(),
+				reason
+			)
+		);
 	}
 
 	private Review findReviewByIdAndValidateOwner(Long reviewId, Long userId, ErrorCode errorCode) {

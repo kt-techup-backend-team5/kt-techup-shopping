@@ -1,6 +1,10 @@
 package com.kt.service;
 
+import com.kt.domain.order.OrderStatus;
+import com.kt.domain.order.event.OrderEvent;
+import com.kt.domain.payment.Payment;
 import com.kt.dto.order.OrderCancelDecisionRequest;
+import com.kt.repository.payment.PaymentRepository;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -46,6 +50,7 @@ public class OrderService {
 	private final RefundRepository refundRepository;
 	private final ApplicationEventPublisher applicationEventPublisher;
 	private final StockService stockService;
+	private final PaymentRepository paymentRepository;
 
 	// reference , primitive
 	// 선택하는 기준 1번째 : null 가능?
@@ -226,6 +231,42 @@ public class OrderService {
 	public void changeOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId);
 		order.changeStatus(request.status());
+	}
+
+	/**
+	 * 구매 확정
+	 * 사용자가 상품을 받고 구매 확정하면 포인트 적립
+	 */
+	public void confirmOrder(Long orderId, CurrentUser currentUser) {
+		Order order = orderRepository.findByOrderIdOrThrow(orderId);
+
+		// 권한 확인
+		Preconditions.validate(
+			order.getUser().getId().equals(currentUser.getId()),
+			ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER
+		);
+
+		// 배송 완료 상태에서만 구매 확정 가능
+		Preconditions.validate(
+			order.getStatus() == OrderStatus.ORDER_DELIVERED,
+			ErrorCode.INVALID_ORDER_STATUS
+		);
+
+		// 주문 상태 변경
+		order.changeStatus(OrderStatus.ORDER_CONFIRMED);
+
+		// 실결제 금액 조회
+		Payment payment = paymentRepository.findByOrderOrThrow(order);
+		Long actualPaymentAmount = payment.getFinalPrice();
+
+		// 구매 확정 이벤트 발행 (포인트 적립 트리거)
+		applicationEventPublisher.publishEvent(
+			new OrderEvent.Confirmed(
+				orderId,
+				currentUser.getId(),
+				actualPaymentAmount
+			)
+		);
 	}
 }
 

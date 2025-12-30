@@ -21,6 +21,7 @@ public class ReviewEvent {
 	public record Blinded(
 		Long reviewId,
 		Long userId,
+		Long orderProductId,
 		String reason
 	) {
 	}
