@@ -30,7 +30,6 @@ import com.kt.domain.user.User;
 import com.kt.dto.question.AnswerRequest;
 import com.kt.dto.question.QuestionResponse;
 import com.kt.repository.user.UserRepository;
-import com.kt.security.JwtFilter;
 import com.kt.security.JwtService;
 import com.kt.security.WithMockCustomUser;
 import com.kt.service.AnswerService;
@@ -61,9 +60,6 @@ class AdminQuestionControllerTest {
 	private JwtService jwtService;
 
 	@MockitoBean
-	private JwtFilter jwtFilter;
-
-	@MockitoBean
 	private UserRepository userRepository;
 
 	private Question testQuestion;
@@ -86,15 +82,14 @@ class AdminQuestionControllerTest {
 
 		// when
 		ResultActions resultActions = mockMvc.perform(get("/admin/questions")
-			.param("page", "0")
-			.param("size", "10")
-			.contentType(MediaType.APPLICATION_JSON))
-			.andDo(result -> System.out.println("Response: " + result.getResponse().getContentAsString()));
+						.param("page", "0")
+						.param("size", "10")
+						.contentType(MediaType.APPLICATION_JSON));
 
 		// then
 		resultActions.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.content[0].content").value(testQuestion.getContent()))
-			.andExpect(jsonPath("$.data.content.length()").value(1));
+				.andExpect(jsonPath("$.data.content[0].content").value(testQuestion.getContent()))
+				.andExpect(jsonPath("$.data.content.length()").value(1));
 		verify(questionService, times(1)).getAdminQuestions(any(Pageable.class));
 	}
 
@@ -108,11 +103,11 @@ class AdminQuestionControllerTest {
 
 		// when
 		ResultActions resultActions = mockMvc.perform(delete("/admin/questions/{questionId}", questionId)
-			.contentType(MediaType.APPLICATION_JSON));
+				.contentType(MediaType.APPLICATION_JSON));
 
 		// then
 		resultActions.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("ok"));
+				.andExpect(jsonPath("$.code").value("ok"));
 		verify(questionService, times(1)).deleteQuestionByAdmin(anyLong());
 	}
 
@@ -126,12 +121,12 @@ class AdminQuestionControllerTest {
 
 		// when
 		ResultActions resultActions = mockMvc.perform(post("/admin/questions/answers")
-			.contentType(MediaType.APPLICATION_JSON)
-			.content(objectMapper.writeValueAsString(request)));
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)));
 
 		// then
 		resultActions.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("ok"));
+				.andExpect(jsonPath("$.code").value("ok"));
 		verify(answerService, times(1)).createAnswer(anyLong(), any(AnswerRequest.Create.class));
 	}
 
@@ -146,12 +141,12 @@ class AdminQuestionControllerTest {
 
 		// when
 		ResultActions resultActions = mockMvc.perform(put("/admin/questions/answers/{answerId}", answerId)
-			.contentType(MediaType.APPLICATION_JSON)
-			.content(objectMapper.writeValueAsString(request)));
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)));
 
 		// then
 		resultActions.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("ok"));
+				.andExpect(jsonPath("$.code").value("ok"));
 		verify(answerService, times(1)).updateAnswer(anyLong(), anyLong(), any(AnswerRequest.Update.class));
 	}
 
@@ -165,11 +160,11 @@ class AdminQuestionControllerTest {
 
 		// when
 		ResultActions resultActions = mockMvc.perform(delete("/admin/questions/answers/{answerId}", answerId)
-			.contentType(MediaType.APPLICATION_JSON));
+				.contentType(MediaType.APPLICATION_JSON));
 
 		// then
 		resultActions.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("ok"));
+				.andExpect(jsonPath("$.code").value("ok"));
 		verify(answerService, times(1)).deleteAnswer(anyLong(), anyLong());
 	}
 }

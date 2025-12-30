@@ -28,6 +28,16 @@ spring:
       cluster:
         nodes: ${redis.host:localhost:6379}
         max-redirects: 3
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+
+s3:
+  bucket: kt-techup-shopping-prod-media
 
 jwt:
   secret: ${kt.jwt.secret:kt-cloud-tech-up-shopping-202511171107}

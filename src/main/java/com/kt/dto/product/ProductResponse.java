@@ -10,6 +10,7 @@ public interface ProductResponse {
 			Long id,
 			String name,
 			Long price,
+			String thumbnailImgUrl,
 			Boolean isSoldOut
 	) {
 		public static Summary of(Product product) {
@@ -17,6 +18,7 @@ public interface ProductResponse {
 					product.getId(),
 					product.getName(),
 					product.getPrice(),
+					product.getThumbnailImgUrl(),
 					product.getStatus().equals(ProductStatus.SOLD_OUT)
 			);
 		}
@@ -27,6 +29,7 @@ public interface ProductResponse {
 			String name,
 			Long price,
 			Long stock,
+			String thumbnailImgUrl,
 			ProductStatus status
 	) {
 		public static AdminSummary of(Product product) {
@@ -35,6 +38,7 @@ public interface ProductResponse {
 					product.getName(),
 					product.getPrice(),
 					product.getStock(),
+					product.getThumbnailImgUrl(),
 					product.getStatus()
 			);
 		}
@@ -46,7 +50,9 @@ public interface ProductResponse {
 			Long price,
 			Boolean isSoldOut,
 			Long viewCount,
-			String description
+			String description,
+			String thumbnailImgUrl,
+			String detailImgUrl
 	) {
 		public static Detail of(Product product, Long viewCount) {
 			return new Detail(
@@ -55,7 +61,9 @@ public interface ProductResponse {
 					product.getPrice(),
 					product.getStatus().equals(ProductStatus.SOLD_OUT),
 					product.getViewCount() + viewCount,
-					product.getDescription()
+					product.getDescription(),
+					product.getThumbnailImgUrl(),
+					product.getDetailImgUrl()
 			);
 		}
 	}
@@ -68,6 +76,8 @@ public interface ProductResponse {
 			ProductStatus status,
 			Long viewCount,
 			String description,
+			String thumbnailImgUrl,
+			String detailImgUrl,
 			LocalDateTime createdAt,
 			LocalDateTime updatedAt
 	) {
@@ -80,6 +90,8 @@ public interface ProductResponse {
 					product.getStatus(),
 					product.getViewCount() + viewCount,
 					product.getDescription(),
+					product.getThumbnailImgUrl(),
+					product.getDetailImgUrl(),
 					product.getCreatedAt(),
 					product.getUpdatedAt()
 			);
