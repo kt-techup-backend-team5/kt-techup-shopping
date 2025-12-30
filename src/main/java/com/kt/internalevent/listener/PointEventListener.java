@@ -39,16 +39,21 @@ public class PointEventListener {
 
 	/**
 	 * 환불/반품 승인 완료 이벤트 처리
-	 * 적립된 포인트 회수
+	 * 1. 적립된 포인트(5%) 회수
+	 * 2. 사용한 포인트 복구
 	 */
 	@EventListener(RefundEvent.Approved.class)
 	public void onRefundApproved(RefundEvent.Approved event) {
 		log.info("환불 승인 이벤트 수신 - refundId: {}, orderId: {}, userId: {}",
 				event.refundId(), event.orderId(), event.userId());
 
+		// 1. 적립된 포인트(5%) 회수
 		pointService.retrievePointsForRefund(event.userId(), event.orderId());
 
-		log.info("환불 포인트 회수 처리 완료 - orderId: {}", event.orderId());
+		// 2. 주문 시 사용한 포인트 복구
+		pointService.refundUsedPointsForRefund(event.userId(), event.orderId());
+
+		log.info("환불 포인트 처리 완료 (회수 + 복구) - orderId: {}", event.orderId());
 	}
 
 	/**

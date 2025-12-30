@@ -299,6 +299,46 @@ public class PointService {
 	}
 
 	/**
+	 * 환불 시 사용한 포인트 복구
+	 */
+	public void refundUsedPointsForRefund(Long userId, Long orderId) {
+		log.info("환불 시 사용 포인트 복구 시작 - userId: {}, orderId: {}", userId, orderId);
+
+		// 해당 주문으로 사용된 포인트 조회
+		PointHistory usedHistory = pointHistoryRepository.findByOrderIdAndType(orderId, PointHistoryType.USED);
+		if (usedHistory == null) {
+			log.info("사용된 포인트가 없는 주문 - orderId: {}", orderId);
+			return;
+		}
+
+		Long pointsToRefund = Math.abs(usedHistory.getChangeAmount()); // 음수로 저장되어 있으므로 절댓값
+
+		// 사용자 조회
+		User user = userRepository.findByIdOrThrow(userId);
+
+		// Point 엔티티 조회
+		Point point = pointRepository.findByUserIdOrThrow(userId);
+
+		// 포인트 복구 (credit)
+		point.credit(pointsToRefund);
+
+		// 이력 저장
+		PointHistory history = PointHistory.createWithRelation(
+				user,
+				PointHistoryType.CREDITED_ADMIN,  // 환불로 인한 복구
+				pointsToRefund,
+				point.getAvailablePoints(),
+				orderId + "번 주문 환불로 인한 사용 포인트 복구",
+				orderId,
+				"ORDER"
+		);
+		pointHistoryRepository.save(history);
+
+		log.info("환불 시 사용 포인트 복구 완료 - userId: {}, orderId: {}, refundedPoints: {}, totalPoints: {}",
+				userId, orderId, pointsToRefund, point.getAvailablePoints());
+	}
+
+	/**
 	 * 포인트 지급 여부 확인
 	 */
 	@Transactional(readOnly = true)
@@ -306,5 +346,88 @@ public class PointService {
 		return pointHistoryRepository.existsByRelatedIdAndRelatedTypeAndType(
 				orderProductId, "ORDER_PRODUCT", PointHistoryType.CREDITED_REVIEW
 		);
+	}
+
+	/**
+	 * 사용자 포인트 잔액 조회
+	 */
+	@Transactional(readOnly = true)
+	public Long getAvailablePoints(Long userId) {
+		log.info("포인트 잔액 조회 - userId: {}", userId);
+
+		return pointRepository.findByUserId(userId)
+				.map(Point::getAvailablePoints)
+				.orElse(0L);  // 포인트 엔티티가 없으면 0P
+	}
+
+	/**
+	 * 사용자 포인트 이력 조회 (기간 필터링)
+	 */
+	@Transactional(readOnly = true)
+	public org.springframework.data.domain.Page<com.kt.domain.point.PointHistory> getPointHistory(
+			Long userId,
+			java.time.LocalDateTime startDate,
+			java.time.LocalDateTime endDate,
+			org.springframework.data.domain.Pageable pageable
+	) {
+		log.info("포인트 이력 조회 - userId: {}, startDate: {}, endDate: {}", userId, startDate, endDate);
+
+		return pointHistoryRepository.findByUserIdAndCreatedAtBetween(userId, startDate, endDate, pageable);
+	}
+
+	/**
+	 * 관리자용 전체 포인트 이력 조회 (기간 제한 없음)
+	 */
+	@Transactional(readOnly = true)
+	public org.springframework.data.domain.Page<com.kt.domain.point.PointHistory> getPointHistoryForAdmin(
+			Long userId,
+			org.springframework.data.domain.Pageable pageable
+	) {
+		log.info("관리자 포인트 이력 조회 - userId: {}", userId);
+
+		return pointHistoryRepository.findByUserId(userId, pageable);
+	}
+
+	/**
+	 * 관리자 포인트 수동 조정
+	 */
+	public void adjustPoints(Long userId, Long amount, String description) {
+		log.info("포인트 수동 조정 시작 - userId: {}, amount: {}, description: {}", userId, amount, description);
+
+		// 사용자 조회
+		User user = userRepository.findByIdOrThrow(userId);
+
+		// Point 엔티티 조회 또는 생성
+		Point point = pointRepository.findByUserId(userId)
+				.orElseGet(() -> {
+					Point newPoint = new Point(user);
+					return pointRepository.save(newPoint);
+				});
+
+		// 포인트 조정
+		if (amount > 0) {
+			// 증가
+			point.credit(amount);
+		} else if (amount < 0) {
+			// 차감 (음수값을 양수로 변환하여 전달)
+			point.retrieve(Math.abs(amount));
+		} else {
+			log.warn("조정 금액이 0입니다 - userId: {}", userId);
+			return;
+		}
+
+		// 이력 저장
+		PointHistoryType type = amount > 0 ? PointHistoryType.CREDITED_ADMIN : PointHistoryType.RETRIEVED_ADMIN;
+		PointHistory history = PointHistory.create(
+				user,
+				type,
+				amount,
+				point.getAvailablePoints(),
+				description
+		);
+		pointHistoryRepository.save(history);
+
+		log.info("포인트 수동 조정 완료 - userId: {}, amount: {}, totalPoints: {}",
+				userId, amount, point.getAvailablePoints());
 	}
 }

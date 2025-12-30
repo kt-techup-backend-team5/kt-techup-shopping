@@ -94,6 +94,7 @@ public class OrderService {
 
 		// 포인트 사용 처리
 		if (usePoints != null && usePoints > 0) {
+			order.setUsedPoints(usePoints);  // Order에 사용 포인트 저장
 			pointService.usePoints(userId, order.getId(), usePoints);
 		}
 
