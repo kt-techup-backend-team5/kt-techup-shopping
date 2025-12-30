@@ -59,7 +59,8 @@ class PaymentEventIntegrationTest {
 		// Fixture를 사용한 테스트 데이터 생성
 		User testUser = userRepository.save(UserFixture.defaultCustomer());
 		productRepository.save(ProductFixture.defaultProduct());
-		testPaymentType = paymentTypeRepository.save(PaymentTypeFixture.card());
+		testPaymentType = paymentTypeRepository.findByTypeCode("CARD")
+			.orElseGet(() -> paymentTypeRepository.save(PaymentTypeFixture.card()));
 		testOrder = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), testUser));
 	}
 

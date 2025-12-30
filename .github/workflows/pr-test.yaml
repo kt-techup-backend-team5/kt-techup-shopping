@@ -1,0 +1,63 @@
+name: PR Test
+
+on:
+  pull_request:
+    branches:
+      - main  # main 브랜치로 PR 생성 시 실행
+
+env:
+  DB_PASSWORD: root
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.8.0
+        with:
+          redis-version: 6
+
+      - name: Start MySQL Service
+        run: |
+          sudo /etc/init.d/mysql start
+          mysql -e 'CREATE DATABASE shoppingtest;' -uroot -proot
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Tests
+        run: ./gradlew test --no-daemon
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: '**/build/test-results/test/TEST-*.xml'
+          check_name: Test Report
+
+      - name: Send Slack Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: GitHub Actions - PR Test
+          fields: repo,commit,author,ref,workflow,job,took
+          text: |
+            PR Test ${{ job.status }}
+            Branch: ${{ github.head_ref }}
+            Author: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always()
