@@ -93,7 +93,15 @@ public enum ErrorCode {
 	INVALID_PAYMENT_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 결제 상태입니다."),
 	NO_AUTHORITY_TO_PAYMENT(HttpStatus.FORBIDDEN, "결제 정보에 대한 권한이 없습니다."),
 	NOT_FOUND_PAYMENT_TYPE(HttpStatus.NOT_FOUND, "결제 타입을 찾을 수 없습니다."),
-	PAYMENT_TYPE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 결제 타입입니다.");
+	PAYMENT_TYPE_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 존재하는 결제 타입입니다."),
+
+	// Point
+	NOT_FOUND_POINT(HttpStatus.NOT_FOUND, "포인트 정보를 찾을 수 없습니다."),
+	INSUFFICIENT_POINTS(HttpStatus.BAD_REQUEST, "포인트가 부족합니다."),
+	INVALID_POINT_AMOUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 포인트 금액입니다."),
+	MINIMUM_POINT_NOT_MET(HttpStatus.BAD_REQUEST, "최소 사용 포인트는 1,000P입니다."),
+	ALREADY_REWARDED_REVIEW(HttpStatus.BAD_REQUEST, "이미 포인트가 지급된 리뷰입니다."),
+	CANNOT_DELETE_REWARDED_REVIEW(HttpStatus.BAD_REQUEST, "포인트가 지급된 리뷰는 삭제할 수 없습니다.");
 
 	private final HttpStatus status;
 	private final String message;
