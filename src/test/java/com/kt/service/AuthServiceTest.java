@@ -3,8 +3,6 @@ package com.kt.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.junit.jupiter.api.DisplayName;
@@ -18,12 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
-import com.kt.domain.user.Gender;
-import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 import com.kt.dto.auth.AuthRequest;
 import com.kt.repository.user.UserRepository;
 import com.kt.security.JwtService;
+import com.kt.support.fixture.UserFixture;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Transactional
@@ -49,7 +46,7 @@ class AuthServiceTest {
     @Tag("integration")
     void 로그인_성공() {
         // given
-        var user = userRepository.save(user("login_user", "login@test.com", "Password1234!", Role.CUSTOMER));
+        var user = saveUser("login_user", "login@test.com", "Password1234!");
 
         // when
         var tokens = authService.login("login_user", "Password1234!");
@@ -75,7 +72,7 @@ class AuthServiceTest {
     @DisplayName("로그인_실패_비밀번호불일치")
     void 로그인_실패_비밀번호불일치() {
         // given
-        userRepository.save(user("login_user2", "login2@test.com", "Password1234!", Role.CUSTOMER));
+        saveUser("login_user2", "login2@test.com", "Password1234!");
 
         // when & then
         assertThatThrownBy(() -> authService.login("login_user2", "WrongPass123!"))
@@ -88,7 +85,7 @@ class AuthServiceTest {
     @Tag("integration")
     void 리프레시토큰_삭제() {
         // given
-        var user = userRepository.save(user("login_user3", "login3@test.com", "Password1234!", Role.CUSTOMER));
+        var user = saveUser("login_user3", "login3@test.com", "Password1234!");
         String refreshToken = jwtService.issue(user.getId(), jwtService.getRefreshExpiration());
         redisService.saveRefreshToken(refreshToken, user.getId(), 60L);
 
@@ -118,7 +115,7 @@ class AuthServiceTest {
     @Tag("integration")
     void 토큰_재발급_성공() {
         // given
-        var user = userRepository.save(user("login_user4", "login4@test.com", "Password1234!", Role.CUSTOMER));
+        var user = saveUser("login_user4", "login4@test.com", "Password1234!");
         String oldRefreshToken = jwtService.issue(user.getId(), jwtService.getRefreshExpiration());
         redisService.saveRefreshToken(oldRefreshToken, user.getId(), 60L);
 
@@ -162,8 +159,8 @@ class AuthServiceTest {
     @Tag("integration")
     void 토큰_재발급_실패_리프레시토큰_불일치() {
         // given
-        var user1 = userRepository.save(user("login_user5", "login5@test.com", "Password1234!", Role.CUSTOMER));
-        var user2 = userRepository.save(user("login_user6", "login6@test.com", "Password1234!", Role.CUSTOMER));
+        var user1 = saveUser("login_user5", "login5@test.com", "Password1234!");
+        var user2 = saveUser("login_user6", "login6@test.com", "Password1234!");
         String refreshToken = jwtService.issue(user1.getId(), jwtService.getRefreshExpiration());
         redisService.saveRefreshToken(refreshToken, user2.getId(), 60L);
 
@@ -180,7 +177,7 @@ class AuthServiceTest {
     @Tag("integration")
     void 토큰_재발급_실패_리프레시토큰_미등록() {
         // given
-        var user = userRepository.save(user("login_user7", "login7@test.com", "Password1234!", Role.CUSTOMER));
+        var user = saveUser("login_user7", "login7@test.com", "Password1234!");
         String refreshToken = jwtService.issue(user.getId(), jwtService.getRefreshExpiration());
 
         // when & then
@@ -189,18 +186,9 @@ class AuthServiceTest {
             .hasMessage(ErrorCode.INVALID_JWT_TOKEN.getMessage());
     }
 
-    private User user(String loginId, String email, String rawPassword, Role role) {
-        return new User(
-            loginId,
-            passwordEncoder.encode(rawPassword),
-            "테스트 사용자",
-            email,
-            "010-1111-2222",
-            Gender.MALE,
-            LocalDate.now(),
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            role
-        );
+    private User saveUser(String loginId, String email, String rawPassword) {
+        var user = UserFixture.customer(loginId, email);
+        user.changePassword(passwordEncoder.encode(rawPassword));
+        return userRepository.save(user);
     }
 }

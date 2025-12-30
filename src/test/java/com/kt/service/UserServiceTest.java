@@ -108,7 +108,7 @@ class UserServiceTest {
     void 회원_검색_키워드없음() {
         // given
         userRepository.save(UserFixture.defaultCustomer());
-        userRepository.save(user("login_search", "search@test.com", Role.CUSTOMER));
+        userRepository.save(UserFixture.customer("login_search", "search@test.com"));
 
         // when
         var result = userService.search(PageRequest.of(0, 10), null);
@@ -122,18 +122,9 @@ class UserServiceTest {
     void 회원_검색_키워드포함() {
         // given
         userRepository.save(UserFixture.defaultCustomer());
-        userRepository.save(new User(
-            "keyword_user",
-            "Password1234!",
-            "키워드 사용자",
-            "keyword@test.com",
-            "010-1111-3333",
-            Gender.MALE,
-            LocalDate.now(),
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            Role.CUSTOMER
-        ));
+        var keywordUser = UserFixture.customer("keyword_user", "keyword@test.com");
+        keywordUser.update("키워드 사용자", "keyword@test.com", "010-1111-3333");
+        userRepository.save(keywordUser);
 
         // when
         var result = userService.search(PageRequest.of(0, 10), "키워드");
@@ -357,7 +348,7 @@ class UserServiceTest {
     void 관리자_목록_조회() {
         // given
         userRepository.save(UserFixture.defaultAdmin());
-        userRepository.save(user("super_admin", "super@test.com", Role.SUPER_ADMIN));
+        userRepository.save(superAdmin("super_admin", "super@test.com"));
         userRepository.save(UserFixture.defaultCustomer());
 
         // when
@@ -375,7 +366,7 @@ class UserServiceTest {
         // given
         userRepository.save(UserFixture.defaultAdmin());
         userRepository.save(UserFixture.defaultCustomer());
-        userRepository.save(user("customer2", "customer2@test.com", Role.CUSTOMER));
+        userRepository.save(UserFixture.customer("customer2", "customer2@test.com"));
 
         // when
         var result = userService.searchCustomers(PageRequest.of(0, 10), null, null, false);
@@ -414,7 +405,7 @@ class UserServiceTest {
     void 관리자_삭제_실패_슈퍼관리자() {
         // given
         var admin = userRepository.save(UserFixture.defaultAdmin());
-        var superAdmin = userRepository.save(user("super_admin", "super@test.com", Role.SUPER_ADMIN));
+        var superAdmin = userRepository.save(superAdmin("super_admin", "super@test.com"));
 
         // when & then
         assertThatThrownBy(() -> userService.deleteAdmin(admin.getId(), superAdmin.getId()))
@@ -440,7 +431,7 @@ class UserServiceTest {
     void 관리자_삭제_성공() {
         // given
         var current = userRepository.save(UserFixture.defaultAdmin());
-        var target = userRepository.save(user("admin_target", "target@test.com", Role.ADMIN));
+        var target = userRepository.save(UserFixture.admin("admin_target", "target@test.com"));
 
         // when
         userService.deleteAdmin(current.getId(), target.getId());
@@ -534,7 +525,7 @@ class UserServiceTest {
         );
     }
 
-    private User user(String loginId, String email, Role role) {
+    private User superAdmin(String loginId, String email) {
         return new User(
             loginId,
             "Password1234!",
@@ -545,7 +536,7 @@ class UserServiceTest {
             LocalDate.now(),
             LocalDateTime.now(),
             LocalDateTime.now(),
-            role
+            Role.SUPER_ADMIN
         );
     }
 
