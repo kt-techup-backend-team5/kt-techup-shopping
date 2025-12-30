@@ -1,6 +1,7 @@
 package com.kt.security;
 
 import java.util.Date;
+import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,7 @@ public class JwtService {
     public String issue(Long id, Date expiration) {
         return Jwts.builder()
                 .subject("kt-cloud-shopping")
+                .claim("nonce", UUID.randomUUID().toString())
                 .issuedAt(new Date())
                 .id(id.toString())
                 .expiration(expiration)
