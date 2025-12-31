@@ -84,7 +84,8 @@ class OrderServiceTest {
 			"수신자 이름",
 			"수신자 주소",
 			"010-1111-2222",
-			2L
+			2L,
+			0L
 		);
 
 		// then
@@ -145,7 +146,8 @@ class OrderServiceTest {
 						targetUser.getName(),
 						"수신자 주소-" + finalI,
 						"010-1111-22" + finalI,
-						1L
+						1L,
+						0L
 					);
 					successCount.incrementAndGet();
 				} catch (RuntimeException e) {
