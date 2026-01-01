@@ -38,6 +38,8 @@ public class Order extends BaseEntity {
 
 	private Long paymentId;
 
+	private Long usedPoints = 0L;  // 주문 시 사용한 포인트
+
 	private String cancelDecisionReason;
 	private String userCancelReason;
 
@@ -62,6 +64,10 @@ public class Order extends BaseEntity {
 			receiver,
 			user
 		);
+	}
+
+	public void setUsedPoints(Long usedPoints) {
+		this.usedPoints = usedPoints != null ? usedPoints : 0L;
 	}
 
 	public void mapToOrderProduct(OrderProduct orderProduct) {

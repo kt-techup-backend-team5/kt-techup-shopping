@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class OrderEventListener {
 	private final OrderRepository orderRepository;
+	private final com.kt.service.PointService pointService;
 
 	/**
 	 * 결제 성공 이벤트 처리
@@ -39,7 +40,7 @@ public class OrderEventListener {
 
 	/**
 	 * 결제 실패 이벤트 처리
-	 * Order 상태를 ORDER_CANCELLED로 변경
+	 * Order 상태를 ORDER_CANCELLED로 변경하고, 사용한 포인트를 복구
 	 */
 	@EventListener(PaymentEvent.Failed.class)
 	public void onPaymentFailed(PaymentEvent.Failed event) {
@@ -48,6 +49,9 @@ public class OrderEventListener {
 
 		Order order = orderRepository.findByOrderIdOrThrow(event.orderId());
 		order.cancelByPaymentFailure();
+
+		// 사용한 포인트 복구
+		pointService.refundPointsForPaymentFailure(order.getUser().getId(), event.orderId());
 
 		log.info("결제 실패로 주문 취소 처리 완료 - orderId: {}, status: {}", event.orderId(), order.getStatus());
 	}
