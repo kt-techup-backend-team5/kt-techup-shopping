@@ -132,6 +132,15 @@ public class PointService {
 	public void retrievePointsForRefund(Long userId, Long orderId) {
 		log.info("환불 포인트 회수 시작 - userId: {}, orderId: {}", userId, orderId);
 
+		// 중복 회수 방지
+		boolean alreadyRetrieved = pointHistoryRepository.existsByRelatedIdAndRelatedTypeAndType(
+				orderId, "ORDER", PointHistoryType.RETRIEVED_REFUND
+		);
+		if (alreadyRetrieved) {
+			log.warn("이미 포인트가 회수된 주문 - orderId: {}", orderId);
+			return;
+		}
+
 		// 해당 주문으로 적립된 포인트 조회
 		PointHistory earnedHistory = pointHistoryRepository.findByOrderIdAndType(orderId,
 				PointHistoryType.CREDITED_ORDER);
@@ -172,6 +181,15 @@ public class PointService {
 	 */
 	public void retrievePointsForReviewBlind(Long userId, Long reviewId, Long orderProductId) {
 		log.info("리뷰 블라인드 포인트 회수 시작 - userId: {}, reviewId: {}, orderProductId: {}", userId, reviewId, orderProductId);
+
+		// 중복 회수 방지
+		boolean alreadyRetrieved = pointHistoryRepository.existsByRelatedIdAndRelatedTypeAndType(
+				reviewId, "REVIEW", PointHistoryType.RETRIEVED_REVIEW_BLIND
+		);
+		if (alreadyRetrieved) {
+			log.warn("이미 포인트가 회수된 리뷰 - reviewId: {}", reviewId);
+			return;
+		}
 
 		// 해당 리뷰로 적립된 포인트 조회
 		boolean wasRewarded = pointHistoryRepository.existsByRelatedIdAndRelatedTypeAndType(
