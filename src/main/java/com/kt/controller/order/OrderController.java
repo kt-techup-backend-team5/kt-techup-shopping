@@ -171,4 +171,25 @@ public class OrderController extends SwaggerAssistance {
 		orderService.requestRefundByUser(orderId, currentUser, request);
 		return ApiResult.ok();
 	}
+
+	@Operation(
+		summary = "구매 확정",
+		description = "사용자가 상품을 받고 구매를 확정합니다. 구매 확정 시 포인트가 적립됩니다."
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "구매 확정 성공"),
+		@ApiResponse(responseCode = "400", description = "배송 완료 상태가 아닌 주문입니다."),
+		@ApiResponse(responseCode = "401", description = "인증 실패"),
+		@ApiResponse(responseCode = "403", description = "권한 없음"),
+		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
+	})
+	@PostMapping("/{orderId}/confirm")
+	public ApiResult<Void> confirmOrder(
+		@AuthenticationPrincipal DefaultCurrentUser currentUser,
+		@Parameter(description = "구매 확정할 주문 ID", example = "1")
+		@PathVariable Long orderId
+	) {
+		orderService.confirmOrder(orderId, currentUser);
+		return ApiResult.ok();
+	}
 }
