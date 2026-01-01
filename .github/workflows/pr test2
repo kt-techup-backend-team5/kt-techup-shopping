@@ -1,0 +1,93 @@
+name: pr test2
+
+on:
+  workflow_dispatch:
+
+env:
+  DB_PASSWORD: root
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.8.0
+        with:
+          redis-version: 6
+
+      - name: Start LocalStack
+        run: |
+          docker run -d --name localstack \
+            -p 4566:4566 \
+            -e SERVICES=s3 \
+            -e DEBUG=1 \
+            localstack/localstack:latest
+
+          # LocalStack이 준비될 때까지 대기 (최대 60초)
+          echo "Waiting for LocalStack to be ready..."
+          for i in {1..30}; do
+            if docker exec localstack curl -s http://localhost:4566/_localstack/health | grep -q '"s3": "available"'; then
+              echo "LocalStack is ready!"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+          # S3 서비스 상태 확인
+          docker exec localstack curl -s http://localhost:4566/_localstack/health
+
+          # S3 버킷 생성
+          echo "Creating S3 bucket..."
+          docker exec localstack awslocal s3 mb s3://kt-techup-shopping-test-media
+
+          # 버킷 생성 확인
+          docker exec localstack awslocal s3 ls
+
+          # 추가 대기 (안정화)
+          sleep 5
+
+      - name: Start MySQL Service
+        run: |
+          sudo /etc/init.d/mysql start
+          mysql -e 'CREATE DATABASE shoppingtest;' -uroot -proot
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Tests
+        run: ./gradlew test --no-daemon
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: '**/build/test-results/test/TEST-*.xml'
+          check_name: Test Report
+
+      - name: Send Slack Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: GitHub Actions - PR Test
+          fields: repo,commit,author,ref,workflow,job,took
+          text: |
+            PR Test ${{ job.status }}
+            Branch: ${{ github.head_ref }}
+            Author: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always()
