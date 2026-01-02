@@ -23,15 +23,14 @@ spring:
       enabled: true
   cloud:
     aws:
-      s3:
-        enabled: false
-      stack:
-        auto: false
       region:
         static: ap-northeast-2
       credentials:
         access-key: test
         secret-key: test
+      s3:
+        endpoint: http://localhost:4566
+        path-style-access-enabled: true
 
 s3:
   bucket: kt-techup-shopping-test-media
