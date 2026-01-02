@@ -6,6 +6,9 @@ on:
 env:
   DB_PASSWORD: root
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  AWS_ACCESS_KEY: test
+  AWS_SECRET_KEY: test
+  AWS_REGION: ap-northeast-2
 
 jobs:
   test:
