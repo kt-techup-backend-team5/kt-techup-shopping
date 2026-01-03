@@ -1,5 +1,7 @@
 package com.kt.repository.address;
 
+import com.kt.common.exception.CustomException;
+import com.kt.common.exception.ErrorCode;
 import com.kt.domain.address.Address;
 import jakarta.persistence.LockModeType;
 import jakarta.validation.constraints.NotNull;
@@ -9,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface AddressRepository extends JpaRepository<Address, Long> {
 
@@ -36,4 +39,11 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
             WHERE a.user.id = :userId
         """)
     List<Address> findAllByUserIdForUpdate(@Param("userId") Long userId);
+
+    Optional<Address> findByIdAndUserId(Long id, Long userid);
+
+    default Address findByIdAndUserIdOrThrow(Long id, Long userId) {
+        return findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_ADDRESS));
+    }
 }
