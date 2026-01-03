@@ -24,3 +24,46 @@ services:
       - "./init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh"
     entrypoint: >
       /bin/sh -c "chmod +x /etc/localstack/init/ready.d/init-s3.sh && /usr/local/bin/docker-entrypoint.sh"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.3
+    container_name: elasticsearch
+    volumes:
+      - ./elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+    ports:
+      - "9200:9200"
+    networks:
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:9.2.3
+    container_name: logstash
+    volumes:
+      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.2.3
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - I18N_LOCALE=ko-KR
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+networks:
+  elk:
+    driver: bridge
