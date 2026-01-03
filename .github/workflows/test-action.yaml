@@ -1,7 +1,9 @@
 name: testing action
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - main  # main 브랜치로 PR 생성 시 실행
 
 env:
   DB_PASSWORD: root
