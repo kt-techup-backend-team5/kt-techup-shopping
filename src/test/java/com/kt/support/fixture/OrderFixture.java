@@ -36,24 +36,36 @@ public final class OrderFixture {
 	 */
 	@Deprecated
 	public static Order defaultOrder(){
-		return Order.create(ReceiverFixture.defaultReceiver(), UserFixture.defaultCustomer());
+		return Order.create(
+			ReceiverFixture.defaultReceiver(),
+			UserFixture.defaultCustomer(),
+			"문 앞에 놔주세요"
+		);
 	}
 
 	/**
-	 * 지정된 수신자와 사용자로 주문을 생성합니다.
+	 * 지정된 수신자와 사용자, 배송요청사항으로 주문을 생성합니다.
 	 * <p>
 	 * <strong>✅ 권장 사용법:</strong>
 	 * <pre>{@code
 	 * User user = userRepository.save(UserFixture.defaultCustomer());
-	 * Order order = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), user));
+	 * Order order = orderRepository.save(OrderFixture.order(ReceiverFixture.defaultReceiver(), user, "경비실에 맡겨주세요"));
 	 * }</pre>
 	 * </p>
 	 *
 	 * @param receiver 배송 수신자 정보
 	 * @param user 주문한 사용자 (반드시 영속화된 상태여야 함)
+	 * @param deliveryRequest 배송 요청사항
 	 * @return 지정된 값을 가진 Order 객체
 	 */
-	public static Order order(Receiver receiver, User user){
-		return new Order(receiver, user);
+	public static Order order(Receiver receiver, User user, String deliveryRequest){
+		return Order.create(receiver, user, deliveryRequest);
+	}
+
+	/**
+	 * 배송 요청사항이 기본값인 주문 생성 (편의 메서드)
+	 */
+	public static Order order(Receiver receiver, User user) {
+		return order(receiver, user, "부재 시 연락주세요");
 	}
 }

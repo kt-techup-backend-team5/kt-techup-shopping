@@ -15,15 +15,19 @@ public final class ReceiverFixture {
 	/**
 	 * 기본 수신자 정보를 생성합니다.
 	 * <p>
-	 * 이름: 테스트 수신자<br>
-	 * 주소: 테스트 주소<br>
-	 * 연락처: 010-1234-5678
+	 * 필드 구성: 이름, 연락처, 우편번호, 주소, 상세주소
 	 * </p>
 	 *
 	 * @return 기본 설정값을 가진 Receiver 객체
 	 */
 	public static Receiver defaultReceiver() {
-		return new Receiver("테스트 수신자", "테스트 주소", "010-1234-5678");
+		return new Receiver(
+			"테스트 수신자",
+			"010-1234-5678",
+			"12345",
+			"테스트 주소",
+			"테스트 상세주소"
+		);
 	}
 
 	/**
@@ -33,11 +37,12 @@ public final class ReceiverFixture {
 	 * </p>
 	 *
 	 * @param name 수신자 이름
-	 * @param address 배송 주소
 	 * @param mobile 연락처
+	 * @param address 배송 주소
+	 * @param detailAddress 상세 주소
 	 * @return 지정된 값을 가진 Receiver 객체
 	 */
-	public static Receiver receiver(String name, String address, String mobile) {
-		return new Receiver(name, address, mobile);
+	public static Receiver receiver(String name, String mobile, String zipcode, String address, String detailAddress) {
+		return new Receiver(name, mobile, zipcode, address, detailAddress);
 	}
 }
