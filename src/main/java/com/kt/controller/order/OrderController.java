@@ -1,21 +1,11 @@
 package com.kt.controller.order;
 
-import com.kt.dto.refund.RefundRequest;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-import com.kt.common.response.ApiResult;
-import com.kt.common.request.Paging;
-import com.kt.common.support.SwaggerAssistance;
-import com.kt.dto.order.OrderRequest;
-import com.kt.dto.order.OrderResponse;
-import com.kt.security.DefaultCurrentUser;
-import com.kt.service.OrderService;
-import com.kt.service.UserOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,13 +14,20 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+
+import com.kt.common.response.ApiResult;
+import com.kt.common.request.Paging;
+import com.kt.common.support.SwaggerAssistance;
+import com.kt.dto.order.OrderRequest;
+import com.kt.dto.order.OrderResponse;
+import com.kt.dto.order.OrderCancelRequest;
+import com.kt.dto.refund.RefundRequest;
+import com.kt.security.DefaultCurrentUser;
+import com.kt.service.OrderService;
+import com.kt.service.UserOrderService;
 
 @Tag(name = "Orders", description = "주문 API")
 @RestController
@@ -52,21 +49,11 @@ public class OrderController extends SwaggerAssistance {
 	})
 	@PostMapping
 	public ApiResult<Void> create(
-		@AuthenticationPrincipal DefaultCurrentUser defaultCurrentUser,
+		@AuthenticationPrincipal DefaultCurrentUser currentUser,
 		@Parameter(description = "주문 생성 요청 정보", required = true)
-		@RequestBody @Valid OrderRequest.Create request) {
-
-		// TODO: request객체를 service로 넘기기 (바뀐 dto에 맞춰 임시 처리함.)
-		var firstItem = request.items().get(0);
-		orderService.create(
-			defaultCurrentUser.getId(),
-			firstItem.productId(),
-			"임시 수령인",
-			"임시 주소",
-			"010-0000-0000",
-			firstItem.quantity(),
-			request.usePoints()
-		);
+		@RequestBody @Valid OrderRequest.Create request
+	) {
+		orderService.create(currentUser.getId(), request);
 		return ApiResult.ok();
 	}
 
@@ -148,7 +135,7 @@ public class OrderController extends SwaggerAssistance {
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
         @Parameter(description = "취소 요청할 주문 ID", example = "1")
 		@PathVariable Long orderId,
-		@RequestBody @Valid com.kt.dto.order.OrderCancelRequest request
+		@RequestBody @Valid OrderCancelRequest request
 	) {
 		orderService.requestCancelByUser(orderId, currentUser, request.reason());
 		return ApiResult.ok();
