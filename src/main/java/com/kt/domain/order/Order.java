@@ -127,4 +127,9 @@ public class Order extends BaseEntity {
 		return List.of(OrderStatus.ORDER_SHIPPING, OrderStatus.ORDER_DELIVERED).contains(this.status);
 	}
 
+    public void markDelivered() {
+        Preconditions.validate(this.status == OrderStatus.ORDER_SHIPPING, ErrorCode.INVALID_ORDER_STATUS);
+        this.status = OrderStatus.ORDER_DELIVERED;
+        this.deliveredAt = LocalDateTime.now();
+    }
 }

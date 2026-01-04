@@ -264,6 +264,12 @@ public class OrderService {
 
 	public void changeOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId);
+
+        if (request.status() == OrderStatus.ORDER_DELIVERED) {
+            order.markDelivered();
+            return;
+        }
+
 		order.changeStatus(request.status());
 	}
 
