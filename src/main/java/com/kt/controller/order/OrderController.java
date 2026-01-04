@@ -40,7 +40,11 @@ public class OrderController extends SwaggerAssistance {
 
 	@Operation(
 		summary = "주문 생성",
-		description = "새로운 주문을 생성합니다."
+		description = "새로운 주문을 생성합니다.",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            content = @Content(schema = @Schema(implementation = OrderRequest.Create.class))
+        )
 	)
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "주문 생성 성공"),
