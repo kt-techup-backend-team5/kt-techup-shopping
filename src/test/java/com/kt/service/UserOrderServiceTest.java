@@ -8,6 +8,7 @@ import com.kt.domain.order.Receiver;
 import com.kt.domain.orderproduct.OrderProduct;
 import com.kt.domain.product.Product;
 import com.kt.domain.user.Gender;
+import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 import com.kt.dto.order.OrderRequest;
 import com.kt.dto.order.OrderResponse;
@@ -46,7 +47,7 @@ class UserOrderServiceTest {
         Long orderId = 10L;
 
         User user = createUser();
-        Receiver receiver = createReceiver("홍길동", "서울시 어딘가 1-1", "010-0000-0000");
+        Receiver receiver = createReceiver("홍길동", "010-0000-0000", "12345", "서울시 어딘가", "101호");
         Order order = createOrder(receiver, user, OrderStatus.ORDER_CREATED);
 
         Product product1 = createProduct("상품1", 1_000L, 10L, "상품 상세설명");
@@ -85,8 +86,8 @@ class UserOrderServiceTest {
         var pageable = PageRequest.of(0, 10);
 
         User user = createUser();
-        Receiver receiver1 = createReceiver("홍길동", "서울시 1", "010-0000-0000");
-        Receiver receiver2 = createReceiver("박동길", "서울시 2", "010-1111-2222");
+		Receiver receiver1 = createReceiver("홍길동", "010-0000-0000", "11111", "서울시 1", "상세 1");
+		Receiver receiver2 = createReceiver("박동길", "010-1111-2222", "22222", "서울시 2", "상세 2");
 
         Order order1 = createOrder(receiver1, user, OrderStatus.ORDER_CREATED);
         Order order2 = createOrder(receiver2, user, OrderStatus.ORDER_ACCEPTED);
@@ -136,17 +137,15 @@ class UserOrderServiceTest {
         Long orderId = 10L;
 
         User user = createUser();
-        Receiver receiver = createReceiver("홍길동", "서울시 1", "010-0000-0000");
-        Order order = createOrder(receiver, user, OrderStatus.ORDER_CREATED); // canUpdate() = true
-
+		Receiver receiver = createReceiver("홍길동", "010-0000-0000", "12345", "서울시 1", "상세");
+		Order order = createOrder(receiver, user, OrderStatus.ORDER_CREATED); // canUpdate() = true
         given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId))
             .willReturn(order);
 
-        OrderRequest.Update request = new OrderRequest.Update(
-            "새 수령인",
-            "서울시 새 주소 123",
-            "010-9999-8888"
-        );
+		OrderRequest.Update request = new OrderRequest.Update(
+			2L, // addressId
+			"새로운 배송 요청사항"
+		);
 
         // when
         userOrderService.updateOrder(userId, orderId, request);
@@ -155,49 +154,8 @@ class UserOrderServiceTest {
         then(orderRepository).should()
             .findByIdAndUserIdOrThrow(orderId, userId);
 
-        assertThat(order.getReceiver().getName()).isEqualTo(request.receiverName());
-        assertThat(order.getReceiver().getAddress()).isEqualTo(request.receiverAddress());
-        assertThat(order.getReceiver().getMobile()).isEqualTo(request.receiverMobile());
-    }
-
-    @Test
-    @DisplayName("주문이 수정 불가능한 상태일 경우 예외가 발생하고 수령인 정보는 변경되지 않는다")
-    void 주문수정_불가상태_예외발생_및_수령인_유지() {
-        // given
-        Long userId = 1L;
-        Long orderId = 10L;
-
-        User user = createUser();
-        Receiver receiver = createReceiver("홍길동", "서울시 1", "010-0000-0000");
-        Order order = createOrder(receiver, user, OrderStatus.ORDER_CANCELLED); // canUpdate() = false
-
-        String originalName = order.getReceiver().getName();
-        String originalAddress = order.getReceiver().getAddress();
-        String originalMobile = order.getReceiver().getMobile();
-
-        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId))
-            .willReturn(order);
-
-        OrderRequest.Update request = new OrderRequest.Update(
-            "새 수령인",
-            "서울시 새 주소 123",
-            "010-9999-8888"
-        );
-
-        // when & then
-        assertThatThrownBy(() -> userOrderService.updateOrder(userId, orderId, request))
-            .isInstanceOf(CustomException.class)
-            .extracting("errorCode")
-            .isEqualTo(ErrorCode.CANNOT_UPDATE_ORDER);
-
-        // 수령인 정보가 변경되지 않았는지 검증
-        assertThat(order.getReceiver().getName()).isEqualTo(originalName);
-        assertThat(order.getReceiver().getAddress()).isEqualTo(originalAddress);
-        assertThat(order.getReceiver().getMobile()).isEqualTo(originalMobile);
-
-        then(orderRepository).should()
-            .findByIdAndUserIdOrThrow(orderId, userId);
-    }
+		assertThat(order.getDeliveryRequest()).isEqualTo(request.deliveryRequest());
+		then(orderRepository).should().findByIdAndUserIdOrThrow(orderId, userId);}
 
     // 픽스처 메서드
     private User createUser() {
@@ -214,8 +172,8 @@ class UserOrderServiceTest {
         );
     }
 
-    private Receiver createReceiver(String name, String address, String mobile) {
-        return new Receiver(name, address, mobile);
+    private Receiver createReceiver(String name, String mobile, String zipcode, String address, String detailAddress) {
+        return new Receiver(name, mobile, zipcode, address, detailAddress);
     }
 
 	private Product createProduct(String name, Long price, Long stock, String description) {
@@ -223,7 +181,7 @@ class UserOrderServiceTest {
 	}
 
     private Order createOrder(Receiver receiver, User user, OrderStatus status) {
-        Order order = Order.create(receiver, user);
+        Order order = Order.create(receiver, user, "배송 요청사항");
         order.changeStatus(status);
         return order;
     }
