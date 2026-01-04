@@ -25,13 +25,13 @@ public class Address extends BaseEntity {
     private String alias;
 
     @Column(nullable = false, length = 50)
-    private String receiverName;
+    private String name;
 
     @Column(nullable = false, length = 30)
-    private String receiverMobile;
+    private String mobile;
 
     @Column(nullable = false, length = 200)
-    private String receiverAddress;
+    private String address;
 
     @Column(length = 200)
     private String detailAddress;
@@ -47,32 +47,32 @@ public class Address extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
-    private Address(User user, String alias, String receiverName, String receiverMobile,
-                    String receiverAddress, String detailAddress, String zipcode,
-                    boolean isDefault) {
+    private Address(User user, String alias, String name, String mobile,
+					String address, String detailAddress, String zipcode,
+					boolean isDefault) {
         this.user = user;
         this.alias = alias;
-        this.receiverName = receiverName;
-        this.receiverMobile = receiverMobile;
-        this.receiverAddress = receiverAddress;
+        this.name = name;
+        this.mobile = mobile;
+        this.address = address;
         this.detailAddress = detailAddress;
         this.zipcode = zipcode;
         this.isDefault = isDefault;
     }
 
-    public static Address create(User user, String alias, String receiverName, String receiverMobile,
-                                 String receiverAddress, String detailAddress, String zipcode,
+    public static Address create(User user, String alias, String name, String mobile,
+                                 String address, String detailAddress, String zipcode,
                                  boolean isDefault) {
-        return new Address(user, alias, receiverName, receiverMobile, receiverAddress, detailAddress, zipcode, isDefault);
+        return new Address(user, alias, name, mobile, address, detailAddress, zipcode, isDefault);
     }
 
-    public void update(String alias, String receiverName, String receiverMobile,
-                       String receiverAddress, String detailAddress, String zipcode,
+    public void update(String alias, String name, String mobile,
+                       String address, String detailAddress, String zipcode,
                        boolean isDefault) {
         this.alias = alias;
-        this.receiverName = receiverName;
-        this.receiverMobile = receiverMobile;
-        this.receiverAddress = receiverAddress;
+        this.name = name;
+        this.mobile = mobile;
+        this.address = address;
         this.detailAddress = detailAddress;
         this.zipcode = zipcode;
         this.isDefault = isDefault;
