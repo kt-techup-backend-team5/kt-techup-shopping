@@ -2,6 +2,7 @@ package com.kt.service;
 
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
+import com.kt.domain.address.Address;
 import com.kt.domain.order.Order;
 import com.kt.domain.order.OrderStatus;
 import com.kt.domain.order.Receiver;
@@ -12,6 +13,7 @@ import com.kt.domain.user.Role;
 import com.kt.domain.user.User;
 import com.kt.dto.order.OrderRequest;
 import com.kt.dto.order.OrderResponse;
+import com.kt.repository.address.AddressRepository;
 import com.kt.repository.order.OrderRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,9 @@ class UserOrderServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+	@Mock
+	private AddressRepository addressRepository;
 
     @InjectMocks
     private UserOrderService userOrderService;
@@ -132,30 +137,45 @@ class UserOrderServiceTest {
     @Test
     @DisplayName("주문이 수정 가능한 상태일 때 수령인 정보가 변경된다")
     void 주문수정_가능상태_수령인_변경() {
-        // given
-        Long userId = 1L;
-        Long orderId = 10L;
+		// given
+		Long userId = 1L;
+		Long orderId = 10L;
 
-        User user = createUser();
+		User user = createUser();
 		Receiver receiver = createReceiver("홍길동", "010-0000-0000", "12345", "서울시 1", "상세");
 		Order order = createOrder(receiver, user, OrderStatus.ORDER_CREATED); // canUpdate() = true
-        given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId))
-            .willReturn(order);
+		given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId))
+			.willReturn(order);
 
 		OrderRequest.Update request = new OrderRequest.Update(
 			2L, // addressId
 			"새로운 배송 요청사항"
 		);
 
-        // when
-        userOrderService.updateOrder(userId, orderId, request);
+		Address address = mock(Address.class);
+		given(address.getName()).willReturn("새 수령인");
+		given(address.getMobile()).willReturn("010-9999-8888");
+		given(address.getZipcode()).willReturn("54321");
+		given(address.getAddress()).willReturn("서울시 새 주소");
+		given(address.getDetailAddress()).willReturn("101호");
 
-        // then
-        then(orderRepository).should()
-            .findByIdAndUserIdOrThrow(orderId, userId);
+		given(addressRepository.findByIdAndUserIdOrThrow(request.addressId(), userId))
+			.willReturn(address);
+
+		// when
+		userOrderService.updateOrder(userId, orderId, request);
+
+		// then
+		then(orderRepository).should().findByIdAndUserIdOrThrow(orderId, userId);
+		then(addressRepository).should().findByIdAndUserIdOrThrow(request.addressId(), userId);
 
 		assertThat(order.getDeliveryRequest()).isEqualTo(request.deliveryRequest());
-		then(orderRepository).should().findByIdAndUserIdOrThrow(orderId, userId);}
+		assertThat(order.getReceiver().getName()).isEqualTo("새 수령인");
+		assertThat(order.getReceiver().getMobile()).isEqualTo("010-9999-8888");
+		assertThat(order.getReceiver().getZipcode()).isEqualTo("54321");
+		assertThat(order.getReceiver().getAddress()).isEqualTo("서울시 새 주소");
+		assertThat(order.getReceiver().getDetailAddress()).isEqualTo("101호");
+	}
 
     // 픽스처 메서드
     private User createUser() {
