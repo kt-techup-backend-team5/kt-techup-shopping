@@ -36,10 +36,14 @@ public interface OrderResponse {
 	record Detail(
 			Long id,
 			String receiverName,
-			String receiverAddress,
 			String receiverMobile,
+			String zipcode,
+			String receiverAddress,
+			String detailAddress,
+			String deliveryRequest,
 			List<Item> items,
 			Long totalPrice,
+			Long usedPoints,
 			OrderStatus status,
 			LocalDateTime createdAt
 	) {
@@ -60,10 +64,14 @@ public interface OrderResponse {
 	record AdminDetail(
 			Long id,
 			String receiverName,
-			String receiverAddress,
 			String receiverMobile,
+			String zipcode,
+			String receiverAddress,
+			String detailAddress,
+			String deliveryRequest,
 			List<Item> items,
 			Long totalPrice,
+			Long usedPoints,
 			OrderStatus status,
 			LocalDateTime createdAt,
 			Long userId,

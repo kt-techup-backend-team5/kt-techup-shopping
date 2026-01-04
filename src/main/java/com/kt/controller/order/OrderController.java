@@ -55,13 +55,16 @@ public class OrderController extends SwaggerAssistance {
 		@AuthenticationPrincipal DefaultCurrentUser defaultCurrentUser,
 		@Parameter(description = "주문 생성 요청 정보", required = true)
 		@RequestBody @Valid OrderRequest.Create request) {
+
+		// TODO: request객체를 service로 넘기기 (바뀐 dto에 맞춰 임시 처리함.)
+		var firstItem = request.items().get(0);
 		orderService.create(
 			defaultCurrentUser.getId(),
-			request.productId(),
-			request.receiverName(),
-			request.receiverAddress(),
-			request.receiverMobile(),
-			request.quantity(),
+			firstItem.productId(),
+			"임시 수령인",
+			"임시 주소",
+			"010-0000-0000",
+			firstItem.quantity(),
 			request.usePoints()
 		);
 		return ApiResult.ok();

@@ -77,13 +77,19 @@ public class OrderService {
 
 		var user = userRepository.findByIdOrThrow(userId);
 
+		// TODO: create 수정 (현재 임시값 넣음)
 		var receiver = new Receiver(
 				receiverName,
+				receiverMobile,
+				"default",
 				receiverAddress,
-				receiverMobile
+				"default"
 		);
 
-		var order = orderRepository.save(Order.create(receiver, user));
+		// TODO: 임시 deliveryReqeust 수정
+		var deliveryRequest = "default";
+
+		var order = orderRepository.save(Order.create(receiver, user, deliveryRequest));
 		var orderProduct = orderProductRepository.save(new OrderProduct(order, product, quantity));
 
 		// 주문생성완료
@@ -221,6 +227,7 @@ public class OrderService {
 	@Transactional(readOnly = true)
 	public OrderResponse.AdminDetail getAdminOrderDetail(Long orderId) {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId);
+		Receiver receiver = order.getReceiver();
 
 		List<OrderResponse.Item> items = order.getOrderProducts().stream()
 				.map(op -> new OrderResponse.Item(
@@ -234,11 +241,15 @@ public class OrderService {
 
 		return new OrderResponse.AdminDetail(
 				order.getId(),
-				order.getReceiver().getName(),
-				order.getReceiver().getAddress(),
-				order.getReceiver().getMobile(),
+				receiver.getName(),
+				receiver.getMobile(),
+				receiver.getZipcode(),
+				receiver.getAddress(),
+				receiver.getDetailAddress(),
+				null, // TODO: 임시 매핑
 				items,
 				order.getTotalPrice(),
+				order.getUsedPoints(),
 				order.getStatus(),
 				order.getCreatedAt(),
 				order.getUser().getId(),
@@ -279,11 +290,7 @@ public class OrderService {
 
 		// 구매 확정 이벤트 발행 (포인트 적립 트리거)
 		applicationEventPublisher.publishEvent(
-			new OrderEvent.Confirmed(
-				orderId,
-				currentUser.getId(),
-				actualPaymentAmount
-			)
+			new OrderEvent.Confirmed(orderId, currentUser.getId(), actualPaymentAmount)
 		);
 	}
 }

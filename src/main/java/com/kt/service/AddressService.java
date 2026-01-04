@@ -44,9 +44,9 @@ public class AddressService {
         var address = Address.create(
             user,
             normalizeAlias(request.alias()),
-            request.receiverName(),
-            request.receiverMobile(),
-            request.receiverAddress(),
+            request.name(),
+            request.mobile(),
+            request.address(),
             request.detailAddress(),
             request.zipcode(),
             makeDefault
@@ -82,9 +82,9 @@ public class AddressService {
 
         target.update(
             normalizeAlias(request.alias()),
-            request.receiverName(),
-            request.receiverMobile(),
-            request.receiverAddress(),
+            request.name(),
+            request.mobile(),
+            request.address(),
             request.detailAddress(),
             request.zipcode(),
             willBeDefault

@@ -10,16 +10,16 @@ public record AddressRequest(
 
     @NotBlank
     @Size(max = 50)
-    String receiverName,
+    String name,
 
     @NotBlank
     @Size(max = 30)
     @Pattern(regexp = "^(0\\d{1,2})-(\\d{3,4})-(\\d{4})$")
-    String receiverMobile,
+    String mobile,
 
     @NotBlank
     @Size(max = 200)
-    String receiverAddress,
+    String address,
 
     @Size(max = 200)
     String detailAddress,
