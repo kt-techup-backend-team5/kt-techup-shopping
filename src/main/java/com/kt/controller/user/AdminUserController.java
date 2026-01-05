@@ -133,9 +133,11 @@ public class AdminUserController extends SwaggerAssistance {
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Void> grant(
             @Parameter(description = "관리자 권한을 부여할 사용자 ID", required = true)
-            @PathVariable Long id
+            @PathVariable Long id,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CurrentUser currentUser
     ) {
-        userService.grantAdminRole(id);
+        userService.grantAdminRole(id, currentUser);
         return ApiResult.ok();
     }
 
@@ -149,9 +151,11 @@ public class AdminUserController extends SwaggerAssistance {
     @ResponseStatus(HttpStatus.OK)
     public ApiResult<Void> revoke(
             @Parameter(description = "관리자 권한을 회수할 사용자 ID", required = true)
-            @PathVariable Long id
+            @PathVariable Long id,
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal CurrentUser currentUser
     ) {
-        userService.revokeAdminRole(id);
+        userService.revokeAdminRole(id, currentUser);
         return ApiResult.ok();
     }
     
