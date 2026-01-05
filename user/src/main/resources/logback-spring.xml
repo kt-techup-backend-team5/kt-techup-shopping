@@ -45,11 +45,13 @@
 
     <!-- 로그 레벨 설정 -->
     <root level="INFO">
-        <!-- 프로덕션 환경에서만 Logstash 사용 -->
-        <springProfile name="!test">
-            <appender-ref ref="LOGSTASH" />
-        </springProfile>
-        <!-- 모든 환경에서 콘솔 출력 -->
         <appender-ref ref="CONSOLE" />
     </root>
+
+    <!-- test 프로파일이 아닐 때만 Logstash 사용 -->
+    <springProfile name="!test">
+        <root level="INFO">
+            <appender-ref ref="LOGSTASH" />
+        </root>
+    </springProfile>
 </configuration>
