@@ -157,18 +157,18 @@ class ReviewServiceTest {
 	}
 
 	@Test
-	@DisplayName("리뷰_삭제_성공")
-	void 리뷰_삭제_성공() {
+	@DisplayName("리뷰_삭제_실패_포인트가_지급된_리뷰")
+	void 리뷰_삭제_실패_포인트가_지급된_리뷰() {
 		// given
-		ReviewCreateRequest createRequest = new ReviewCreateRequest(testOrderProduct.getId(), 1, "삭제될 리뷰");
+		ReviewCreateRequest createRequest = new ReviewCreateRequest(testOrderProduct.getId(), 1, "포인트가 지급된 리뷰");
 		reviewService.createReview(testUser.getId(), createRequest);
 		var review = reviewRepository.findAll().getFirst();
 
-		// when
-		reviewService.deleteReview(review.getId(), testUser.getId());
-
-		// then
-		assertThat(reviewRepository.count()).isZero();
+		// when & then
+		// 리뷰 작성 시 자동으로 포인트가 지급되므로, 포인트가 지급된 리뷰는 삭제할 수 없음
+		assertThatThrownBy(() -> reviewService.deleteReview(review.getId(), testUser.getId()))
+				.isInstanceOf(CustomException.class)
+				.hasMessage("포인트가 지급된 리뷰는 삭제할 수 없습니다.");
 	}
 
 	@Test

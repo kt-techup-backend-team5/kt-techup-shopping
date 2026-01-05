@@ -151,12 +151,12 @@ class AddressServiceTest {
             .hasMessage(ErrorCode.ADDRESS_LIMIT_EXCEEDED.getMessage());
     }
 
-    private AddressRequest req(String alias, boolean isDefault, String receiverAddress) {
+    private AddressRequest req(String alias, boolean isDefault, String address) {
         return new AddressRequest(
             alias,
             "홍길동",
             "010-1111-2222",
-            receiverAddress,
+            address,
             "101동 203호",
             "12345",
             isDefault

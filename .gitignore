@@ -56,3 +56,6 @@ application-local.yml
 
 # AWS Elastic Beanstalk local / platform configs (optional)
 .ebextensions/
+
+# Elasticsearch data directory
+/elasticsearch/

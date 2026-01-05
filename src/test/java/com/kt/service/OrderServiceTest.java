@@ -5,10 +5,15 @@ import static org.assertj.core.api.Assertions.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.kt.domain.address.Address;
+import com.kt.domain.product.ProductStatus;
+import com.kt.dto.order.OrderRequest;
+import com.kt.repository.address.AddressRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +45,14 @@ class OrderServiceTest {
 	@Autowired
 	private OrderProductRepository orderProductRepository;
 
-	@BeforeEach
+    @Autowired
+    private AddressRepository addressRepository;
+
+    @BeforeEach
 	void setUp() {
 		orderProductRepository.deleteAll();
 		orderRepository.deleteAll();
+        addressRepository.deleteAll();
 		productRepository.deleteAll();
 		userRepository.deleteAll();
 	}
@@ -77,15 +86,34 @@ class OrderServiceTest {
 				)
 		);
 
+        if (product.getStatus() != ProductStatus.ACTIVATED) {
+            product.activate();
+            productRepository.flush();
+        }
+
+        var address = addressRepository.save(
+                Address.create(
+                        user,
+                        "집",
+                        "수신자 이름",
+                        "010-1111-2222",
+                        "수신자 주소",
+                        "상세주소",
+                        "12345",
+                        true
+                )
+        );
+
+        var request = new OrderRequest.Create(
+                List.of(new OrderRequest.OrderItem(product.getId(), 2L)),
+                address.getId(),
+                null, // deliveryRequest optional
+                OrderRequest.OrderType.DIRECT,
+                0L
+        );
+
 		// when
-		orderService.create(
-			user.getId(),
-			product.getId(),
-			"수신자 이름",
-			"수신자 주소",
-			"010-1111-2222",
-			2L
-		);
+		orderService.create(user.getId(), request);
 
 		// then
 		var foundedProduct = productRepository.findByIdOrThrow(product.getId());
@@ -116,6 +144,21 @@ class OrderServiceTest {
 
 		var users = userRepository.saveAll(userList);
 
+        // 각 유저별 addressId가 필요하므로 Address도 500개 생성
+        var addressList = users.stream()
+                .map(u -> Address.create(
+                        u,
+                        "기본",
+                        u.getName(),
+                        "010-1111-2222",
+                        "수신자 주소",
+                        "상세주소",
+                        "12345",
+                        true
+                ))
+                .toList();
+        var addresses = addressRepository.saveAll(addressList);
+
 		var product = productRepository.save(
 				new Product(
 						"테스트 상품명",
@@ -127,6 +170,9 @@ class OrderServiceTest {
 				)
 		);
 
+        if (product.getStatus() != ProductStatus.ACTIVATED) {
+            product.activate();
+        }
 		productRepository.flush();
 
 		var executorService = Executors.newFixedThreadPool(100);
@@ -138,18 +184,20 @@ class OrderServiceTest {
 			int finalI = i;
 			executorService.submit(() -> {
 				try {
-					var targetUser = users.get(finalI);
-					orderService.create(
-						targetUser.getId(),
-						product.getId(),
-						targetUser.getName(),
-						"수신자 주소-" + finalI,
-						"010-1111-22" + finalI,
-						1L
-					);
-					successCount.incrementAndGet();
+                    var targetUser = users.get(finalI);
+                    var targetAddress = addresses.get(finalI);
+
+                    var request = new OrderRequest.Create(
+                            List.of(new OrderRequest.OrderItem(product.getId(), 1L)),
+                            targetAddress.getId(),
+                            null,
+                            OrderRequest.OrderType.DIRECT,
+                            0L
+                    );
+
+                    orderService.create(targetUser.getId(), request);
+                    successCount.incrementAndGet();
 				} catch (RuntimeException e) {
-					e.printStackTrace();
 					failureCount.incrementAndGet();
 				} finally {
 					countDownLatch.countDown();
