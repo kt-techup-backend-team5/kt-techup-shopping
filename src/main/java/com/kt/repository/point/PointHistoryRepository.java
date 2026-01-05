@@ -14,14 +14,20 @@ import com.kt.domain.point.PointHistoryType;
 public interface PointHistoryRepository extends JpaRepository<PointHistory, Long> {
 	/**
 	 * 사용자 포인트 이력 조회 (기간 필터링, 페이징)
+	 * N+1 문제 방지를 위해 fetch join 사용
 	 */
-	Page<PointHistory> findByUserIdAndCreatedAtBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate,
+	@Query("SELECT ph FROM PointHistory ph JOIN FETCH ph.user WHERE ph.user.id = :userId AND ph.createdAt BETWEEN :startDate AND :endDate")
+	Page<PointHistory> findByUserIdAndCreatedAtBetween(@Param("userId") Long userId,
+			@Param("startDate") LocalDateTime startDate,
+			@Param("endDate") LocalDateTime endDate,
 			Pageable pageable);
 
 	/**
 	 * 사용자 전체 포인트 이력 조회 (관리자용)
+	 * N+1 문제 방지를 위해 fetch join 사용
 	 */
-	Page<PointHistory> findByUserId(Long userId, Pageable pageable);
+	@Query("SELECT ph FROM PointHistory ph JOIN FETCH ph.user WHERE ph.user.id = :userId")
+	Page<PointHistory> findByUserId(@Param("userId") Long userId, Pageable pageable);
 
 	/**
 	 * 특정 관련 엔티티에 대한 포인트 이력 존재 여부 확인

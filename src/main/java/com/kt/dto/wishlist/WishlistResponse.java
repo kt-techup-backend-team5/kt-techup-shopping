@@ -20,7 +20,7 @@ public interface WishlistResponse {
                 product.getId(),
                 product.getName(),
                 product.getPrice(),
-                null,   // TODO: Product에 이미지 필드 구현되면 product.getThumbnailUrl()로 변경 필요
+                product.getThumbnailImgUrl(),
                 wishlist.getCreatedAt()
             );
         }

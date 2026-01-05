@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <!-- Logstash가 실행 중일 때만 사용 -->
+    <springProfile name="!test">
+        <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <destination>localhost:5044</destination>
+
+            <!-- 연결 실패 시에도 앱이 시작되도록 설정 -->
+            <keepAliveDuration>5 minutes</keepAliveDuration>
+            <reconnectionDelay>10 seconds</reconnectionDelay>
+
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp>
+                        <fieldName>timestamp</fieldName>
+                        <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</pattern>
+                    </timestamp>
+
+                    <logLevel>
+                        <fieldName>level</fieldName>
+                    </logLevel>
+
+                    <loggerName>
+                        <fieldName>logger</fieldName>
+                    </loggerName>
+
+                    <threadName>
+                        <fieldName>thread</fieldName>
+                    </threadName>
+
+                    <message>
+                        <fieldName>message</fieldName>
+                    </message>
+
+                    <mdc>
+                        <fieldName>mdc</fieldName>
+                    </mdc>
+                </providers>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- 로그 레벨 설정 -->
+    <root level="INFO">
+        <!-- 프로덕션 환경에서만 Logstash 사용 -->
+        <springProfile name="!test">
+            <appender-ref ref="LOGSTASH" />
+        </springProfile>
+        <!-- 모든 환경에서 콘솔 출력 -->
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>

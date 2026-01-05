@@ -35,6 +35,13 @@ spring:
       credentials:
         access-key: ${AWS_ACCESS_KEY}
         secret-key: ${AWS_SECRET_KEY}
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
 
 s3:
   bucket: kt-techup-shopping-prod-media
@@ -47,3 +54,19 @@ jwt:
 slack:
   bot-token: ${SLACK_API_TOKEN}
   log-channel: ${SLACK_LOG_CHANNEL}
+
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+      pattern: "%h %l %u %t \"%r\" %s %b %D"
+      directory: logs
+      prefix: access_log
+      suffix: .log
+
+logging:
+  level:
+    root: INFO
+    com.kt.controller: WARN
+    com.kt.service: INFO
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:OFF}

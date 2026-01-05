@@ -1,21 +1,11 @@
 package com.kt.controller.order;
 
-import com.kt.dto.refund.RefundRequest;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-import com.kt.common.response.ApiResult;
-import com.kt.common.request.Paging;
-import com.kt.common.support.SwaggerAssistance;
-import com.kt.dto.order.OrderRequest;
-import com.kt.dto.order.OrderResponse;
-import com.kt.security.DefaultCurrentUser;
-import com.kt.service.OrderService;
-import com.kt.service.UserOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,13 +14,20 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+
+import com.kt.common.response.ApiResult;
+import com.kt.common.request.Paging;
+import com.kt.common.support.SwaggerAssistance;
+import com.kt.dto.order.OrderRequest;
+import com.kt.dto.order.OrderResponse;
+import com.kt.dto.order.OrderCancelRequest;
+import com.kt.dto.refund.RefundRequest;
+import com.kt.security.DefaultCurrentUser;
+import com.kt.service.OrderService;
+import com.kt.service.UserOrderService;
 
 @Tag(name = "Orders", description = "주문 API")
 @RestController
@@ -43,7 +40,11 @@ public class OrderController extends SwaggerAssistance {
 
 	@Operation(
 		summary = "주문 생성",
-		description = "새로운 주문을 생성합니다."
+		description = "새로운 주문을 생성합니다.",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            content = @Content(schema = @Schema(implementation = OrderRequest.Create.class))
+        )
 	)
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "주문 생성 성공"),
@@ -52,17 +53,11 @@ public class OrderController extends SwaggerAssistance {
 	})
 	@PostMapping
 	public ApiResult<Void> create(
-		@AuthenticationPrincipal DefaultCurrentUser defaultCurrentUser,
+		@AuthenticationPrincipal DefaultCurrentUser currentUser,
 		@Parameter(description = "주문 생성 요청 정보", required = true)
-		@RequestBody @Valid OrderRequest.Create request) {
-		orderService.create(
-			defaultCurrentUser.getId(),
-			request.productId(),
-			request.receiverName(),
-			request.receiverAddress(),
-			request.receiverMobile(),
-			request.quantity()
-		);
+		@RequestBody @Valid OrderRequest.Create request
+	) {
+		orderService.create(currentUser.getId(), request);
 		return ApiResult.ok();
 	}
 
@@ -144,7 +139,7 @@ public class OrderController extends SwaggerAssistance {
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
         @Parameter(description = "취소 요청할 주문 ID", example = "1")
 		@PathVariable Long orderId,
-		@RequestBody @Valid com.kt.dto.order.OrderCancelRequest request
+		@RequestBody @Valid OrderCancelRequest request
 	) {
 		orderService.requestCancelByUser(orderId, currentUser, request.reason());
 		return ApiResult.ok();
@@ -169,6 +164,27 @@ public class OrderController extends SwaggerAssistance {
 			@RequestBody @Valid RefundRequest request
 	) {
 		orderService.requestRefundByUser(orderId, currentUser, request);
+		return ApiResult.ok();
+	}
+
+	@Operation(
+		summary = "구매 확정",
+		description = "사용자가 상품을 받고 구매를 확정합니다. 구매 확정 시 포인트가 적립됩니다."
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "구매 확정 성공"),
+		@ApiResponse(responseCode = "400", description = "배송 완료 상태가 아닌 주문입니다."),
+		@ApiResponse(responseCode = "401", description = "인증 실패"),
+		@ApiResponse(responseCode = "403", description = "권한 없음"),
+		@ApiResponse(responseCode = "404", description = "주문을 찾을 수 없음")
+	})
+	@PostMapping("/{orderId}/confirm")
+	public ApiResult<Void> confirmOrder(
+		@AuthenticationPrincipal DefaultCurrentUser currentUser,
+		@Parameter(description = "구매 확정할 주문 ID", example = "1")
+		@PathVariable Long orderId
+	) {
+		orderService.confirmOrder(orderId, currentUser);
 		return ApiResult.ok();
 	}
 }

@@ -23,6 +23,20 @@ jobs:
         with:
           redis-version: 6
 
+      - name: Start LocalStack
+        run: |
+          docker run -d --name localstack \
+            -p 4566:4566 \
+            -e SERVICES=s3 \
+            -e DEBUG=1 \
+            localstack/localstack:latest
+
+          # LocalStack이 준비될 때까지 대기
+          timeout 60 bash -c 'until docker exec localstack curl -s http://localhost:4566/_localstack/health | grep -q "\"s3\": \"available\""; do sleep 2; done'
+
+          # S3 버킷 생성
+          docker exec localstack awslocal s3 mb s3://kt-techup-shopping-test-media
+
       - name: Start MySQL Service
         run: |
           sudo /etc/init.d/mysql start

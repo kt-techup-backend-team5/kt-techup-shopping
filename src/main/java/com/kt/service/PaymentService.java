@@ -16,7 +16,9 @@ import com.kt.repository.payment.PaymentRepository;
 import com.kt.repository.payment.PaymentTypeRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -36,11 +38,11 @@ public class PaymentService {
 		// 활성화된 결제 타입인지 확인
 		Preconditions.validate(paymentType.canUse(), ErrorCode.NOT_FOUND_PAYMENT_TYPE);
 
-		// TODO: 배송비랑 포인트, 쿠폰 구현 하고 여기 부분 수정해야함
-		// 결제 금액 계산 (임시로 배송비 3000원 고정)
+		// 결제 금액 계산 (배송비 3000원 고정)
 		final long originalPrice = order.getTotalPrice();  // 주문의 총 상품 금액
 		final long deliveryFee = 3000;
-		final long discountPrice = 0;  // 현재 할인쿤폰 포인트 미구현으로 0으로 고정
+		// 사용한 포인트
+		final long discountPrice = order.getUsedPoints();  // 포인트를 할인으로 처리 (쿠폰 미구현)
 		final long finalPrice = originalPrice - discountPrice + deliveryFee;
 
 		// 결제(Payment) 엔티티 생성하고 저장하기
@@ -57,6 +59,9 @@ public class PaymentService {
 		// TODO: 실제 결제 API 호출 (PG사 연동)
 		// 현재는 항상 성공하는 것으로 가정
 		newPayment.markAsSuccess();
+
+		log.info("결제 성공 - paymentId: {}, orderId: {}, amount: {}원, paymentType: {}",
+			newPayment.getId(), orderId, finalPrice, paymentType.getName());
 
 		// 결제 성공 이벤트 발행 -> OrderEventListener가 수신하여 Order 상태 변경
 		eventPublisher.publishEvent(new PaymentEvent.Success(newPayment.getId(), orderId));
