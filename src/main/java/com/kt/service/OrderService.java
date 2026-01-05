@@ -1,44 +1,44 @@
 package com.kt.service;
 
-import com.kt.domain.order.OrderStatus;
-import com.kt.domain.order.event.OrderEvent;
-import com.kt.domain.payment.Payment;
-import com.kt.domain.refund.event.RefundEvent;
-import com.kt.dto.order.OrderCancelDecisionRequest;
-import com.kt.repository.payment.PaymentRepository;
+import com.kt.common.exception.ErrorCode;
+import com.kt.common.support.Message;
+import com.kt.common.support.Preconditions;
 
+import com.kt.domain.order.Order;
+import com.kt.domain.order.OrderStatus;
+import com.kt.domain.order.Receiver;
+import com.kt.domain.order.event.OrderEvent;
+import com.kt.domain.orderproduct.OrderProduct;
+import com.kt.domain.payment.Payment;
+import com.kt.domain.product.ProductStatus;
+import com.kt.domain.refund.Refund;
+import com.kt.domain.refund.RefundType;
+import com.kt.domain.refund.event.RefundEvent;
+
+import com.kt.dto.order.*;
+import com.kt.dto.refund.RefundRejectRequest;
+import com.kt.dto.refund.RefundRequest;
+import com.kt.dto.refund.RefundResponse;
+
+import com.kt.repository.address.AddressRepository;
+import com.kt.repository.cart.CartItemRepository;
+import com.kt.repository.order.OrderRepository;
+import com.kt.repository.orderproduct.OrderProductRepository;
+import com.kt.repository.payment.PaymentRepository;
+import com.kt.repository.product.ProductRepository;
+import com.kt.repository.refund.RefundRepository;
+import com.kt.repository.user.UserRepository;
+import com.kt.security.CurrentUser;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kt.common.exception.ErrorCode;
-import com.kt.common.support.Lock;
-import com.kt.common.support.Message;
-import com.kt.common.support.Preconditions;
-import com.kt.domain.order.Order;
-import com.kt.domain.order.Receiver;
-import com.kt.domain.orderproduct.OrderProduct;
-import com.kt.dto.order.OrderResponse;
-import com.kt.dto.order.OrderSearchCondition;
-import com.kt.dto.order.OrderStatusUpdateRequest;
-import com.kt.repository.order.OrderRepository;
-import com.kt.repository.orderproduct.OrderProductRepository;
-import com.kt.repository.product.ProductRepository;
-import com.kt.repository.user.UserRepository;
-import com.kt.security.CurrentUser;
-
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.kt.domain.refund.Refund;
-import com.kt.domain.refund.RefundStatus;
-import com.kt.domain.refund.RefundType;
-import com.kt.dto.refund.RefundRejectRequest;
-import com.kt.dto.refund.RefundRequest;
-import com.kt.dto.refund.RefundResponse;
-import com.kt.repository.refund.RefundRepository;
 import java.util.List;
 
 @Slf4j
@@ -50,68 +50,75 @@ public class OrderService {
 	private final ProductRepository productRepository;
 	private final OrderRepository orderRepository;
 	private final OrderProductRepository orderProductRepository;
+	private final AddressRepository addressRepository;
+	private final CartItemRepository cartItemRepository;
 	private final RefundRepository refundRepository;
-	private final ApplicationEventPublisher applicationEventPublisher;
-	private final StockService stockService;
 	private final PaymentRepository paymentRepository;
+
+	private final StockService stockService;
 	private final PointService pointService;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
-	// reference , primitive
-	// 선택하는 기준 1번째 : null 가능?
-	// Long -> null, long -> 0
-	// Generic이냐 아니냐 -> Generic은 무조건 참조형
-	//주문생성
-	@Lock(key = Lock.Key.STOCK, index = 1)
-	public void create(
-			Long userId,
-			Long productId,
-			String receiverName,
-			String receiverAddress,
-			String receiverMobile,
-			Long quantity,
-			Long usePoints
-	) {
-		var product = productRepository.findByIdOrThrow(productId);
-
-		// 2. 여기서 획득
-		System.out.println(product.getStock());
-		Preconditions.validate(product.canProvide(quantity), ErrorCode.NOT_ENOUGH_STOCK);
-
+	public void create(Long userId, OrderRequest.Create request) {
 		var user = userRepository.findByIdOrThrow(userId);
+		var address = addressRepository.findByIdAndUserIdOrThrow(request.addressId(), userId);
 
-		// TODO: create 수정 (현재 임시값 넣음)
 		var receiver = new Receiver(
-				receiverName,
-				receiverMobile,
-				"default",
-				receiverAddress,
-				"default"
+				address.getName(),
+				address.getMobile(),
+				address.getZipcode(),
+				address.getAddress(),
+				address.getDetailAddress()
 		);
 
-		// TODO: 임시 deliveryReqeust 수정
-		var deliveryRequest = "default";
+        var deliveryRequest = (request.deliveryRequest() != null) ? request.deliveryRequest() : "";
+        var order = orderRepository.save(Order.create(receiver, user, deliveryRequest));
 
-		var order = orderRepository.save(Order.create(receiver, user, deliveryRequest));
-		var orderProduct = orderProductRepository.save(new OrderProduct(order, product, quantity));
+		for (var item : request.items()) {
+            var productId = item.productId();
+            var quantity = item.quantity();
+            var product = productRepository.findByIdOrThrow(productId);
 
-		// 주문생성완료
-		product.decreaseStock(quantity);
+            Preconditions.validate(product.getStatus() == ProductStatus.ACTIVATED, ErrorCode.NOT_ON_SALE_PRODUCT);
 
-		product.mapToOrderProduct(orderProduct);
-		order.mapToOrderProduct(orderProduct);
+            stockService.decreaseStockWithLock(productId, quantity);
+
+            var orderProduct = orderProductRepository.save(
+                    new OrderProduct(order, product, quantity)
+            );
+
+            product.mapToOrderProduct(orderProduct);
+            order.mapToOrderProduct(orderProduct);
+        }
 
 		// 포인트 사용 처리
+        Long usePoints = request.usePoints();
 		if (usePoints != null && usePoints > 0) {
+            Preconditions.validate(usePoints <= order.getTotalPrice(), ErrorCode.INVALID_POINT_AMOUNT);
+
 			order.setUsedPoints(usePoints);  // Order에 사용 포인트 저장
 			pointService.usePoints(userId, order.getId(), usePoints);
 		}
 
-		log.info("주문 생성 - orderId: {}, userId: {}, productId: {}, quantity: {}, amount: {}원, usePoints: {}P",
-			order.getId(), userId, productId, quantity, quantity * product.getPrice(), usePoints != null ? usePoints : 0);
+        // CART 주문이면 장바구니 정리
+        if (request.orderType() == OrderRequest.OrderType.CART) {
+            var productIds = request.items().stream()
+                    .map(OrderRequest.OrderItem::productId)
+                    .distinct()
+                    .toList();
+
+            cartItemRepository.deleteByUserIdAndProductIdIn(userId, productIds);
+        }
+
+		log.info("주문 생성 - orderId: {}, userId: {}, totalAmount: {}원, productCount: {}, usePoints: {}P",
+			order.getId(), userId, order.getTotalPrice(), request.items().size(), usePoints != null ? usePoints : 0);
 
 		applicationEventPublisher.publishEvent(
-				new Message("User: " + user.getName() + " ordered :" + quantity * product.getPrice())
-		);
+                new Message(String.format(
+                        "[주문 생성] orderId=%d / userId=%d / 총액=%d원 / 상품수=%d",
+                        order.getId(), userId, order.getTotalPrice(), request.items().size()
+                ))
+        );
 	}
 
 	public void requestCancelByUser(Long orderId, CurrentUser currentUser, String reason) {
@@ -262,7 +269,7 @@ public class OrderService {
 				receiver.getZipcode(),
 				receiver.getAddress(),
 				receiver.getDetailAddress(),
-				null, // TODO: 임시 매핑
+				order.getDeliveryRequest(),
 				items,
 				order.getTotalPrice(),
 				order.getUsedPoints(),
@@ -275,6 +282,12 @@ public class OrderService {
 
 	public void changeOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
 		Order order = orderRepository.findByOrderIdOrThrow(orderId);
+
+        if (request.status() == OrderStatus.ORDER_DELIVERED) {
+            order.markDelivered();
+            return;
+        }
+
 		order.changeStatus(request.status());
 	}
 
