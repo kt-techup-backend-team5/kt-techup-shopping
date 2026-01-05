@@ -2,7 +2,11 @@ package com.kt.service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,9 +17,11 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kt.domain.product.Product;
+import com.kt.domain.product.ProductAnalysis;
 import com.kt.domain.product.ProductSortType;
 import com.kt.domain.product.ProductStatus;
 import com.kt.dto.product.ProductCommand;
+import com.kt.dto.product.ProductPromptConstants;
 import com.kt.repository.product.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -33,12 +39,32 @@ public class ProductService {
 
 	private final ProductRepository productRepository;
 	private final AwsS3Service awsS3Service;
+	private final VectorStore vectorStore;
+	private final ChatClient chatClient;
 
 	public void create(ProductCommand.Create command) {
 		String thumbnailImgUrl = uploadIfPresent(command.thumbnail());
 		String detailImgUrl = uploadIfPresent(command.detail());
+		ProductAnalysis productAnalysis = chatClient.prompt()
+				.user(u -> u.text(ProductPromptConstants.ANALYZE_PRODUCT)
+						.param("name", command.data().getName())
+						.param("description", command.data().getDescription()))
+				.call()
+				.entity(ProductAnalysis.class);
 
-		productRepository.save(command.toEntity(thumbnailImgUrl, detailImgUrl));
+		Product product = productRepository.save(command.toEntity(thumbnailImgUrl, detailImgUrl, productAnalysis));
+
+		String searchContent = String.format("상품명: %s, 설명:%s", command.data().getName(),
+				command.data().getDescription());
+		Map<String, Object> metadata = Map.of(
+				"productId", product.getId(),
+				"gender", productAnalysis.getGender(),
+				"ageTarget", productAnalysis.getAgeTarget(),
+				"price", product.getPrice()
+		);
+
+		Document document = new Document(searchContent, metadata);
+		vectorStore.add(List.of(document));
 	}
 
 	public Page<Product> searchPublicStatus(String keyword, ProductSortType sortType, Pageable pageable) {
