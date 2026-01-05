@@ -14,6 +14,9 @@ import org.springframework.util.StreamUtils;
 import com.kt.dto.chatbot.ChatbotRequest;
 import com.kt.dto.chatbot.ChatbotResponse;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ChatbotService {
 	private final ChatClient chatClient;
@@ -50,6 +53,9 @@ public class ChatbotService {
 			.user(finalPrompt)
 			.call()
 			.content();
+
+		log.info("AI 챗봇 응답 - userId: {}, questionLength: {}자, answerLength: {}자, orderContext: {}",
+			userId, userQuestion.length(), answer.length(), !contextInfo.isEmpty());
 
 		return new ChatbotResponse(answer);
 	}
@@ -107,10 +113,10 @@ public class ChatbotService {
 		} catch (IOException e) {
 			// Fallback 프롬프트
 			return """
-				당신은 KT 테크업 쇼핑몰의 고객 지원 AI 어시스턴트입니다.
+				당신은 케클케클 쇼핑몰의 고객 지원 AI 어시스턴트입니다.
 				고객의 질문에 친절하고 정확하게 답변해주세요.
 				주문, 배송, 결제, 반품, 교환 등 쇼핑몰 관련 질문에 답변합니다.
 				""";
 		}
 	}
-}
+			}
