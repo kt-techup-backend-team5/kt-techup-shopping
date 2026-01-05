@@ -55,6 +55,9 @@ subprojects {
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+        // Spring AI BOM
+        implementation platform('org.springframework.ai:spring-ai-bom:1.1.2')
     }
 
     tasks.named('test') {
