@@ -2,7 +2,6 @@ name: testing action
 
 on:
   workflow_dispatch:  # 수동 실행 가능하게 추가
-  push:
   pull_request:
     branches:
       - main  # main 브랜치로 PR 생성 시 실행
