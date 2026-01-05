@@ -1,0 +1,41 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        show_sql: false
+    show-sql: false
+    open-in-view: false
+  data:
+    redis:
+      cluster:
+        nodes: ${redis.host:localhost:6379}
+  h2:
+    console:
+      enabled: true
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: test
+        secret-key: test
+      s3:
+        endpoint: http://localhost:4566
+        path-style-access-enabled: true
+
+s3:
+  bucket: kt-techup-shopping-test-media
+
+jwt:
+  secret: ${kt.jwt.secret:kt-cloud-tech-up-shopping-202511171107}
+  access-token-expiration: ${kt.jwt.access-token-expiration:300000}
+  refresh-token-expiration: ${kt.jwt.refresh-token-expiration:43200000}
