@@ -1,6 +1,7 @@
 package com.kt.service;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
 import org.junit.jupiter.api.Test;
@@ -70,6 +71,11 @@ public class QuestionServiceTest {
 		given(productRepository.findByIdOrThrow(productId)).willReturn(product);
 
 		ArgumentCaptor<Question> argumentCaptor = ArgumentCaptor.forClass(Question.class);
+
+		// save 후 반환할 Question 객체 (ID 포함)
+		Question savedQuestion = spy(new Question("문의 내용입니다.", true, user, product));
+		willReturn(1L).given(savedQuestion).getId();
+		given(questionRepository.save(any(Question.class))).willReturn(savedQuestion);
 
 		// when
 		questionService.createQuestion(userId, request);

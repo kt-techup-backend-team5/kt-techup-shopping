@@ -71,7 +71,8 @@ public class ReviewController {
 			@RequestParam Long productId,
 			Pageable pageable
 	) {
-		return ApiResult.ok(reviewService.getReviewsByProductId(productId, pageable));
+		Page<ReviewResponse> reviews = reviewService.getReviewsByProductId(productId, pageable);
+		return ApiResult.ok(reviews);
 	}
 
 	@Operation(

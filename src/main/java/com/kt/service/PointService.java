@@ -33,14 +33,12 @@ public class PointService {
 	 * 실결제 금액의 5%를 반올림하여 적립
 	 */
 	public void creditPointsForOrder(Long userId, Long orderId, Long actualPaymentAmount) {
-		log.info("구매 확정 포인트 적립 시작 - userId: {}, orderId: {}, amount: {}", userId, orderId, actualPaymentAmount);
-
 		// 중복 지급 방지
 		boolean alreadyRewarded = pointHistoryRepository.existsByRelatedIdAndRelatedTypeAndType(
 				orderId, "ORDER", PointHistoryType.CREDITED_ORDER
 		);
 		if (alreadyRewarded) {
-			log.warn("이미 포인트가 지급된 주문 - orderId: {}", orderId);
+			log.warn("포인트 중복 적립 시도 - orderId: {}", orderId);
 			throw new CustomException(ErrorCode.ALREADY_REWARDED_REVIEW);
 		}
 
@@ -48,7 +46,7 @@ public class PointService {
 		long pointsToCredit = Math.round(actualPaymentAmount * POINT_CREDIT_RATE / 100.0);
 
 		if (pointsToCredit <= 0) {
-			log.warn("적립할 포인트가 0 이하 - userId: {}, orderId: {}", userId, orderId);
+			log.warn("포인트 적립 실패 (0 이하) - userId: {}, orderId: {}", userId, orderId);
 			return;
 		}
 
@@ -77,7 +75,7 @@ public class PointService {
 		);
 		pointHistoryRepository.save(history);
 
-		log.info("포인트 적립 완료 - userId: {}, orderId: {}, points: {}, totalPoints: {}",
+		log.info("포인트 적립 - userId: {}, orderId: {}, +{}P → {}P",
 				userId, orderId, pointsToCredit, point.getAvailablePoints());
 	}
 
@@ -86,14 +84,12 @@ public class PointService {
 	 * 고정 100P 지급
 	 */
 	public void creditPointsForReview(Long userId, Long reviewId, Long orderProductId) {
-		log.info("리뷰 작성 포인트 적립 시작 - userId: {}, reviewId: {}, orderProductId: {}", userId, reviewId, orderProductId);
-
 		// 중복 지급 방지 (1개 상품당 1회만)
 		boolean alreadyRewarded = pointHistoryRepository.existsByRelatedIdAndRelatedTypeAndType(
 				orderProductId, "ORDER_PRODUCT", PointHistoryType.CREDITED_REVIEW
 		);
 		if (alreadyRewarded) {
-			log.warn("이미 포인트가 지급된 상품 리뷰 - orderProductId: {}", orderProductId);
+			log.warn("리뷰 포인트 중복 적립 시도 - orderProductId: {}", orderProductId);
 			throw new CustomException(ErrorCode.ALREADY_REWARDED_REVIEW);
 		}
 
@@ -122,7 +118,7 @@ public class PointService {
 		);
 		pointHistoryRepository.save(history);
 
-		log.info("리뷰 포인트 적립 완료 - userId: {}, reviewId: {}, points: {}, totalPoints: {}",
+		log.info("리뷰 포인트 적립 - userId: {}, reviewId: {}, +{}P → {}P",
 				userId, reviewId, REVIEW_POINT, point.getAvailablePoints());
 	}
 
@@ -130,14 +126,12 @@ public class PointService {
 	 * 환불 시 포인트 회수
 	 */
 	public void retrievePointsForRefund(Long userId, Long orderId) {
-		log.info("환불 포인트 회수 시작 - userId: {}, orderId: {}", userId, orderId);
-
 		// 중복 회수 방지
 		boolean alreadyRetrieved = pointHistoryRepository.existsByRelatedIdAndRelatedTypeAndType(
 				orderId, "ORDER", PointHistoryType.RETRIEVED_REFUND
 		);
 		if (alreadyRetrieved) {
-			log.warn("이미 포인트가 회수된 주문 - orderId: {}", orderId);
+			log.warn("포인트 중복 회수 시도 - orderId: {}", orderId);
 			return;
 		}
 
@@ -145,7 +139,6 @@ public class PointService {
 		PointHistory earnedHistory = pointHistoryRepository.findByOrderIdAndType(orderId,
 				PointHistoryType.CREDITED_ORDER);
 		if (earnedHistory == null) {
-			log.warn("적립된 포인트가 없는 주문 - orderId: {}", orderId);
 			return;
 		}
 
@@ -172,7 +165,7 @@ public class PointService {
 		);
 		pointHistoryRepository.save(history);
 
-		log.info("포인트 회수 완료 - userId: {}, orderId: {}, retrievedPoints: {}, remainingPoints: {}",
+		log.info("환불 포인트 회수 - userId: {}, orderId: {}, -{}P → {}P",
 				userId, orderId, pointsToRetrieve, point.getAvailablePoints());
 	}
 
@@ -180,14 +173,11 @@ public class PointService {
 	 * 리뷰 블라인드 시 포인트 회수
 	 */
 	public void retrievePointsForReviewBlind(Long userId, Long reviewId, Long orderProductId) {
-		log.info("리뷰 블라인드 포인트 회수 시작 - userId: {}, reviewId: {}, orderProductId: {}", userId, reviewId, orderProductId);
-
 		// 중복 회수 방지
 		boolean alreadyRetrieved = pointHistoryRepository.existsByRelatedIdAndRelatedTypeAndType(
 				reviewId, "REVIEW", PointHistoryType.RETRIEVED_REVIEW_BLIND
 		);
 		if (alreadyRetrieved) {
-			log.warn("이미 포인트가 회수된 리뷰 - reviewId: {}", reviewId);
 			return;
 		}
 
@@ -196,7 +186,6 @@ public class PointService {
 				orderProductId, "ORDER_PRODUCT", PointHistoryType.CREDITED_REVIEW
 		);
 		if (!wasRewarded) {
-			log.warn("적립된 포인트가 없는 리뷰 - orderProductId: {}", orderProductId);
 			return;
 		}
 
@@ -221,7 +210,7 @@ public class PointService {
 		);
 		pointHistoryRepository.save(history);
 
-		log.info("리뷰 블라인드 포인트 회수 완료 - userId: {}, reviewId: {}, retrievedPoints: {}, remainingPoints: {}",
+		log.info("리뷰 블라인드 포인트 회수 - userId: {}, reviewId: {}, -{}P → {}P",
 				userId, reviewId, REVIEW_POINT, point.getAvailablePoints());
 	}
 
@@ -230,17 +219,14 @@ public class PointService {
 	 * 최소 사용 금액(1000P) 및 잔액 검증 포함
 	 */
 	public void usePoints(Long userId, Long orderId, Long pointsToUse) {
-		log.info("포인트 사용 시작 - userId: {}, orderId: {}, usePoints: {}", userId, orderId, pointsToUse);
-
 		// 포인트 사용이 0이면 처리하지 않음
 		if (pointsToUse == null || pointsToUse == 0) {
-			log.info("사용할 포인트가 없음 - userId: {}", userId);
 			return;
 		}
 
 		// 최소 사용 금액 검증 (1000P)
 		if (pointsToUse < 1000) {
-			log.warn("최소 사용 포인트 미달 - userId: {}, usePoints: {}", userId, pointsToUse);
+			log.warn("최소 포인트 미달 - userId: {}, usePoints: {}", userId, pointsToUse);
 			throw new CustomException(ErrorCode.MINIMUM_POINT_NOT_MET);
 		}
 
@@ -252,7 +238,7 @@ public class PointService {
 
 		// 잔액 부족 검증
 		if (point.getAvailablePoints() < pointsToUse) {
-			log.warn("포인트 잔액 부족 - userId: {}, availablePoints: {}, usePoints: {}",
+			log.warn("포인트 잔액 부족 - userId: {}, available: {}P, requested: {}P",
 					userId, point.getAvailablePoints(), pointsToUse);
 			throw new CustomException(ErrorCode.INSUFFICIENT_POINTS);
 		}
@@ -272,7 +258,7 @@ public class PointService {
 		);
 		pointHistoryRepository.save(history);
 
-		log.info("포인트 사용 완료 - userId: {}, orderId: {}, usedPoints: {}, remainingPoints: {}",
+		log.info("포인트 사용 - userId: {}, orderId: {}, -{}P → {}P",
 				userId, orderId, pointsToUse, point.getAvailablePoints());
 	}
 
@@ -280,12 +266,9 @@ public class PointService {
 	 * 결제 실패 시 포인트 복구
 	 */
 	public void refundPointsForPaymentFailure(Long userId, Long orderId) {
-		log.info("결제 실패 포인트 복구 시작 - userId: {}, orderId: {}", userId, orderId);
-
 		// 해당 주문으로 사용된 포인트 조회
 		PointHistory usedHistory = pointHistoryRepository.findByOrderIdAndType(orderId, PointHistoryType.USED);
 		if (usedHistory == null) {
-			log.info("사용된 포인트가 없는 주문 - orderId: {}", orderId);
 			return;
 		}
 
@@ -312,7 +295,7 @@ public class PointService {
 		);
 		pointHistoryRepository.save(history);
 
-		log.info("결제 실패 포인트 복구 완료 - userId: {}, orderId: {}, refundedPoints: {}, totalPoints: {}",
+		log.info("결제 실패 포인트 복구 - userId: {}, orderId: {}, +{}P → {}P",
 				userId, orderId, pointsToRefund, point.getAvailablePoints());
 	}
 
@@ -320,12 +303,9 @@ public class PointService {
 	 * 환불 시 사용한 포인트 복구
 	 */
 	public void refundUsedPointsForRefund(Long userId, Long orderId) {
-		log.info("환불 시 사용 포인트 복구 시작 - userId: {}, orderId: {}", userId, orderId);
-
 		// 해당 주문으로 사용된 포인트 조회
 		PointHistory usedHistory = pointHistoryRepository.findByOrderIdAndType(orderId, PointHistoryType.USED);
 		if (usedHistory == null) {
-			log.info("사용된 포인트가 없는 주문 - orderId: {}", orderId);
 			return;
 		}
 
@@ -352,7 +332,7 @@ public class PointService {
 		);
 		pointHistoryRepository.save(history);
 
-		log.info("환불 시 사용 포인트 복구 완료 - userId: {}, orderId: {}, refundedPoints: {}, totalPoints: {}",
+		log.info("환불 포인트 복구 - userId: {}, orderId: {}, +{}P → {}P",
 				userId, orderId, pointsToRefund, point.getAvailablePoints());
 	}
 
@@ -371,8 +351,6 @@ public class PointService {
 	 */
 	@Transactional(readOnly = true)
 	public Long getAvailablePoints(Long userId) {
-		log.info("포인트 잔액 조회 - userId: {}", userId);
-
 		return pointRepository.findByUserId(userId)
 				.map(Point::getAvailablePoints)
 				.orElse(0L);  // 포인트 엔티티가 없으면 0P
@@ -388,8 +366,6 @@ public class PointService {
 			java.time.LocalDateTime endDate,
 			org.springframework.data.domain.Pageable pageable
 	) {
-		log.info("포인트 이력 조회 - userId: {}, startDate: {}, endDate: {}", userId, startDate, endDate);
-
 		return pointHistoryRepository.findByUserIdAndCreatedAtBetween(userId, startDate, endDate, pageable);
 	}
 
@@ -401,8 +377,6 @@ public class PointService {
 			Long userId,
 			org.springframework.data.domain.Pageable pageable
 	) {
-		log.info("관리자 포인트 이력 조회 - userId: {}", userId);
-
 		return pointHistoryRepository.findByUserId(userId, pageable);
 	}
 
@@ -410,8 +384,6 @@ public class PointService {
 	 * 관리자 포인트 수동 조정
 	 */
 	public void adjustPoints(Long userId, Long amount, String description) {
-		log.info("포인트 수동 조정 시작 - userId: {}, amount: {}, description: {}", userId, amount, description);
-
 		// 사용자 조회
 		User user = userRepository.findByIdOrThrow(userId);
 
@@ -430,7 +402,6 @@ public class PointService {
 			// 차감 (음수값을 양수로 변환하여 전달)
 			point.retrieve(Math.abs(amount));
 		} else {
-			log.warn("조정 금액이 0입니다 - userId: {}", userId);
 			return;
 		}
 
@@ -445,7 +416,7 @@ public class PointService {
 		);
 		pointHistoryRepository.save(history);
 
-		log.info("포인트 수동 조정 완료 - userId: {}, amount: {}, totalPoints: {}",
-				userId, amount, point.getAvailablePoints());
+		log.info("관리자 포인트 조정 - userId: {}, {}{}P → {}P ({})",
+				userId, amount > 0 ? "+" : "", amount, point.getAvailablePoints(), description);
 	}
 }

@@ -19,6 +19,7 @@ import com.kt.repository.review.ReviewRepository;
 import com.kt.repository.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -62,6 +64,9 @@ public class ReviewService {
 		);
 
 		Review savedReview = reviewRepository.save(review);
+
+		log.info("리뷰 작성 - reviewId: {}, userId: {}, productId: {}, rating: {}",
+			savedReview.getId(), userId, orderProduct.getProduct().getId(), request.getRating());
 
 		// 리뷰 작성 이벤트 발행 (포인트 적립 트리거)
 		applicationEventPublisher.publishEvent(
@@ -116,6 +121,9 @@ public class ReviewService {
 		Preconditions.validate(reason != null && !reason.isBlank(), ErrorCode.BLIND_REASON_REQUIRED);
 
 		review.blind(reason, admin);
+
+		log.info("리뷰 블라인드 - reviewId: {}, userId: {}, adminId: {}, reason: {}",
+			reviewId, review.getUser().getId(), adminId, reason);
 
 		// 리뷰 블라인드 이벤트 발행 (포인트 회수 트리거)
 		applicationEventPublisher.publishEvent(
