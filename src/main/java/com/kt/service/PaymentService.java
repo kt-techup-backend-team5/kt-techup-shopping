@@ -16,7 +16,9 @@ import com.kt.repository.payment.PaymentRepository;
 import com.kt.repository.payment.PaymentTypeRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -57,6 +59,9 @@ public class PaymentService {
 		// TODO: 실제 결제 API 호출 (PG사 연동)
 		// 현재는 항상 성공하는 것으로 가정
 		newPayment.markAsSuccess();
+
+		log.info("결제 성공 - paymentId: {}, orderId: {}, amount: {}원, paymentType: {}",
+			newPayment.getId(), orderId, finalPrice, paymentType.getName());
 
 		// 결제 성공 이벤트 발행 -> OrderEventListener가 수신하여 Order 상태 변경
 		eventPublisher.publishEvent(new PaymentEvent.Success(newPayment.getId(), orderId));

@@ -75,7 +75,8 @@ public class QuestionController {
 		@RequestParam Long productId,
 		Pageable pageable
 	) {
-		return ApiResult.ok(questionService.getQuestionsByProductId(productId, pageable));
+		Page<QuestionResponse> questions = questionService.getQuestionsByProductId(productId, pageable);
+		return ApiResult.ok(questions);
 	}
 
 	@Operation(
@@ -92,7 +93,8 @@ public class QuestionController {
 		@AuthenticationPrincipal DefaultCurrentUser currentUser,
 		Pageable pageable
 	) {
-		return ApiResult.ok(questionService.getMyQuestions(currentUser.getId(), pageable));
+		Page<QuestionResponse> questions = questionService.getMyQuestions(currentUser.getId(), pageable);
+		return ApiResult.ok(questions);
 	}
 
 	@Operation(

@@ -36,8 +36,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -106,6 +110,9 @@ public class OrderService {
             cartItemRepository.deleteByUserIdAndProductIdIn(userId, productIds);
         }
 
+		log.info("주문 생성 - orderId: {}, userId: {}, totalAmount: {}원, productCount: {}, usePoints: {}P",
+			order.getId(), userId, order.getTotalPrice(), request.items().size(), usePoints != null ? usePoints : 0);
+
 		applicationEventPublisher.publishEvent(
                 new Message(String.format(
                         "[주문 생성] orderId=%d / userId=%d / 총액=%d원 / 상품수=%d",
@@ -122,6 +129,8 @@ public class OrderService {
 						.getId()
 						.equals(currentUser.getId()), ErrorCode.NO_AUTHORITY_TO_CANCEL_ORDER);
 		order.requestCancel(reason);
+
+		log.info("주문 취소 요청 - orderId: {}, userId: {}, reason: {}", orderId, currentUser.getId(), reason);
 	}
 
 	public void requestRefundByUser(Long orderId, CurrentUser currentUser, RefundRequest request) {
@@ -136,7 +145,10 @@ public class OrderService {
 		Preconditions.validate(!refundRepository.hasCompletedRefund(order), ErrorCode.ALREADY_REFUNDED);
 
 		Refund refund = new Refund(order, request.getRefundType(), request.getReason());
-		refundRepository.save(refund);
+		Refund savedRefund = refundRepository.save(refund);
+
+		log.info("환불/반품 요청 - refundId: {}, orderId: {}, userId: {}, type: {}, reason: {}",
+			savedRefund.getId(), orderId, currentUser.getId(), request.getRefundType(), request.getReason());
 
 		// 환불/반품 요청 시 주문 상태는 변경하지 않음 (Refund 도메인에서 독립적으로 관리)
 		// 향후 이벤트 기반 아키텍처로 전환 시 RefundRequestedEvent 발행 가능
@@ -183,6 +195,9 @@ public class OrderService {
 		// 환불/반품 처리 완료
 		refund.complete();
 
+		log.info("환불/반품 승인 - refundId: {}, orderId: {}, userId: {}, type: {}, amount: {}원",
+			refund.getId(), orderId, order.getUser().getId(), refund.getType(), order.getTotalPrice());
+
 		// 환불 승인 이벤트 발행 (포인트 회수 트리거)
 		applicationEventPublisher.publishEvent(
 			new RefundEvent.Approved(
@@ -200,6 +215,9 @@ public class OrderService {
 
 		// Refund 도메인에서 독립적으로 상태 관리 (reject 메서드 내부에서 검증)
 		refund.reject(request.getReason());
+
+		log.info("환불/반품 거절 - refundId: {}, orderId: {}, reason: {}",
+			refundId, refund.getOrder().getId(), request.getReason());
 
 		// 환불/반품 거절 시 주문 상태는 변경하지 않음 (Refund 도메인에서 독립적으로 관리)
 		// 향후 이벤트 기반 아키텍처로 전환 시 RefundRejectedEvent 발행 가능
@@ -298,6 +316,9 @@ public class OrderService {
 		// 실결제 금액 조회
 		Payment payment = paymentRepository.findByOrderOrThrow(order);
 		Long actualPaymentAmount = payment.getFinalPrice();
+
+		log.info("구매 확정 - orderId: {}, userId: {}, actualPayment: {}원",
+			orderId, currentUser.getId(), actualPaymentAmount);
 
 		// 구매 확정 이벤트 발행 (포인트 적립 트리거)
 		applicationEventPublisher.publishEvent(

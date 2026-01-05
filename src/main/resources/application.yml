@@ -54,3 +54,19 @@ jwt:
 slack:
   bot-token: ${SLACK_API_TOKEN}
   log-channel: ${SLACK_LOG_CHANNEL}
+
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+      pattern: "%h %l %u %t \"%r\" %s %b %D"
+      directory: logs
+      prefix: access_log
+      suffix: .log
+
+logging:
+  level:
+    root: INFO
+    com.kt.controller: WARN
+    com.kt.service: INFO
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:OFF}

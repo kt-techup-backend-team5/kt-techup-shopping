@@ -17,7 +17,9 @@ import com.kt.repository.question.QuestionRepository;
 import com.kt.repository.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -39,7 +41,10 @@ public class QuestionService {
 				product
 		);
 
-		questionRepository.save(question);
+		Question savedQuestion = questionRepository.save(question);
+
+		log.info("문의 작성 - questionId: {}, userId: {}, productId: {}, isPublic: {}",
+			savedQuestion.getId(), userId, request.productId(), request.isPublic());
 	}
 
 	// 특정 상품의 문의 목록 조회 (공개 문의만)
