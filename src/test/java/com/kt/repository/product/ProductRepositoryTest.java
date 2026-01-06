@@ -41,12 +41,12 @@ class ProductRepositoryTest {
 
 	@BeforeEach
 	void setUp() {
-		this.productA = new Product("LG 모니터", 1500000L, 10L, null, null, null);
+		this.productA = new Product("LG 모니터", 1500000L, 10L, null, null, null, null);
 
-		this.productB = new Product("삼성 모니터", 55000L, 20L, null, null, null);
+		this.productB = new Product("삼성 모니터", 55000L, 20L, null, null, null, null);
 		this.productB.inActivate();
 
-		this.productC = new Product("레이저 마우스", 100000L, 30L, null, null, null);
+		this.productC = new Product("레이저 마우스", 100000L, 30L, null, null, null, null);
 		this.productC.soldOut();
 
 		productRepository.saveAll(List.of(productA, productB, productC));
