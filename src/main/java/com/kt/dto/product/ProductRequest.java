@@ -48,4 +48,13 @@ public class ProductRequest {
 		@NotEmpty
 		private List<Long> productIds;
 	}
+
+	@Getter
+	@AllArgsConstructor
+	@Schema(name = "ProductRequest.Recommend")
+	public static class Recommend {
+		@NotNull
+		@NotEmpty
+		String question;
+	}
 }
