@@ -95,7 +95,8 @@ jobs:
                 ]
               }]
             }
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: failure()
 
   # 배포 Job (테스트 통과 시에만 실행)
@@ -204,7 +205,8 @@ jobs:
                 ]
               }]
             }
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: success()
 
       - name: Send Slack notification (Failure)
@@ -241,5 +243,6 @@ jobs:
                 ]
               }]
             }
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: failure()
