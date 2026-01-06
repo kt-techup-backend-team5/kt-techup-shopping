@@ -8,6 +8,10 @@ import com.kt.domain.review.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRepositoryCustom {
 
@@ -20,4 +24,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
 
 	boolean existsByOrderProductId(Long orderProductId);
 
+    @Query("""
+		select r
+		from Review r
+		where r.product.id = :productId
+		  and r.isBlinded = false
+		  and r.content is not null
+		  and length(trim(r.content)) > 0
+		order by r.id desc
+	""")
+    List<Review> findRecentForSummary(@Param("productId") Long productId, Pageable pageable);
 }
