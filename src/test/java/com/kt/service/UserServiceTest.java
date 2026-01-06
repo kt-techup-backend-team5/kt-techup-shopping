@@ -445,10 +445,12 @@ class UserServiceTest {
     @DisplayName("관리자_권한_부여")
     void 관리자_권한_부여() {
         // given
+        var actor = userRepository.save(superAdmin("super_admin", "super@test.com"));
         var user = userRepository.save(UserFixture.defaultCustomer());
+        var currentUser = new DefaultCurrentUser(actor.getId(), actor.getLoginId(), actor.getRole());
 
         // when
-        userService.grantAdminRole(user.getId());
+        userService.grantAdminRole(user.getId(), currentUser);
 
         // then
         var updated = userRepository.findByIdOrThrow(user.getId());
@@ -459,10 +461,12 @@ class UserServiceTest {
     @DisplayName("관리자_권한_회수")
     void 관리자_권한_회수() {
         // given
+        var actor = userRepository.save(superAdmin("super_admin", "super@test.com"));
         var admin = userRepository.save(UserFixture.defaultAdmin());
+        var currentUser = new DefaultCurrentUser(actor.getId(), actor.getLoginId(), actor.getRole());
 
         // when
-        userService.revokeAdminRole(admin.getId());
+        userService.revokeAdminRole(admin.getId(), currentUser);
 
         // then
         var updated = userRepository.findByIdOrThrow(admin.getId());
