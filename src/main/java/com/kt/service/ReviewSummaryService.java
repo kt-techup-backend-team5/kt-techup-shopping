@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,8 +66,8 @@ public class ReviewSummaryService {
                 now.plusHours(ttlHours)
             );
 
-            replaceCache(cached, empty);
-            return ReviewSummaryResponse.from(empty);
+            var saved = replaceCache(cached, empty);
+            return ReviewSummaryResponse.from(saved);
         }
 
         var avgRating = reviews.stream().mapToInt(Review::getRating).average().orElse(0.0);
@@ -92,8 +93,8 @@ public class ReviewSummaryService {
                 now.plusHours(ttlHours)
             );
 
-            replaceCache(cached, entity);
-            return ReviewSummaryResponse.from(entity);
+            var saved = replaceCache(cached, entity);
+            return ReviewSummaryResponse.from(saved);
 
         } catch (Exception e) {
             log.warn("리뷰 요약 생성 실패 - productId={}, reviews={}", productId, reviews.size(), e);
@@ -115,17 +116,23 @@ public class ReviewSummaryService {
                 now.plusHours(1)
             );
 
-            replaceCache(null, failed);
-            return ReviewSummaryResponse.from(failed);
+            var saved = replaceCache(null, failed);
+            return ReviewSummaryResponse.from(saved);
         }
     }
 
-    private void replaceCache(ReviewSummary oldCache, ReviewSummary newCache) {
+    private ReviewSummary replaceCache(ReviewSummary oldCache, ReviewSummary newCache) {
         if (oldCache != null) {
             reviewSummaryRepository.delete(oldCache);
             reviewSummaryRepository.flush();
         }
-        reviewSummaryRepository.save(newCache);
+
+        try {
+            return reviewSummaryRepository.save(newCache);
+        } catch (DataIntegrityViolationException e) {
+            return reviewSummaryRepository.findByProductId(newCache.getProductId())
+                .orElse(newCache);
+        }
     }
 
     private boolean equalsLong(Long a, Long b) {
