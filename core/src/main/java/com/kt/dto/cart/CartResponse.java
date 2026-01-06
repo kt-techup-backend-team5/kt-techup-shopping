@@ -33,7 +33,7 @@ public interface CartResponse {
                 price,
                 cartItem.getQuantity(),
                 price * cartItem.getQuantity(),
-                null, // TODO: product.getThumbnailUrl()로 변경 필요
+                product.getThumbnailImgUrl(),
                 cartItem.getUpdatedAt()
             );
         }

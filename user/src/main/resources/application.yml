@@ -70,3 +70,10 @@ logging:
     com.kt.controller: WARN
     com.kt.service: INFO
     org.hibernate.SQL: ${SQL_LOG_LEVEL:OFF}
+
+review-summary:   #리뷰 요약 기능 설정
+  max-reviews: 30 # 요약에 사용할 최근 리뷰 개수
+  ttl-hours: 24   # 요약 캐시 유효시간
+
+openai:
+  prompt-version: v1

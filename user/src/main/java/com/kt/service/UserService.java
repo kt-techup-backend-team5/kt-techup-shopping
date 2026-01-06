@@ -8,11 +8,13 @@ import com.kt.dto.user.*;
 import com.kt.repository.order.OrderRepository;
 import com.kt.repository.user.UserRepository;
 import com.kt.security.DefaultCurrentUser;
+import com.kt.security.CurrentUser;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +29,7 @@ import java.time.LocalDateTime;
 import com.kt.domain.user.Role;
 import com.kt.domain.user.CreatedAtSortType;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -263,14 +266,42 @@ public class UserService {
         deactivateUser(targetUserId);
     }
 
-	public void grantAdminRole(Long id) {
+	public void grantAdminRole(Long id, CurrentUser actor) {
 		var user = userRepository.findByIdOrThrow(id);
+		Preconditions.validate(
+				user.getRole() == Role.CUSTOMER,
+				ErrorCode.ALREADY_HAS_ROLE
+		);
+		var previousRole = user.getRole();
 		user.grantAdminRole();
+		log.info(
+				"ADMIN_ROLE_GRANTED actorId={} actorLoginId={} targetId={} targetLoginId={} previousRole={} newRole={}",
+				actor.getId(),
+				actor.getLoginId(),
+				user.getId(),
+				user.getLoginId(),
+				previousRole,
+				user.getRole()
+		);
 	}
 
-	public void revokeAdminRole(Long id) {
+	public void revokeAdminRole(Long id, CurrentUser actor) {
 		var user = userRepository.findByIdOrThrow(id);
+		Preconditions.validate(
+				user.getRole() == Role.ADMIN,
+				ErrorCode.USER_NOT_ADMIN
+		);
+		var previousRole = user.getRole();
 		user.revokeAdminRole();
+		log.info(
+				"ADMIN_ROLE_REVOKED actorId={} actorLoginId={} targetId={} targetLoginId={} previousRole={} newRole={}",
+				actor.getId(),
+				actor.getLoginId(),
+				user.getId(),
+				user.getLoginId(),
+				previousRole,
+				user.getRole()
+		);
 	}
 
     @Transactional
