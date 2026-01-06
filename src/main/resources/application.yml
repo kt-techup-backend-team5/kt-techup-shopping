@@ -43,6 +43,12 @@ spring:
         options:
           model: gpt-4o-mini
           temperature: 0.7
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: product_recommendations
+        initialize-schema: true
 
     retry:  # OpenAi 호출 실패 대비 재시도 설정
       max-attempts: 4
