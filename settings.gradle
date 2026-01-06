@@ -4,3 +4,10 @@ pluginManagement {
     }
 }
 rootProject.name = 'kt-techup-shopping'
+
+include 'common'
+include 'core'
+include 'integration'
+include 'auth'
+include 'user'
+include 'admin'

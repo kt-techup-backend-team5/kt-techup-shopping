@@ -1,0 +1,72 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${db.host:localhost}:3306/${db.scheme:shopping}
+    username: ${db.username:root}
+    password: ${db.password:1234}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      #create = 테이블을 만들기만
+      #update = 테이블 없으면 만들고 있지만 entity랑 다르면 수정 -> 삭제는 안해줌
+      #validate = 테이블이랑 entity랑 맞는지 확인만
+      #none = 아무것도 안함
+      #create-drop = create랑 똑같은데 애플리케이션 종료시점에 테이블을 drop함 => 테스트코드에서만 쓰세요
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          time_zone: Asia/Seoul
+        show_sql: true #로컬에서만
+    #        default_batch_fetch_size: 2
+    show-sql: true
+  data:
+    redis:
+      ssl:
+        enabled: true
+      cluster:
+        nodes: ${redis.host:localhost:6379}
+        max-redirects: 3
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+
+s3:
+  bucket: kt-techup-shopping-prod-media
+
+jwt:
+  secret: ${kt.jwt.secret:kt-cloud-tech-up-shopping-202511171107}
+  access-token-expiration: ${kt.jwt.access-token-expiration:300000} #5분
+  refresh-token-expiration: ${kt.jwt.refresh-token-expiration:43200000} #12시간
+
+slack:
+  bot-token: ${SLACK_API_TOKEN}
+  log-channel: ${SLACK_LOG_CHANNEL}
+
+server:
+  tomcat:
+    accesslog:
+      enabled: true
+      pattern: "%h %l %u %t \"%r\" %s %b %D"
+      directory: logs
+      prefix: access_log
+      suffix: .log
+
+logging:
+  level:
+    root: INFO
+    com.kt.controller: WARN
+    com.kt.service: INFO
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:OFF}
