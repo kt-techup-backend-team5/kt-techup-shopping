@@ -6,11 +6,12 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      #create = 테이블을 만들기만
-      #update = 테이블 없으면 만들고 있지만 entity랑 다르면 수정 -> 삭제는 안해줌
-      #validate = 테이블이랑 entity랑 맞는지 확인만
-      #none = 아무것도 안함
-      #create-drop = create랑 똑같은데 애플리케이션 종료시점에 테이블을 drop함 => 테스트코드에서만 쓰세요
+      # hibernate.ddl-auto: 테이블 자동 생성 옵션
+      #create:      기존 삭제 후 생성
+      #update:      엔티티 수정사항만 반영 (컬럼 추가 등, 삭제는 불가)
+      #validate:    엔티티-테이블 매핑 일치 확인 (다르면 에러)
+      #none:        자동 생성 기능 비활성화 (운영 환경 권장)
+      #create-drop: 시작 시 생성, 종료 시 테이블 삭제 (테스트용)
       ddl-auto: update
     properties:
       hibernate:
@@ -42,6 +43,20 @@ spring:
         options:
           model: gpt-4o-mini
           temperature: 0.7
+
+    retry:  # OpenAi 호출 실패 대비 재시도 설정
+      max-attempts: 4
+      backoff:
+        initial-interval: 1s
+        multiplier: 2
+        max-interval: 10s
+
+review-summary:   #리뷰 요약 기능 설정
+  max-reviews: 30 # 요약에 사용할 최근 리뷰 개수
+  ttl-hours: 24   # 요약 캐시 유효시간
+
+openai:
+  prompt-version: v1
 
 s3:
   bucket: kt-techup-shopping-prod-media
