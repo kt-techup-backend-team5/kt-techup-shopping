@@ -54,8 +54,8 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: root
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_ACCESS_KEY: ${{ secrets.BACK_END_DEPLOYER_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.BACK_END_DEPLOYER_SECRET_KEY }}
           SLACK_API_TOKEN: ${{ secrets.SLACK_API_TOKEN }}
           SLACK_LOG_CHANNEL: ${{ secrets.SLACK_LOG_CHANNEL }}
 
@@ -146,8 +146,8 @@ jobs:
       - name: Deploy to AWS Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
         with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          aws_access_key: ${{ secrets.BACK_END_DEPLOYER_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.BACK_END_DEPLOYER_SECRET_KEY }}
           application_name: ${{ env.APP_NAME }}
           environment_name: ${{ env.ENV_NAME }}
           version_label: ${{ env.APP_NAME }}-monolith-${{ env.TIMESTAMP }}
