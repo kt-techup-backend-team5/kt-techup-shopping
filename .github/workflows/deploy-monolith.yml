@@ -117,7 +117,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "APP_NAME=kt-techup-shopping-monolith" >> $GITHUB_ENV
+          echo "APP_NAME=javachip-dev" >> $GITHUB_ENV
+          echo "ENV_NAME=Javachip-dev-env" >> $GITHUB_ENV
           echo "TIMESTAMP=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
 
       - name: Set up JDK 21
@@ -148,8 +149,8 @@ jobs:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
           aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
           application_name: ${{ env.APP_NAME }}
-          environment_name: ${{ env.APP_NAME }}-prod
-          version_label: ${{ env.APP_NAME }}-${{ env.TIMESTAMP }}
+          environment_name: ${{ env.ENV_NAME }}
+          version_label: ${{ env.APP_NAME }}-monolith-${{ env.TIMESTAMP }}
           region: ap-northeast-2
           deployment_package: ${{ env.APP_NAME }}-${{ env.TIMESTAMP }}.zip
 
@@ -166,12 +167,12 @@ jobs:
                 "fields": [
                   {
                     "title": "Environment",
-                    "value": "${{ env.APP_NAME }}-prod",
+                    "value": "${{ env.ENV_NAME }}",
                     "short": true
                   },
                   {
                     "title": "Version",
-                    "value": "${{ env.TIMESTAMP }}",
+                    "value": "${{ env.APP_NAME }}-monolith-${{ env.TIMESTAMP }}",
                     "short": true
                   },
                   {
@@ -214,7 +215,7 @@ jobs:
                 "fields": [
                   {
                     "title": "Environment",
-                    "value": "${{ env.APP_NAME }}-prod",
+                    "value": "${{ env.ENV_NAME }}",
                     "short": true
                   },
                   {
