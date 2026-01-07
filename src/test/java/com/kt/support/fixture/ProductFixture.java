@@ -24,7 +24,7 @@ public final class ProductFixture {
 	 * @return 기본 설정값을 가진 Product 객체
 	 */
 	public static Product defaultProduct() {
-		return new Product("테스트 상품", 100_000L, 10L, "상품 상세설명", null, null);
+		return new Product("테스트 상품", 100_000L, 10L, "상품 상세설명", null, null, null);
 	}
 
 	/**
@@ -40,6 +40,6 @@ public final class ProductFixture {
 	 * @return 지정된 값을 가진 Product 객체
 	 */
 	public static Product product(String name, Long price, Long stock, String description) {
-		return new Product(name, price, stock, description, null, null);
+		return new Product(name, price, stock, description, null, null, null);
 	}
 }

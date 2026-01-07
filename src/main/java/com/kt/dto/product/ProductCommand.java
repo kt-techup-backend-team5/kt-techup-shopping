@@ -3,6 +3,7 @@ package com.kt.dto.product;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kt.domain.product.Product;
+import com.kt.domain.product.ProductAnalysis;
 
 import jakarta.validation.Valid;
 
@@ -12,13 +13,14 @@ public interface ProductCommand {
 			MultipartFile thumbnail,
 			MultipartFile detail
 	) {
-		public Product toEntity(String thumbnailUrl, String detailUrl) {
+		public Product toEntity(String thumbnailUrl, String detailUrl, ProductAnalysis productAnalysis) {
 			return new Product(data.getName(),
 					data.getPrice(),
 					data.getQuantity(),
 					data.getDescription(),
 					thumbnailUrl,
-					detailUrl);
+					detailUrl,
+					productAnalysis);
 		}
 	}
 

@@ -49,6 +49,12 @@ spring:
           auth: false
           starttls:
             enable: false
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: product_recommendations_test
+        initialize-schema: false
 
 s3:
   bucket: kt-techup-shopping-test-media

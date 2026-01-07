@@ -2,9 +2,12 @@ package com.kt.controller.product;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,19 +17,20 @@ import com.kt.common.response.ApiResult;
 import com.kt.common.support.ProductViewEvent;
 import com.kt.common.support.SwaggerAssistance;
 import com.kt.domain.product.ProductSortType;
+import com.kt.dto.product.ProductRequest;
 import com.kt.dto.product.ProductResponse;
 import com.kt.dto.review.ReviewResponse;
 import com.kt.security.CurrentUser;
 import com.kt.service.ProductService;
 import com.kt.service.RedisService;
 import com.kt.service.ReviewService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 
 @Tag(name = "Product")
 @RestController
@@ -81,6 +85,22 @@ public class ProductController extends SwaggerAssistance {
 			@Parameter(description = "리뷰를 조회할 상품 ID", required = true) @PathVariable Long productId,
 			Pageable pageable) {
 		return ApiResult.ok(reviewService.getReviewsByProductId(productId, pageable));
+	}
+
+	@Operation(summary = "AI 상품 추천",
+			description = "자연어 질문을 분석하여 상품을 추천합니다. 나이, 성별, 가격대를 알려주세요.",
+			parameters = {
+					@Parameter(name = "page", description = "페이지 번호", example = "0"),
+					@Parameter(name = "size", description = "페이지 크기", example = "5")
+			})
+	@PostMapping("/recommendations")
+	public ApiResult<Page<ProductResponse.Summary>> recommendations(
+			@RequestBody ProductRequest.Recommend request,
+			@Parameter(hidden = true) Paging paging) {
+		var recommendations = productService.getRecommendations(request.getQuestion(), paging.toPageable())
+				.map(ProductResponse.Summary::of);
+
+		return ApiResult.ok(recommendations);
 	}
 }
 
