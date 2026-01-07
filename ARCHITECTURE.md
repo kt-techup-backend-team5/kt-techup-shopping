@@ -1030,22 +1030,6 @@ shopping-admin.zip
 └── Procfile (web: java -jar shopping-admin.jar)
 ```
 
-### 독립 배포의 장점
-
-**비용 절감**:
-- User: t3.medium (활성 사용자 많음)
-- Admin: t3.small (관리자만 사용)
-- **약 30% 비용 절감**
-
-**독립 스케일링**:
-- User: Auto Scaling (트래픽에 따라)
-- Admin: Fixed (1대만 유지)
-
-**무중단 배포**:
-- User 배포 시 Admin 영향 없음
-- Admin 배포 시 User 영향 없음
-
----
 
 ## 향후 개선 방향
 
