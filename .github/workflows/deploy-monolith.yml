@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - deploy/monolith
+  workflow_dispatch:
 
 env:
   JAVA_VERSION: '21'
