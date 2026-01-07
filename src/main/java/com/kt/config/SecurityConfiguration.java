@@ -35,7 +35,9 @@ public class SecurityConfiguration {
             "/auth/signup",
             "/auth/login",
             "/auth/reissue",
-            "/users/find-login-id"
+            "/users/find-login-id",
+            "/mail/send",
+            "/mail/check"
     };
 
     private static final String[] PUT_PERMIT_ALL = {

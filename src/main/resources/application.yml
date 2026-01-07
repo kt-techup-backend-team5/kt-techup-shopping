@@ -43,6 +43,23 @@ spring:
         options:
           model: gpt-4o-mini
           temperature: 0.7
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  mail:
+    from: ${MAIL_FROM:${MAIL_USERNAME}}
+    expiration-seconds: ${MAIL_EXPIRATION_SECONDS:300}
+    verified-expiration-seconds: ${MAIL_VERIFIED_EXPIRATION_SECONDS:1800}
     vectorstore:
       qdrant:
         host: localhost

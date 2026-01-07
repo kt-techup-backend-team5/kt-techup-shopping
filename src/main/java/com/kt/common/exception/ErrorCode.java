@@ -21,6 +21,8 @@ public enum ErrorCode {
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
     ALREADY_EXISTS_USER_ID(HttpStatus.BAD_REQUEST, "이미 존재하는 아이디입니다"),
     ALREADY_EXISTS_EMAIL(HttpStatus.BAD_REQUEST, "이미 존재하는 이메일입니다"),
+    NOT_MATCHED_AUTHNUM(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않습니다."),
+    AUTH_EMAIL_UNVERIFIED(HttpStatus.BAD_REQUEST, "이메일 인증이 완료되지 않았습니다."),
     FAIL_LOGIN(HttpStatus.BAD_REQUEST, "아이디 혹은 비밀번호가 일치하지 않습니다."),
     DOES_NOT_MATCH_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호가 일치하지 않습니다."),
     CAN_NOT_ALLOWED_SAME_PASSWORD(HttpStatus.BAD_REQUEST, "기존 비밀번호와 동일한 비밀번호로 변경할 수 없습니다."),
@@ -105,7 +107,10 @@ public enum ErrorCode {
 
 	// File
 	INVALID_FILE_ERROR(HttpStatus.BAD_REQUEST, "유효하지 않은 파일입니다."),
-	FAIL_UPLOAD_FILE(HttpStatus.BAD_REQUEST, "파일 업로드를 실패했습니다.");
+	FAIL_UPLOAD_FILE(HttpStatus.BAD_REQUEST, "파일 업로드를 실패했습니다."),
+
+	// Mail
+	MAIL_DELIVERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "메일 전송에 실패했습니다.");
 
 	private final HttpStatus status;
 	private final String message;

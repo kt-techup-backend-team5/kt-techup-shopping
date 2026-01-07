@@ -2,10 +2,14 @@ package com.kt.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.kt.common.exception.CustomException;
 import com.kt.common.exception.ErrorCode;
@@ -44,6 +49,14 @@ class UserServiceTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private MailCheckService mailCheckService;
+
+    @BeforeEach
+    void setUp() {
+        given(mailCheckService.isVerifiedEmail(anyString())).willReturn(true);
+    }
+
     @AfterEach
     void clearSecurityContext() {
         SecurityContextHolder.clearContext();
@@ -62,6 +75,20 @@ class UserServiceTest {
         var saved = userRepository.findByLoginId("login_1").orElseThrow();
         assertThat(saved.getEmail()).isEqualTo("user1@test.com");
         assertThat(passwordEncoder.matches(request.password(), saved.getPassword())).isTrue();
+        verify(mailCheckService).clearVerifiedEmail("user1@test.com");
+    }
+
+    @Test
+    @DisplayName("회원_생성_실패_이메일_인증_미완료")
+    void 회원_생성_실패_이메일_인증_미완료() {
+        // given
+        UserCreateRequest request = createRequest("login_1", "user1@test.com");
+        given(mailCheckService.isVerifiedEmail("user1@test.com")).willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> userService.create(request))
+            .isInstanceOf(CustomException.class)
+            .hasMessage(ErrorCode.AUTH_EMAIL_UNVERIFIED.getMessage());
     }
 
     @Test

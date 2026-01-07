@@ -33,7 +33,7 @@ public class AuthController {
 	// 회원가입
 	@Operation(
 			summary = "회원 가입",
-			description = "새로운 사용자를 생성합니다."
+			description = "이메일 인증 완료 후 새로운 사용자를 생성합니다."
 	)
 	@ApiResponses({
 			@ApiResponse(responseCode = "201", description = "회원 가입 성공"),

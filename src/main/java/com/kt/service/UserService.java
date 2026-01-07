@@ -37,10 +37,12 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final OrderRepository orderRepository;
+	private final MailCheckService mailCheckService;
 
 	public void create(UserCreateRequest request) {
 		Preconditions.validate(!isDuplicateLoginId(request.loginId()), ErrorCode.ALREADY_EXISTS_USER_ID);
 		Preconditions.validate(!isDuplicateEmail(request.email()), ErrorCode.ALREADY_EXISTS_EMAIL);
+		Preconditions.validate(mailCheckService.isVerifiedEmail(request.email()), ErrorCode.AUTH_EMAIL_UNVERIFIED);
 
 		var newUser = User.customer(
 				request.loginId(),
@@ -55,6 +57,7 @@ public class UserService {
 		);
 
 		userRepository.save(newUser);
+		mailCheckService.clearVerifiedEmail(request.email());
 	}
 
 	public boolean isDuplicateLoginId(String loginId) {
