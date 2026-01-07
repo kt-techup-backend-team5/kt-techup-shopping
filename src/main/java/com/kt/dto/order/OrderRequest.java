@@ -1,5 +1,6 @@
 package com.kt.dto.order;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -25,10 +26,13 @@ public interface OrderRequest {
     ) {
     }
 
-    record Update(
+    @Schema(description = "주문 수정 요청")
+    record UpdateOrder(
+        @Schema(description = "변경할 배송지 ID", example = "1")
         @NotNull(message = "변경할 배송지를 선택해주세요.")
         Long addressId,
 
+        @Schema(description = "배송 요청 사항", example = "문 앞에 놔주세요")
         String deliveryRequest
     ) {
     }
