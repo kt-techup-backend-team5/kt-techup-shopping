@@ -7,6 +7,7 @@ import jakarta.mail.internet.MimeMessage;
 import java.security.SecureRandom;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class MailCheckService {
 
@@ -41,8 +43,12 @@ public class MailCheckService {
         String title = "[케클벅스]회원가입 이메일 인증 메일입니다.";
         String plainContent = "인증번호는 " + authNum + " 입니다.";
         String htmlContent = buildHtmlContent(authNum);
-        createMessage(fromAddress, sendMail, title, plainContent, htmlContent);
-        mailRedisService.setDataExpire(authKey(sendMail), authNum, emailExpiration);
+        try {
+            createMessage(fromAddress, sendMail, title, plainContent, htmlContent);
+            mailRedisService.setDataExpire(authKey(sendMail), authNum, emailExpiration);
+        } catch (RuntimeException e) {
+            log.error("이메일 전송 실패 - email: {}", sendMail, e);
+        }
 
     }
 
