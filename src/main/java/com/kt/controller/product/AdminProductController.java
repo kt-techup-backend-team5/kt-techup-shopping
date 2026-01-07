@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +24,7 @@ import com.kt.domain.product.ProductSortType;
 import com.kt.dto.product.ProductCommand;
 import com.kt.dto.product.ProductRequest;
 import com.kt.dto.product.ProductResponse;
+import com.kt.security.CurrentUser;
 import com.kt.service.ProductService;
 import com.kt.service.RedisService;
 
@@ -77,10 +79,12 @@ public class AdminProductController extends SwaggerAssistance {
 			@Parameter(description = "상품 정보 (JSON)", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
 			@RequestPart("data") @Valid ProductRequest.Create request,
 			@RequestPart(value = "thumbnail image", required = false) MultipartFile thumbnailImg,
-			@RequestPart(value = "detail image", required = false) MultipartFile detailImg) {
-
+			@RequestPart(value = "detail image", required = false) MultipartFile detailImg,
+			@AuthenticationPrincipal CurrentUser currentUser) {
+		Long userId = currentUser.getId();
 		ProductCommand.Create command = new ProductCommand.Create(request, thumbnailImg, detailImg);
-		productService.create(command);
+
+		productService.create(userId, command);
 
 		return ApiResult.ok();
 	}

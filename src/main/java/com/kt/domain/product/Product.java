@@ -10,6 +10,7 @@ import com.kt.common.support.BaseEntity;
 import com.kt.common.support.Preconditions;
 import com.kt.domain.orderproduct.OrderProduct;
 
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -40,9 +41,11 @@ public class Product extends BaseEntity {
 	private List<OrderProduct> orderProducts = new ArrayList<>();
 	private String thumbnailImgUrl;
 	private String detailImgUrl;
+	@Embedded
+	private ProductAnalysis productAnalysis;
 
 	public Product(String name, Long price, Long stock, String description, String thumbnailImgUrl,
-			String detailImgUrl) {
+			String detailImgUrl, ProductAnalysis productAnalysis) {
 		Preconditions.validate(Strings.isNotBlank(name), ErrorCode.INVALID_PARAMETER);
 		Preconditions.validate(price != null, ErrorCode.INVALID_PARAMETER);
 		Preconditions.validate(price >= 0, ErrorCode.INVALID_PARAMETER);
@@ -57,6 +60,7 @@ public class Product extends BaseEntity {
 		this.status = ProductStatus.ACTIVATED;
 		this.thumbnailImgUrl = thumbnailImgUrl;
 		this.detailImgUrl = detailImgUrl;
+		this.productAnalysis = productAnalysis;
 	}
 
 	public void update(String name, Long price, Long stock, String description, String thumbnailImgUrl,

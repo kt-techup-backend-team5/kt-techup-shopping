@@ -145,7 +145,7 @@ class AdminProductControllerTest {
 				"detail-content".getBytes()
 		);
 
-		doNothing().when(productService).create(any(ProductCommand.Create.class));
+		doNothing().when(productService).create(anyLong(), any(ProductCommand.Create.class));
 
 		// when
 		ResultActions resultActions = mockMvc.perform(
@@ -157,7 +157,7 @@ class AdminProductControllerTest {
 
 		// then
 		resultActions.andExpect(status().isOk());
-		verify(productService, times(1)).create(any(ProductCommand.Create.class));
+		verify(productService, times(1)).create(anyLong(), any(ProductCommand.Create.class));
 	}
 
 	@Test
