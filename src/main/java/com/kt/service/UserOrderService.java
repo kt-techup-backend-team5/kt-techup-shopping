@@ -40,7 +40,7 @@ public class UserOrderService {
 	 * AddressId를 받아 DB에서 주소 정보를 조회한 뒤 스냅샷을 갱신합니다.
 	 */
 	@Transactional
-	public void updateOrder(Long userId, Long orderId, OrderRequest.Update request) {
+	public void updateOrder(Long userId, Long orderId, OrderRequest.UpdateOrder request) {
 		var order = orderRepository.findByIdAndUserIdOrThrow(orderId, userId);
 		Preconditions.validate(order.canUpdate(), ErrorCode.CANNOT_UPDATE_ORDER);
 
