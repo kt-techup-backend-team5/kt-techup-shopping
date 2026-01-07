@@ -145,7 +145,7 @@ class UserOrderServiceTest {
 		given(orderRepository.findByIdAndUserIdOrThrow(orderId, userId))
 				.willReturn(order);
 
-		OrderRequest.Update request = new OrderRequest.Update(
+		OrderRequest.UpdateOrder request = new OrderRequest.UpdateOrder(
 				2L, // addressId
 				"새로운 배송 요청사항"
 		);
