@@ -38,6 +38,12 @@ spring:
         options:
           model: gpt-4o-mini
           temperature: 0.7
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: product_recommendations_test
+        initialize-schema: false
   mail:
     host: localhost
     port: 3025
@@ -49,12 +55,6 @@ spring:
           auth: false
           starttls:
             enable: false
-    vectorstore:
-      qdrant:
-        host: localhost
-        port: 6334
-        collection-name: product_recommendations_test
-        initialize-schema: false
 
 s3:
   bucket: kt-techup-shopping-test-media
