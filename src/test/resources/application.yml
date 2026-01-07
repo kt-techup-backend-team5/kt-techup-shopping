@@ -33,7 +33,7 @@ spring:
         path-style-access-enabled: true
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY}
+      api-key: ${OPENAI_API_KEY:test}
       chat:
         options:
           model: gpt-4o-mini
@@ -66,6 +66,6 @@ jwt:
 
 app:
   mail:
-    from: ${MAIL_FROM:${MAIL_USERNAME}}
+    from: ${MAIL_FROM:${MAIL_USERNAME:test@example.com}}
     expiration-seconds: ${MAIL_EXPIRATION_SECONDS:300}
     verified-expiration-seconds: ${MAIL_VERIFIED_EXPIRATION_SECONDS:1800}
