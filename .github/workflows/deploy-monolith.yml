@@ -117,8 +117,8 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "APP_NAME=javachip-dev" >> $GITHUB_ENV
-          echo "ENV_NAME=Javachip-dev-env" >> $GITHUB_ENV
+          echo "APP_NAME=javachip-monolith-env" >> $GITHUB_ENV
+          echo "ENV_NAME=javachip-monolith-env-env-1" >> $GITHUB_ENV
           echo "TIMESTAMP=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
 
       - name: Set up JDK 21
