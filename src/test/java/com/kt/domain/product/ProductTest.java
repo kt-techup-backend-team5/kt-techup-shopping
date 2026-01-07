@@ -26,7 +26,8 @@ class ProductTest {
 	@Test
 	void 객체_생성_성공() {
 		// given & when
-		Product product = new Product(DEFAULT_NAME, DEFAULT_PRICE, DEFAULT_STOCK, DEFAULT_DESCRIPTION, null, null);
+		Product product = new Product(DEFAULT_NAME, DEFAULT_PRICE, DEFAULT_STOCK, DEFAULT_DESCRIPTION, null, null,
+				null);
 
 		// then
 		assertThat(product.getName()).isEqualTo(DEFAULT_NAME);
@@ -41,7 +42,7 @@ class ProductTest {
 	@NullAndEmptySource
 	void 상품_생성_실패__상품명_null_이거나_공백(String name) {
 		// when & then
-		assertThatThrownBy(() -> new Product(name, DEFAULT_PRICE, DEFAULT_STOCK, DEFAULT_DESCRIPTION, null, null))
+		assertThatThrownBy(() -> new Product(name, DEFAULT_PRICE, DEFAULT_STOCK, DEFAULT_DESCRIPTION, null, null, null))
 				.isInstanceOf(CustomException.class)
 				.hasMessageContaining(ErrorCode.INVALID_PARAMETER.getMessage());
 	}
@@ -49,11 +50,11 @@ class ProductTest {
 	@ParameterizedTest
 	@ValueSource(longs = {-1L})
 	void 상품_생성_실패__가격이나_재고가_음수(Long value) {
-		assertThatThrownBy(() -> new Product(DEFAULT_NAME, value, DEFAULT_STOCK, DEFAULT_DESCRIPTION, null, null))
+		assertThatThrownBy(() -> new Product(DEFAULT_NAME, value, DEFAULT_STOCK, DEFAULT_DESCRIPTION, null, null, null))
 				.isInstanceOf(CustomException.class)
 				.hasMessageContaining(ErrorCode.INVALID_PARAMETER.getMessage());
 
-		assertThatThrownBy(() -> new Product(DEFAULT_NAME, DEFAULT_PRICE, value, DEFAULT_DESCRIPTION, null, null))
+		assertThatThrownBy(() -> new Product(DEFAULT_NAME, DEFAULT_PRICE, value, DEFAULT_DESCRIPTION, null, null, null))
 				.isInstanceOf(CustomException.class)
 				.hasMessageContaining(ErrorCode.INVALID_PARAMETER.getMessage());
 	}

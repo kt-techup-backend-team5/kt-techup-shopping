@@ -64,6 +64,15 @@ services:
     networks:
       - elk
 
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    volumes:
+      - ./qdrant/storage:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+
 networks:
   elk:
     driver: bridge

@@ -67,3 +67,6 @@ application-local.yml
 
 # Elasticsearch data directory
 /elasticsearch/
+
+# Qdrant
+/qdrant/
