@@ -38,6 +38,17 @@ spring:
         options:
           model: gpt-4o-mini
           temperature: 0.7
+  mail:
+    host: localhost
+    port: 3025
+    username: test@example.com
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
 
 s3:
   bucket: kt-techup-shopping-test-media
@@ -46,3 +57,9 @@ jwt:
   secret: ${kt.jwt.secret:kt-cloud-tech-up-shopping-202511171107}
   access-token-expiration: ${kt.jwt.access-token-expiration:300000}
   refresh-token-expiration: ${kt.jwt.refresh-token-expiration:43200000}
+
+app:
+  mail:
+    from: ${MAIL_FROM:${MAIL_USERNAME}}
+    expiration-seconds: ${MAIL_EXPIRATION_SECONDS:300}
+    verified-expiration-seconds: ${MAIL_VERIFIED_EXPIRATION_SECONDS:1800}
