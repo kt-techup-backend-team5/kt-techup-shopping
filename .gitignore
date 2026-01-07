@@ -57,6 +57,7 @@ out/
 ehthumbs.db
 Thumbs.db
 
+
 # Local configurations
 src/main/resources/application-loacal.yml
 resources/application-loacal.yml
