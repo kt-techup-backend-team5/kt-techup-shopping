@@ -33,10 +33,12 @@ import com.kt.dto.product.ProductSearchCondition;
 import com.kt.repository.product.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class ProductService {
 	private final static List<ProductStatus> PUBLIC_VIEWABLE_STATUS = List.of(
 			ProductStatus.ACTIVATED,
@@ -51,7 +53,9 @@ public class ProductService {
 	// TODO(YE) ProductService ChatClient 분리
 	private final ChatClient chatClient;
 
-	public void create(ProductCommand.Create command) {
+	public void create(Long userId, ProductCommand.Create command) {
+		log.info("[Product Create Start] User: {}, Name: {}", userId, command.data().getName());
+
 		String thumbnailImgUrl = uploadIfPresent(command.thumbnail());
 		String detailImgUrl = uploadIfPresent(command.detail());
 		ProductAnalysis productAnalysis = chatClient.prompt()
@@ -61,7 +65,12 @@ public class ProductService {
 				.call()
 				.entity(ProductAnalysis.class);
 
+		log.info("[AI Analysis Success] Target: {}, Gender: {}, Reason: {}", productAnalysis.getAgeTarget(),
+				productAnalysis.getGender(), productAnalysis.getReason());
+
 		Product product = productRepository.save(command.toEntity(thumbnailImgUrl, detailImgUrl, productAnalysis));
+
+		log.info("[DB Save Success] Product ID: {}", product.getId());
 
 		String searchContent = String.format("상품명: %s, 설명:%s", command.data().getName(),
 				command.data().getDescription());
@@ -73,6 +82,8 @@ public class ProductService {
 
 		Document document = new Document(searchContent, metadata);
 		vectorStore.add(List.of(document));
+
+		log.info("[VectorStore Indexing Success] Product ID: {}", product.getId());
 	}
 
 	public Page<Product> searchPublicStatus(String keyword, ProductSortType sortType, Pageable pageable) {
