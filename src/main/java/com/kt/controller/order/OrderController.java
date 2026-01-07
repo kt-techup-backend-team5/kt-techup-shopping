@@ -117,7 +117,7 @@ public class OrderController extends SwaggerAssistance {
     public ApiResult<Void> updateOrder(
         @AuthenticationPrincipal DefaultCurrentUser currentUser,
         @PathVariable Long orderId,
-        @RequestBody @Valid OrderRequest.Update request
+        @RequestBody @Valid OrderRequest.UpdateOrder request
     ) {
         userOrderService.updateOrder(currentUser.getId(), orderId, request);
         return ApiResult.ok();
