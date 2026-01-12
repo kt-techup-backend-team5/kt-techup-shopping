@@ -70,3 +70,7 @@ application-local.yml
 
 # Qdrant
 /qdrant/
+
+# Localstack
+
+/localstack/
