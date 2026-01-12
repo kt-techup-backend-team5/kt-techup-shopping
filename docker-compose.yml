@@ -21,7 +21,10 @@ services:
     ports:
       - "4566:4566"
     volumes:
+      - "./localstack:/var/lib/localstack"
       - "./init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh"
+    environment:
+      - PERSISTENCE=1
     entrypoint: >
       /bin/sh -c "chmod +x /etc/localstack/init/ready.d/init-s3.sh && /usr/local/bin/docker-entrypoint.sh"
 
